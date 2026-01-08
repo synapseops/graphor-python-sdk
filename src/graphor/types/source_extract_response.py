@@ -1,6 +1,6 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from .._models import BaseModel
 
@@ -14,5 +14,5 @@ class SourceExtractResponse(BaseModel):
     raw_json: Optional[str] = None
     """Raw JSON-text produced by the model before validation/correction."""
 
-    structured_output: Optional[object] = None
+    structured_output: Optional[Dict[str, object]] = None
     """Structured output (object) matching the requested output_schema."""
