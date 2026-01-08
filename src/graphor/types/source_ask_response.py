@@ -1,6 +1,6 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from typing import Optional
+from typing import Dict, Optional
 
 from .._models import BaseModel
 
@@ -25,7 +25,7 @@ class SourceAskResponse(BaseModel):
     validation/correction.
     """
 
-    structured_output: Optional[object] = None
+    structured_output: Optional[Dict[str, object]] = None
     """
     Optional structured output (object) validated against the requested
     output_schema.
