@@ -1,128 +1,75 @@
-# Graphor Python API library
+# Graphor Python SDK
 
-<!-- prettier-ignore -->
 [![PyPI version](https://img.shields.io/pypi/v/graphor.svg?label=pypi%20(stable))](https://pypi.org/project/graphor/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-The Graphor Python library provides convenient access to the Graphor REST API from any Python 3.9+
-application. The library includes type definitions for all request params and response fields,
-and offers both synchronous and asynchronous clients powered by [httpx](https://github.com/encode/httpx).
+The official Python SDK for the [Graphor](https://graphorlm.com) API. Build intelligent document applications with ease.
 
-It is generated with [Stainless](https://www.stainless.com/).
+**Features:**
+- 📄 **Document Ingestion** — Upload files, web pages, GitHub repos, and YouTube videos
+- 💬 **Document Chat** — Ask questions with conversational memory
+- 📊 **Structured Extraction** — Extract data using JSON Schema
+- 🔍 **Semantic Search** — Retrieve relevant chunks for custom RAG pipelines
+- ⚡ **Async Support** — Full async/await support with `AsyncGraphor`
+- 🔒 **Type Safety** — Complete type definitions for all params and responses
 
 ## Documentation
 
-The full API of this library can be found in [api.md](api.md).
+📚 **Full documentation**: [docs.graphorlm.com/sdk/overview](https://docs.graphorlm.com/sdk/overview)
 
 ## Installation
 
-```sh
-# install from PyPI
+```bash
 pip install graphor
 ```
 
-## Usage
+For better async performance with aiohttp:
 
-The full API of this library can be found in [api.md](api.md).
-
-```python
-from graphor import Graphor
-
-client = Graphor()
-
-public_source = client.sources.upload(
-    file=b"raw file contents",
-)
-print(public_source.project_id)
-```
-
-While you can provide an `api_key` keyword argument,
-we recommend using [python-dotenv](https://pypi.org/project/python-dotenv/)
-to add `GRAPHOR_API_KEY="My API Key"` to your `.env` file
-so that your API Key is not stored in source control.
-
-## Async usage
-
-Simply import `AsyncGraphor` instead of `Graphor` and use `await` with each API call:
-
-```python
-import asyncio
-from graphor import AsyncGraphor
-
-client = AsyncGraphor()
-
-
-async def main() -> None:
-    public_source = await client.sources.upload(
-        file=b"raw file contents",
-    )
-    print(public_source.project_id)
-
-
-asyncio.run(main())
-```
-
-Functionality between the synchronous and asynchronous clients is otherwise identical.
-
-### With aiohttp
-
-By default, the async client uses `httpx` for HTTP requests. However, for improved concurrency performance you may also use `aiohttp` as the HTTP backend.
-
-You can enable this by installing `aiohttp`:
-
-```sh
-# install from PyPI
+```bash
 pip install graphor[aiohttp]
 ```
 
-Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:
-
-```python
-import asyncio
-from graphor import DefaultAioHttpClient
-from graphor import AsyncGraphor
-
-
-async def main() -> None:
-    async with AsyncGraphor(
-        http_client=DefaultAioHttpClient(),
-    ) as client:
-        public_source = await client.sources.upload(
-            file=b"raw file contents",
-        )
-        print(public_source.project_id)
-
-
-asyncio.run(main())
-```
-
-## Using types
-
-Nested request parameters are [TypedDicts](https://docs.python.org/3/library/typing.html#typing.TypedDict). Responses are [Pydantic models](https://docs.pydantic.dev) which also provide helper methods for things like:
-
-- Serializing back into JSON, `model.to_json()`
-- Converting to a dictionary, `model.to_dict()`
-
-Typed requests and responses provide autocomplete and documentation within your editor. If you would like to see type errors in VS Code to help catch bugs earlier, set `python.analysis.typeCheckingMode` to `basic`.
-
-## Nested params
-
-Nested parameters are dictionaries, typed using `TypedDict`, for example:
+## Quick Start
 
 ```python
 from graphor import Graphor
 
-client = Graphor()
+client = Graphor()  # Uses GRAPHOR_API_KEY env var
 
-response = client.sources.load_elements(
-    file_name="file_name",
-    filter={},
-)
-print(response.filter)
+# Upload a document
+source = client.sources.upload(file=open("document.pdf", "rb"))
+print(f"Uploaded: {source.file_name}")
+
+# Ask questions about your documents
+response = client.sources.ask(question="What are the main topics?")
+print(f"Answer: {response.answer}")
 ```
 
-## File uploads
+## Authentication
 
-Request parameters that correspond to file uploads can be passed as `bytes`, or a [`PathLike`](https://docs.python.org/3/library/os.html#os.PathLike) instance or a tuple of `(filename, contents, media type)`.
+Set your API key as an environment variable (recommended):
+
+```bash
+export GRAPHOR_API_KEY="grlm_your_api_key_here"
+```
+
+```python
+from graphor import Graphor
+
+client = Graphor()  # Automatically uses GRAPHOR_API_KEY
+```
+
+Or pass it directly:
+
+```python
+client = Graphor(api_key="grlm_your_api_key_here")
+```
+
+## Core Features
+
+### 📄 Upload Documents
+
+Upload files, web pages, GitHub repositories, or YouTube videos:
 
 ```python
 from pathlib import Path
@@ -130,21 +77,175 @@ from graphor import Graphor
 
 client = Graphor()
 
-client.sources.upload(
-    file=Path("/path/to/file"),
+# Upload a local file
+source = client.sources.upload(file=Path("report.pdf"))
+
+# Upload from URL
+source = client.sources.upload_url(url="https://example.com/article")
+
+# Upload from GitHub
+source = client.sources.upload_github(url="https://github.com/org/repo")
+
+# Upload from YouTube
+source = client.sources.upload_youtube(url="https://youtube.com/watch?v=...")
+```
+
+**Supported formats:** PDF, DOCX, TXT, MD, HTML, CSV, XLSX, PNG, JPG, MP3, MP4, and more.
+
+📖 [Full upload documentation](https://docs.graphorlm.com/sdk/sources/upload)
+
+### ⚙️ Process Documents
+
+Reprocess documents with different OCR/parsing methods:
+
+```python
+# Reprocess with high-resolution parsing
+source = client.sources.parse(
+    file_name="document.pdf",
+    partition_method="hi_res"  # Options: basic, hi_res, hi_res_ft, mai, graphorlm
 )
 ```
 
-The async client uses the exact same interface. If you pass a [`PathLike`](https://docs.python.org/3/library/os.html#os.PathLike) instance, the file contents will be read asynchronously automatically.
+📖 [Full processing documentation](https://docs.graphorlm.com/sdk/sources/process)
 
-## Handling errors
+### 💬 Chat with Documents
 
-When the library is unable to connect to the API (for example, due to network connection problems or a timeout), a subclass of `graphor.APIConnectionError` is raised.
+Ask questions about your documents with conversational memory:
 
-When the API returns a non-success status code (that is, 4xx or 5xx
-response), a subclass of `graphor.APIStatusError` is raised, containing `status_code` and `response` properties.
+```python
+# Ask a question
+response = client.sources.ask(
+    question="What are the key findings?"
+)
+print(response.answer)
 
-All errors inherit from `graphor.APIError`.
+# Follow-up question (maintains context)
+follow_up = client.sources.ask(
+    question="Can you elaborate on the first point?",
+    conversation_id=response.conversation_id
+)
+print(follow_up.answer)
+
+# Scope to specific documents
+response = client.sources.ask(
+    question="Compare these two reports",
+    file_names=["report-2023.pdf", "report-2024.pdf"]
+)
+```
+
+📖 [Full chat documentation](https://docs.graphorlm.com/sdk/chat)
+
+### 📊 Extract Structured Data
+
+Extract structured information using JSON Schema:
+
+```python
+result = client.sources.extract(
+    file_names=["invoice.pdf"],
+    user_instruction="Extract invoice details",
+    output_schema={
+        "type": "object",
+        "properties": {
+            "invoice_number": {"type": "string"},
+            "total_amount": {"type": "number"},
+            "line_items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "amount": {"type": "number"}
+                    }
+                }
+            }
+        }
+    }
+)
+
+print(result.structured_output)
+# {"invoice_number": "INV-001", "total_amount": 1500.00, "line_items": [...]}
+```
+
+📖 [Full extraction documentation](https://docs.graphorlm.com/sdk/extract)
+
+### 🔍 Retrieve Chunks (Prebuilt RAG)
+
+Build custom RAG pipelines with semantic search:
+
+```python
+# Retrieve relevant chunks
+result = client.sources.retrieve_chunks(
+    query="What are the payment terms?"
+)
+
+for chunk in result.chunks:
+    print(f"[{chunk.file_name}, Page {chunk.page_number}]")
+    print(f"Score: {chunk.score:.2f}")
+    print(chunk.text)
+    print("---")
+
+# Use with your preferred LLM
+context = "\n".join([c.text for c in result.chunks])
+# Pass context to OpenAI, Anthropic, etc.
+```
+
+📖 [Full RAG documentation](https://docs.graphorlm.com/sdk/prebuilt-rag)
+
+### 📋 Manage Sources
+
+List, inspect, and delete documents:
+
+```python
+# List all sources
+sources = client.sources.list()
+for source in sources:
+    print(f"{source.file_name}: {source.status}")
+
+# Get document elements
+elements = client.sources.load_elements(
+    file_name="document.pdf",
+    page=1,
+    page_size=50
+)
+
+# Delete a source
+result = client.sources.delete(file_name="document.pdf")
+```
+
+## Async Usage
+
+Use `AsyncGraphor` for async/await support:
+
+```python
+import asyncio
+from graphor import AsyncGraphor
+
+async def main():
+    client = AsyncGraphor()
+    
+    # All methods support await
+    source = await client.sources.upload(file=b"content")
+    response = await client.sources.ask(question="Summarize this document")
+    
+    print(response.answer)
+
+asyncio.run(main())
+```
+
+### With aiohttp (Better Concurrency)
+
+```python
+from graphor import AsyncGraphor, DefaultAioHttpClient
+
+async def main():
+    async with AsyncGraphor(http_client=DefaultAioHttpClient()) as client:
+        sources = await client.sources.list()
+        print(f"Found {len(sources)} sources")
+
+asyncio.run(main())
+```
+
+## Error Handling
 
 ```python
 import graphor
@@ -153,253 +254,147 @@ from graphor import Graphor
 client = Graphor()
 
 try:
-    client.sources.upload(
-        file=b"raw file contents",
-    )
-except graphor.APIConnectionError as e:
-    print("The server could not be reached")
-    print(e.__cause__)  # an underlying Exception, likely raised within httpx.
-except graphor.RateLimitError as e:
-    print("A 429 status code was received; we should back off a bit.")
+    response = client.sources.ask(question="What is this about?")
+except graphor.AuthenticationError:
+    print("Invalid API key")
+except graphor.NotFoundError:
+    print("Resource not found")
+except graphor.RateLimitError:
+    print("Rate limited - back off and retry")
+except graphor.APIConnectionError:
+    print("Network error")
 except graphor.APIStatusError as e:
-    print("Another non-200-range status code was received")
-    print(e.status_code)
-    print(e.response)
+    print(f"API error: {e.status_code}")
 ```
 
-Error codes are as follows:
+| Status Code | Error Type |
+|-------------|------------|
+| 400 | `BadRequestError` |
+| 401 | `AuthenticationError` |
+| 403 | `PermissionDeniedError` |
+| 404 | `NotFoundError` |
+| 422 | `UnprocessableEntityError` |
+| 429 | `RateLimitError` |
+| ≥500 | `InternalServerError` |
+| N/A | `APIConnectionError` |
 
-| Status Code | Error Type                 |
-| ----------- | -------------------------- |
-| 400         | `BadRequestError`          |
-| 401         | `AuthenticationError`      |
-| 403         | `PermissionDeniedError`    |
-| 404         | `NotFoundError`            |
-| 422         | `UnprocessableEntityError` |
-| 429         | `RateLimitError`           |
-| >=500       | `InternalServerError`      |
-| N/A         | `APIConnectionError`       |
+## Configuration
 
 ### Retries
 
-Certain errors are automatically retried 2 times by default, with a short exponential backoff.
-Connection errors (for example, due to a network connectivity problem), 408 Request Timeout, 409 Conflict,
-429 Rate Limit, and >=500 Internal errors are all retried by default.
-
-You can use the `max_retries` option to configure or disable retry settings:
+Requests are automatically retried twice with exponential backoff:
 
 ```python
-from graphor import Graphor
+# Configure default retries
+client = Graphor(max_retries=5)
 
-# Configure the default for all requests:
-client = Graphor(
-    # default is 2
-    max_retries=0,
-)
-
-# Or, configure per-request:
-client.with_options(max_retries=5).sources.upload(
-    file=b"raw file contents",
-)
+# Or per-request
+client.with_options(max_retries=3).sources.ask(question="...")
 ```
 
 ### Timeouts
 
-By default requests time out after 1 minute. You can configure this with a `timeout` option,
-which accepts a float or an [`httpx.Timeout`](https://www.python-httpx.org/advanced/timeouts/#fine-tuning-the-configuration) object:
+Default timeout is 60 seconds:
 
 ```python
-from graphor import Graphor
+# Configure default timeout
+client = Graphor(timeout=120.0)
 
-# Configure the default for all requests:
-client = Graphor(
-    # 20 seconds (default is 1 minute)
-    timeout=20.0,
-)
-
-# More granular control:
-client = Graphor(
-    timeout=httpx.Timeout(60.0, read=5.0, write=10.0, connect=2.0),
-)
-
-# Override per-request:
-client.with_options(timeout=5.0).sources.upload(
-    file=b"raw file contents",
+# Or per-request
+client.with_options(timeout=300.0).sources.parse(
+    file_name="large-document.pdf",
+    partition_method="graphorlm"
 )
 ```
 
-On timeout, an `APITimeoutError` is thrown.
+## Complete Example
 
-Note that requests that time out are [retried twice by default](#retries).
-
-## Advanced
-
-### Logging
-
-We use the standard library [`logging`](https://docs.python.org/3/library/logging.html) module.
-
-You can enable logging by setting the environment variable `GRAPHOR_LOG` to `info`.
-
-```shell
-$ export GRAPHOR_LOG=info
-```
-
-Or to `debug` for more verbose logging.
-
-### How to tell whether `None` means `null` or missing
-
-In an API response, a field may be explicitly `null`, or missing entirely; in either case, its value is `None` in this library. You can differentiate the two cases with `.model_fields_set`:
-
-```py
-if response.my_field is None:
-  if 'my_field' not in response.model_fields_set:
-    print('Got json like {}, without a "my_field" key present at all.')
-  else:
-    print('Got json like {"my_field": null}.')
-```
-
-### Accessing raw response data (e.g. headers)
-
-The "raw" Response object can be accessed by prefixing `.with_raw_response.` to any HTTP method call, e.g.,
-
-```py
+```python
+from pathlib import Path
 from graphor import Graphor
 
 client = Graphor()
-response = client.sources.with_raw_response.upload(
-    file=b"raw file contents",
+
+# 1. Upload a document
+source = client.sources.upload(file=Path("contract.pdf"))
+print(f"✅ Uploaded: {source.file_name}")
+
+# 2. Process with advanced parsing
+processed = client.sources.parse(
+    file_name=source.file_name,
+    partition_method="hi_res"
 )
-print(response.headers.get('X-My-Header'))
+print(f"✅ Processed: {processed.status}")
 
-source = response.parse()  # get the object that `sources.upload()` would have returned
-print(source.project_id)
-```
-
-These methods return an [`APIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) object.
-
-The async client returns an [`AsyncAPIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) with the same structure, the only difference being `await`able methods for reading the response content.
-
-#### `.with_streaming_response`
-
-The above interface eagerly reads the full response body when you make the request, which may not always be what you want.
-
-To stream the response body, use `.with_streaming_response` instead, which requires a context manager and only reads the response body once you call `.read()`, `.text()`, `.json()`, `.iter_bytes()`, `.iter_text()`, `.iter_lines()` or `.parse()`. In the async client, these are async methods.
-
-```python
-with client.sources.with_streaming_response.upload(
-    file=b"raw file contents",
-) as response:
-    print(response.headers.get("X-My-Header"))
-
-    for line in response.iter_lines():
-        print(line)
-```
-
-The context manager is required so that the response will reliably be closed.
-
-### Making custom/undocumented requests
-
-This library is typed for convenient access to the documented API.
-
-If you need to access undocumented endpoints, params, or response properties, the library can still be used.
-
-#### Undocumented endpoints
-
-To make requests to undocumented endpoints, you can make requests using `client.get`, `client.post`, and other
-http verbs. Options on the client will be respected (such as retries) when making this request.
-
-```py
-import httpx
-
-response = client.post(
-    "/foo",
-    cast_to=httpx.Response,
-    body={"my_param": True},
+# 3. Ask questions
+response = client.sources.ask(
+    question="What are the key terms of this contract?",
+    file_names=[source.file_name]
 )
+print(f"📝 Answer: {response.answer}")
 
-print(response.headers.get("x-foo"))
-```
-
-#### Undocumented request params
-
-If you want to explicitly send an extra param, you can do so with the `extra_query`, `extra_body`, and `extra_headers` request
-options.
-
-#### Undocumented response properties
-
-To access undocumented response properties, you can access the extra fields like `response.unknown_prop`. You
-can also get all the extra fields on the Pydantic model as a dict with
-[`response.model_extra`](https://docs.pydantic.dev/latest/api/base_model/#pydantic.BaseModel.model_extra).
-
-### Configuring the HTTP client
-
-You can directly override the [httpx client](https://www.python-httpx.org/api/#client) to customize it for your use case, including:
-
-- Support for [proxies](https://www.python-httpx.org/advanced/proxies/)
-- Custom [transports](https://www.python-httpx.org/advanced/transports/)
-- Additional [advanced](https://www.python-httpx.org/advanced/clients/) functionality
-
-```python
-import httpx
-from graphor import Graphor, DefaultHttpxClient
-
-client = Graphor(
-    # Or use the `GRAPHOR_BASE_URL` env var
-    base_url="http://my.test.server.example.com:8083",
-    http_client=DefaultHttpxClient(
-        proxy="http://my.test.proxy.example.com",
-        transport=httpx.HTTPTransport(local_address="0.0.0.0"),
-    ),
+# 4. Extract structured data
+extracted = client.sources.extract(
+    file_names=[source.file_name],
+    user_instruction="Extract contract details",
+    output_schema={
+        "type": "object",
+        "properties": {
+            "parties": {"type": "array", "items": {"type": "string"}},
+            "effective_date": {"type": "string"},
+            "termination_date": {"type": "string"},
+            "total_value": {"type": "number"}
+        }
+    }
 )
+print(f"📊 Extracted: {extracted.structured_output}")
+
+# 5. Build custom RAG
+chunks = client.sources.retrieve_chunks(
+    query="payment obligations",
+    file_names=[source.file_name]
+)
+print(f"🔍 Found {chunks.total} relevant chunks")
 ```
 
-You can also customize the client on a per-request basis by using `with_options()`:
+## API Reference
 
-```python
-client.with_options(http_client=DefaultHttpxClient(...))
-```
+### Sources
 
-### Managing HTTP resources
+| Method | Description | Docs |
+|--------|-------------|------|
+| `sources.upload()` | Upload a local file | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-a-file) |
+| `sources.upload_url()` | Upload from web URL | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-url) |
+| `sources.upload_github()` | Upload from GitHub | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-github) |
+| `sources.upload_youtube()` | Upload from YouTube | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-youtube) |
+| `sources.parse()` | Reprocess with different method | [📖](https://docs.graphorlm.com/sdk/sources/process) |
+| `sources.list()` | List all sources | [📖](https://docs.graphorlm.com/sdk/sources/list) |
+| `sources.delete()` | Delete a source | [📖](https://docs.graphorlm.com/sdk/sources/delete) |
+| `sources.load_elements()` | Get parsed elements | [📖](https://docs.graphorlm.com/sdk/sources/list-elements) |
 
-By default the library closes underlying HTTP connections whenever the client is [garbage collected](https://docs.python.org/3/reference/datamodel.html#object.__del__). You can manually close the client using the `.close()` method if desired, or with a context manager that closes when exiting.
+### Chat & AI
 
-```py
-from graphor import Graphor
-
-with Graphor() as client:
-  # make requests here
-  ...
-
-# HTTP client is now closed
-```
-
-## Versioning
-
-This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
-
-1. Changes that only affect static types, without breaking runtime behavior.
-2. Changes to library internals which are technically public but not intended or documented for external use. _(Please open a GitHub issue to let us know if you are relying on such internals.)_
-3. Changes that we do not expect to impact the vast majority of users in practice.
-
-We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
-
-We are keen for your feedback; please open an [issue](https://www.github.com/synapseops/graphor-python-sdk/issues) with questions, bugs, or suggestions.
-
-### Determining the installed version
-
-If you've upgraded to the latest version but aren't seeing any new features you were expecting then your python environment is likely still using an older version.
-
-You can determine the version that is being used at runtime with:
-
-```py
-import graphor
-print(graphor.__version__)
-```
+| Method | Description | Docs |
+|--------|-------------|------|
+| `sources.ask()` | Ask questions about documents | [📖](https://docs.graphorlm.com/sdk/chat) |
+| `sources.extract()` | Extract structured data | [📖](https://docs.graphorlm.com/sdk/extract) |
+| `sources.retrieve_chunks()` | Retrieve chunks for RAG | [📖](https://docs.graphorlm.com/sdk/prebuilt-rag) |
 
 ## Requirements
 
-Python 3.9 or higher.
+- Python 3.9+
 
 ## Contributing
 
-See [the contributing documentation](./CONTRIBUTING.md).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## License
+
+MIT License - see [LICENSE](./LICENSE) for details.
+
+## Links
+
+- 📚 [Documentation](https://docs.graphorlm.com/sdk/overview)
+- 🐛 [Issue Tracker](https://github.com/synapseops/graphor-python-sdk/issues)
+- 📦 [PyPI](https://pypi.org/project/graphor/)
+- 🏠 [Graphor](https://graphorlm.com)
