@@ -1,11 +1,11 @@
 [project]
 name = "graphor"
-version = "0.1.0"
+version = "0.2.0"
 description = "The official Python library for the graphor API"
 dynamic = ["readme"]
 license = "Apache-2.0"
 authors = [
-{ name = "Graphor", email = "" },
+{ name = "Graphor", email = "support@graphorlm.com" },
 ]
 
 dependencies = [
