@@ -5,7 +5,7 @@ description = "The official Python library for the graphor API"
 dynamic = ["readme"]
 license = "Apache-2.0"
 authors = [
-{ name = "Graphor", email = "" },
+{ name = "Graphor", email = "support@graphorlm.com" },
 ]
 
 dependencies = [
