@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 (2026-01-17)
+
+Full Changelog: [v0.2.2...v0.3.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.2.2...v0.3.0)
+
+### Features
+
+* **client:** add support for binary request streaming ([247170c](https://github.com/synapseops/graphor-python-sdk/commit/247170c9501b0f1f2ceaea4361532030d777dfc6))
+
+
+### Chores
+
+* **internal:** update `actions/checkout` version ([ebd8144](https://github.com/synapseops/graphor-python-sdk/commit/ebd81445054763a698cdc05eb0ee7f8486e9b476))
+
 ## 0.2.2 (2026-01-09)
 
 Full Changelog: [v0.2.1...v0.2.2](https://github.com/synapseops/graphor-python-sdk/compare/v0.2.1...v0.2.2)
