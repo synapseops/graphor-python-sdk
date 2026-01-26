@@ -17,8 +17,17 @@ class SourceAskParams(TypedDict, total=False):
     conversation_id: Optional[str]
     """Conversation identifier to maintain memory context"""
 
+    file_ids: Optional[SequenceNotStr[str]]
+    """
+    Optional list of file IDs to restrict search to one or more documents
+    (preferred)
+    """
+
     file_names: Optional[SequenceNotStr[str]]
-    """Optional list of file display names to restrict search to one or more documents"""
+    """
+    Optional list of file display names to restrict search to one or more documents
+    (deprecated, use file_ids)
+    """
 
     output_schema: Optional[Dict[str, object]]
     """Optional JSON Schema used to request a structured output.

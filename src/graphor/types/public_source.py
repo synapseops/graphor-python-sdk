@@ -25,4 +25,7 @@ class PublicSource(BaseModel):
 
     status: str
 
+    file_id: Optional[str] = None
+    """Unique identifier for the source"""
+
     partition_method: Optional[PartitionMethod] = None
