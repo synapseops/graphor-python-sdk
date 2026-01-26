@@ -114,7 +114,6 @@ from graphor import Graphor
 client = Graphor()
 
 response = client.sources.load_elements(
-    file_name="file_name",
     filter={},
 )
 print(response.filter)

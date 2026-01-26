@@ -84,7 +84,8 @@ class SourcesResource(SyncAPIResource):
     def delete(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -95,8 +96,12 @@ class SourcesResource(SyncAPIResource):
         """
         Delete a source from the project for public access.
 
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+
         Args:
-          file_name: The name of the file to delete
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file to delete (deprecated, use file_id)
 
           extra_headers: Send extra headers
 
@@ -108,7 +113,13 @@ class SourcesResource(SyncAPIResource):
         """
         return self._delete(
             "/sources/delete",
-            body=maybe_transform({"file_name": file_name}, source_delete_params.SourceDeleteParams),
+            body=maybe_transform(
+                {
+                    "file_id": file_id,
+                    "file_name": file_name,
+                },
+                source_delete_params.SourceDeleteParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -120,6 +131,7 @@ class SourcesResource(SyncAPIResource):
         *,
         question: str,
         conversation_id: Optional[str] | Omit = omit,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
@@ -138,7 +150,11 @@ class SourcesResource(SyncAPIResource):
 
           conversation_id: Conversation identifier to maintain memory context
 
+          file_ids: Optional list of file IDs to restrict search to one or more documents
+              (preferred)
+
           file_names: Optional list of file display names to restrict search to one or more documents
+              (deprecated, use file_ids)
 
           output_schema: Optional JSON Schema used to request a structured output. When provided, the
               system will first ask the sources model to output JSON-text, then
@@ -160,6 +176,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "question": question,
                     "conversation_id": conversation_id,
+                    "file_ids": file_ids,
                     "file_names": file_names,
                     "output_schema": output_schema,
                     "reset": reset,
@@ -175,9 +192,10 @@ class SourcesResource(SyncAPIResource):
     def extract(
         self,
         *,
-        file_names: SequenceNotStr[str],
         output_schema: Dict[str, object],
         user_instruction: str,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
+        file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -189,12 +207,14 @@ class SourcesResource(SyncAPIResource):
         Run a one-off public extraction for files using the provided output schema.
 
         Args:
-          file_names: List of file names to extract from
-
           output_schema: JSON Schema used to request a structured output. The system will extract data
               according to this schema.
 
           user_instruction: User instruction to guide the extraction
+
+          file_ids: List of file IDs to extract from (preferred)
+
+          file_names: List of file names to extract from (deprecated, use file_ids)
 
           extra_headers: Send extra headers
 
@@ -208,9 +228,10 @@ class SourcesResource(SyncAPIResource):
             "/sources/run-extraction",
             body=maybe_transform(
                 {
-                    "file_names": file_names,
                     "output_schema": output_schema,
                     "user_instruction": user_instruction,
+                    "file_ids": file_ids,
+                    "file_names": file_names,
                 },
                 source_extract_params.SourceExtractParams,
             ),
@@ -223,7 +244,8 @@ class SourcesResource(SyncAPIResource):
     def load_elements(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         filter: Optional[source_load_elements_params.Filter] | Omit = omit,
         page: Optional[int] | Omit = omit,
         page_size: Optional[int] | Omit = omit,
@@ -237,8 +259,12 @@ class SourcesResource(SyncAPIResource):
         """
         Loads elements from a file with optional pagination for public access.
 
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+
         Args:
-          file_name: The name of the file
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file (deprecated, use file_id)
 
           filter: The filter of the elements
 
@@ -258,6 +284,7 @@ class SourcesResource(SyncAPIResource):
             "/sources/elements",
             body=maybe_transform(
                 {
+                    "file_id": file_id,
                     "file_name": file_name,
                     "filter": filter,
                     "page": page,
@@ -274,7 +301,8 @@ class SourcesResource(SyncAPIResource):
     def parse(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         partition_method: PartitionMethod | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -284,10 +312,14 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Parse
+        Process/parse an existing source.
+
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
 
         Args:
-          file_name: The name of the file
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file (deprecated, use file_id)
 
           partition_method: The method used to partition the file
 
@@ -303,6 +335,7 @@ class SourcesResource(SyncAPIResource):
             "/sources/process",
             body=maybe_transform(
                 {
+                    "file_id": file_id,
                     "file_name": file_name,
                     "partition_method": partition_method,
                 },
@@ -318,6 +351,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         query: str,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -331,10 +365,16 @@ class SourcesResource(SyncAPIResource):
         Uses
         Google File Search with grounding to find relevant document chunks.
 
+        Accepts either file_ids (preferred) or file_names (deprecated) as identifier.
+
         Args:
           query: The search query to retrieve relevant chunks
 
+          file_ids: Optional list of file IDs to restrict retrieval to one or more documents
+              (preferred)
+
           file_names: Optional list of file names to restrict retrieval to one or more documents
+              (deprecated, use file_ids)
 
           extra_headers: Send extra headers
 
@@ -349,6 +389,7 @@ class SourcesResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "query": query,
+                    "file_ids": file_ids,
                     "file_names": file_names,
                 },
                 source_retrieve_chunks_params.SourceRetrieveChunksParams,
@@ -556,7 +597,8 @@ class AsyncSourcesResource(AsyncAPIResource):
     async def delete(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -567,8 +609,12 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         Delete a source from the project for public access.
 
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+
         Args:
-          file_name: The name of the file to delete
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file to delete (deprecated, use file_id)
 
           extra_headers: Send extra headers
 
@@ -580,7 +626,13 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         return await self._delete(
             "/sources/delete",
-            body=await async_maybe_transform({"file_name": file_name}, source_delete_params.SourceDeleteParams),
+            body=await async_maybe_transform(
+                {
+                    "file_id": file_id,
+                    "file_name": file_name,
+                },
+                source_delete_params.SourceDeleteParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -592,6 +644,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         question: str,
         conversation_id: Optional[str] | Omit = omit,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
@@ -610,7 +663,11 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           conversation_id: Conversation identifier to maintain memory context
 
+          file_ids: Optional list of file IDs to restrict search to one or more documents
+              (preferred)
+
           file_names: Optional list of file display names to restrict search to one or more documents
+              (deprecated, use file_ids)
 
           output_schema: Optional JSON Schema used to request a structured output. When provided, the
               system will first ask the sources model to output JSON-text, then
@@ -632,6 +689,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "question": question,
                     "conversation_id": conversation_id,
+                    "file_ids": file_ids,
                     "file_names": file_names,
                     "output_schema": output_schema,
                     "reset": reset,
@@ -647,9 +705,10 @@ class AsyncSourcesResource(AsyncAPIResource):
     async def extract(
         self,
         *,
-        file_names: SequenceNotStr[str],
         output_schema: Dict[str, object],
         user_instruction: str,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
+        file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -661,12 +720,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         Run a one-off public extraction for files using the provided output schema.
 
         Args:
-          file_names: List of file names to extract from
-
           output_schema: JSON Schema used to request a structured output. The system will extract data
               according to this schema.
 
           user_instruction: User instruction to guide the extraction
+
+          file_ids: List of file IDs to extract from (preferred)
+
+          file_names: List of file names to extract from (deprecated, use file_ids)
 
           extra_headers: Send extra headers
 
@@ -680,9 +741,10 @@ class AsyncSourcesResource(AsyncAPIResource):
             "/sources/run-extraction",
             body=await async_maybe_transform(
                 {
-                    "file_names": file_names,
                     "output_schema": output_schema,
                     "user_instruction": user_instruction,
+                    "file_ids": file_ids,
+                    "file_names": file_names,
                 },
                 source_extract_params.SourceExtractParams,
             ),
@@ -695,7 +757,8 @@ class AsyncSourcesResource(AsyncAPIResource):
     async def load_elements(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         filter: Optional[source_load_elements_params.Filter] | Omit = omit,
         page: Optional[int] | Omit = omit,
         page_size: Optional[int] | Omit = omit,
@@ -709,8 +772,12 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         Loads elements from a file with optional pagination for public access.
 
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+
         Args:
-          file_name: The name of the file
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file (deprecated, use file_id)
 
           filter: The filter of the elements
 
@@ -730,6 +797,7 @@ class AsyncSourcesResource(AsyncAPIResource):
             "/sources/elements",
             body=await async_maybe_transform(
                 {
+                    "file_id": file_id,
                     "file_name": file_name,
                     "filter": filter,
                     "page": page,
@@ -746,7 +814,8 @@ class AsyncSourcesResource(AsyncAPIResource):
     async def parse(
         self,
         *,
-        file_name: str,
+        file_id: Optional[str] | Omit = omit,
+        file_name: Optional[str] | Omit = omit,
         partition_method: PartitionMethod | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -756,10 +825,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Parse
+        Process/parse an existing source.
+
+        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
 
         Args:
-          file_name: The name of the file
+          file_id: Unique identifier for the source (preferred)
+
+          file_name: The name of the file (deprecated, use file_id)
 
           partition_method: The method used to partition the file
 
@@ -775,6 +848,7 @@ class AsyncSourcesResource(AsyncAPIResource):
             "/sources/process",
             body=await async_maybe_transform(
                 {
+                    "file_id": file_id,
                     "file_name": file_name,
                     "partition_method": partition_method,
                 },
@@ -790,6 +864,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         query: str,
+        file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -803,10 +878,16 @@ class AsyncSourcesResource(AsyncAPIResource):
         Uses
         Google File Search with grounding to find relevant document chunks.
 
+        Accepts either file_ids (preferred) or file_names (deprecated) as identifier.
+
         Args:
           query: The search query to retrieve relevant chunks
 
+          file_ids: Optional list of file IDs to restrict retrieval to one or more documents
+              (preferred)
+
           file_names: Optional list of file names to restrict retrieval to one or more documents
+              (deprecated, use file_ids)
 
           extra_headers: Send extra headers
 
@@ -821,6 +902,7 @@ class AsyncSourcesResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "query": query,
+                    "file_ids": file_ids,
                     "file_names": file_names,
                 },
                 source_retrieve_chunks_params.SourceRetrieveChunksParams,

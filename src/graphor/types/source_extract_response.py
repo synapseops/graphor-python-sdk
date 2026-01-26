@@ -11,6 +11,9 @@ class SourceExtractResponse(BaseModel):
     file_names: List[str]
     """List of file names used for extraction"""
 
+    file_ids: Optional[List[str]] = None
+    """List of file IDs used for extraction"""
+
     raw_json: Optional[str] = None
     """Raw JSON-text produced by the model before validation/correction."""
 

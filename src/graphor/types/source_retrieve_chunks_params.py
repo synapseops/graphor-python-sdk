@@ -14,5 +14,14 @@ class SourceRetrieveChunksParams(TypedDict, total=False):
     query: Required[str]
     """The search query to retrieve relevant chunks"""
 
+    file_ids: Optional[SequenceNotStr[str]]
+    """
+    Optional list of file IDs to restrict retrieval to one or more documents
+    (preferred)
+    """
+
     file_names: Optional[SequenceNotStr[str]]
-    """Optional list of file names to restrict retrieval to one or more documents"""
+    """
+    Optional list of file names to restrict retrieval to one or more documents
+    (deprecated, use file_ids)
+    """

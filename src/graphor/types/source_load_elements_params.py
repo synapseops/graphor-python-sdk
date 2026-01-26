@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Iterable, Optional
-from typing_extensions import Required, Annotated, TypedDict
+from typing_extensions import Annotated, TypedDict
 
 from .._types import SequenceNotStr
 from .._utils import PropertyInfo
@@ -12,8 +12,11 @@ __all__ = ["SourceLoadElementsParams", "Filter"]
 
 
 class SourceLoadElementsParams(TypedDict, total=False):
-    file_name: Required[str]
-    """The name of the file"""
+    file_id: Optional[str]
+    """Unique identifier for the source (preferred)"""
+
+    file_name: Optional[str]
+    """The name of the file (deprecated, use file_id)"""
 
     filter: Optional[Filter]
     """The filter of the elements"""
