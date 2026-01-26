@@ -11,6 +11,9 @@ class Chunk(BaseModel):
     text: str
     """The text content of the chunk"""
 
+    file_id: Optional[str] = None
+    """The unique identifier of the source file"""
+
     file_name: Optional[str] = None
     """The source file name"""
 

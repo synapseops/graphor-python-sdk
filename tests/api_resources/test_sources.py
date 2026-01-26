@@ -56,7 +56,14 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_method_delete(self, client: Graphor) -> None:
+        source = client.sources.delete()
+        assert_matches_type(SourceDeleteResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
+    def test_method_delete_with_all_params(self, client: Graphor) -> None:
         source = client.sources.delete(
+            file_id="file_id",
             file_name="file_name",
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
@@ -64,9 +71,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_raw_response_delete(self, client: Graphor) -> None:
-        response = client.sources.with_raw_response.delete(
-            file_name="file_name",
-        )
+        response = client.sources.with_raw_response.delete()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -76,9 +81,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_streaming_response_delete(self, client: Graphor) -> None:
-        with client.sources.with_streaming_response.delete(
-            file_name="file_name",
-        ) as response:
+        with client.sources.with_streaming_response.delete() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -101,6 +104,7 @@ class TestSources:
         source = client.sources.ask(
             question="question",
             conversation_id="conversation_id",
+            file_ids=["string"],
             file_names=["string"],
             output_schema={"foo": "bar"},
             reset=True,
@@ -137,7 +141,6 @@ class TestSources:
     @parametrize
     def test_method_extract(self, client: Graphor) -> None:
         source = client.sources.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         )
@@ -145,9 +148,19 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
+    def test_method_extract_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.extract(
+            output_schema={"foo": "bar"},
+            user_instruction="user_instruction",
+            file_ids=["string"],
+            file_names=["string"],
+        )
+        assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
     def test_raw_response_extract(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         )
@@ -161,7 +174,6 @@ class TestSources:
     @parametrize
     def test_streaming_response_extract(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         ) as response:
@@ -176,15 +188,14 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_method_load_elements(self, client: Graphor) -> None:
-        source = client.sources.load_elements(
-            file_name="file_name",
-        )
+        source = client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_method_load_elements_with_all_params(self, client: Graphor) -> None:
         source = client.sources.load_elements(
+            file_id="file_id",
             file_name="file_name",
             filter={
                 "elements_to_remove": ["string"],
@@ -199,9 +210,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_raw_response_load_elements(self, client: Graphor) -> None:
-        response = client.sources.with_raw_response.load_elements(
-            file_name="file_name",
-        )
+        response = client.sources.with_raw_response.load_elements()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -211,9 +220,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_streaming_response_load_elements(self, client: Graphor) -> None:
-        with client.sources.with_streaming_response.load_elements(
-            file_name="file_name",
-        ) as response:
+        with client.sources.with_streaming_response.load_elements() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -225,15 +232,14 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_method_parse(self, client: Graphor) -> None:
-        source = client.sources.parse(
-            file_name="file_name",
-        )
+        source = client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_method_parse_with_all_params(self, client: Graphor) -> None:
         source = client.sources.parse(
+            file_id="file_id",
             file_name="file_name",
             partition_method="basic",
         )
@@ -242,9 +248,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_raw_response_parse(self, client: Graphor) -> None:
-        response = client.sources.with_raw_response.parse(
-            file_name="file_name",
-        )
+        response = client.sources.with_raw_response.parse()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -254,9 +258,7 @@ class TestSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     def test_streaming_response_parse(self, client: Graphor) -> None:
-        with client.sources.with_streaming_response.parse(
-            file_name="file_name",
-        ) as response:
+        with client.sources.with_streaming_response.parse() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -278,6 +280,7 @@ class TestSources:
     def test_method_retrieve_chunks_with_all_params(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
             query="query",
+            file_ids=["string"],
             file_names=["string"],
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
@@ -490,7 +493,14 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_method_delete(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.delete()
+        assert_matches_type(SourceDeleteResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
+    async def test_method_delete_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete(
+            file_id="file_id",
             file_name="file_name",
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
@@ -498,9 +508,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncGraphor) -> None:
-        response = await async_client.sources.with_raw_response.delete(
-            file_name="file_name",
-        )
+        response = await async_client.sources.with_raw_response.delete()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -510,9 +518,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncGraphor) -> None:
-        async with async_client.sources.with_streaming_response.delete(
-            file_name="file_name",
-        ) as response:
+        async with async_client.sources.with_streaming_response.delete() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -535,6 +541,7 @@ class TestAsyncSources:
         source = await async_client.sources.ask(
             question="question",
             conversation_id="conversation_id",
+            file_ids=["string"],
             file_names=["string"],
             output_schema={"foo": "bar"},
             reset=True,
@@ -571,7 +578,6 @@ class TestAsyncSources:
     @parametrize
     async def test_method_extract(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         )
@@ -579,9 +585,19 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
+    async def test_method_extract_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.extract(
+            output_schema={"foo": "bar"},
+            user_instruction="user_instruction",
+            file_ids=["string"],
+            file_names=["string"],
+        )
+        assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
     async def test_raw_response_extract(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         )
@@ -595,7 +611,6 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_extract(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.extract(
-            file_names=["string"],
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
         ) as response:
@@ -610,15 +625,14 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_method_load_elements(self, async_client: AsyncGraphor) -> None:
-        source = await async_client.sources.load_elements(
-            file_name="file_name",
-        )
+        source = await async_client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_method_load_elements_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.load_elements(
+            file_id="file_id",
             file_name="file_name",
             filter={
                 "elements_to_remove": ["string"],
@@ -633,9 +647,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_raw_response_load_elements(self, async_client: AsyncGraphor) -> None:
-        response = await async_client.sources.with_raw_response.load_elements(
-            file_name="file_name",
-        )
+        response = await async_client.sources.with_raw_response.load_elements()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -645,9 +657,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_streaming_response_load_elements(self, async_client: AsyncGraphor) -> None:
-        async with async_client.sources.with_streaming_response.load_elements(
-            file_name="file_name",
-        ) as response:
+        async with async_client.sources.with_streaming_response.load_elements() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -659,15 +669,14 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_method_parse(self, async_client: AsyncGraphor) -> None:
-        source = await async_client.sources.parse(
-            file_name="file_name",
-        )
+        source = await async_client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_method_parse_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.parse(
+            file_id="file_id",
             file_name="file_name",
             partition_method="basic",
         )
@@ -676,9 +685,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_raw_response_parse(self, async_client: AsyncGraphor) -> None:
-        response = await async_client.sources.with_raw_response.parse(
-            file_name="file_name",
-        )
+        response = await async_client.sources.with_raw_response.parse()
 
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -688,9 +695,7 @@ class TestAsyncSources:
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
     async def test_streaming_response_parse(self, async_client: AsyncGraphor) -> None:
-        async with async_client.sources.with_streaming_response.parse(
-            file_name="file_name",
-        ) as response:
+        async with async_client.sources.with_streaming_response.parse() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
@@ -712,6 +717,7 @@ class TestAsyncSources:
     async def test_method_retrieve_chunks_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
             query="query",
+            file_ids=["string"],
             file_names=["string"],
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])

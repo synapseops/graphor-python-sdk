@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing_extensions import Required, TypedDict
+from typing import Optional
+from typing_extensions import TypedDict
 
 __all__ = ["SourceDeleteParams"]
 
 
 class SourceDeleteParams(TypedDict, total=False):
-    file_name: Required[str]
-    """The name of the file to delete"""
+    file_id: Optional[str]
+    """Unique identifier for the source (preferred)"""
+
+    file_name: Optional[str]
+    """The name of the file to delete (deprecated, use file_id)"""

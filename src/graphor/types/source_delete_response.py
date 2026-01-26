@@ -1,5 +1,7 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
+from typing import Optional
+
 from .._models import BaseModel
 
 __all__ = ["SourceDeleteResponse"]
@@ -20,3 +22,6 @@ class SourceDeleteResponse(BaseModel):
 
     status: str
     """The status of the deletion"""
+
+    file_id: Optional[str] = None
+    """Unique identifier for the source"""
