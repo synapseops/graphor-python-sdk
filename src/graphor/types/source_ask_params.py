@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Dict, Optional
-from typing_extensions import Required, TypedDict
+from typing_extensions import Literal, Required, TypedDict
 
 from .._types import SequenceNotStr
 
@@ -38,3 +38,6 @@ class SourceAskParams(TypedDict, total=False):
 
     reset: Optional[bool]
     """When true, starts a new conversation and ignores history"""
+
+    thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
+    """Controls model and thinking configuration: 'fast', 'balanced', 'accurate'"""
