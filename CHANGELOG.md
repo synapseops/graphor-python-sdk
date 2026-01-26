@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1 (2026-01-24)
+
+Full Changelog: [v0.3.0...v0.3.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.3.0...v0.3.1)
+
+### Chores
+
+* **ci:** upgrade `actions/github-script` ([4ee07c4](https://github.com/synapseops/graphor-python-sdk/commit/4ee07c48770525196ada72b50e966161c17aa0c5))
+
 ## 0.3.0 (2026-01-17)
 
 Full Changelog: [v0.2.2...v0.3.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.2.2...v0.3.0)
