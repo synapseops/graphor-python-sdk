@@ -108,6 +108,7 @@ class TestSources:
             file_names=["string"],
             output_schema={"foo": "bar"},
             reset=True,
+            thinking_level="fast",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -154,6 +155,7 @@ class TestSources:
             user_instruction="user_instruction",
             file_ids=["string"],
             file_names=["string"],
+            thinking_level="fast",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
@@ -545,6 +547,7 @@ class TestAsyncSources:
             file_names=["string"],
             output_schema={"foo": "bar"},
             reset=True,
+            thinking_level="fast",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -591,6 +594,7 @@ class TestAsyncSources:
             user_instruction="user_instruction",
             file_ids=["string"],
             file_names=["string"],
+            thinking_level="fast",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 

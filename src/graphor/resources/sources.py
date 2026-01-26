@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Dict, Mapping, Optional, cast
+from typing_extensions import Literal
 
 import httpx
 
@@ -135,6 +136,7 @@ class SourcesResource(SyncAPIResource):
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -162,6 +164,8 @@ class SourcesResource(SyncAPIResource):
 
           reset: When true, starts a new conversation and ignores history
 
+          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -180,6 +184,7 @@ class SourcesResource(SyncAPIResource):
                     "file_names": file_names,
                     "output_schema": output_schema,
                     "reset": reset,
+                    "thinking_level": thinking_level,
                 },
                 source_ask_params.SourceAskParams,
             ),
@@ -196,6 +201,7 @@ class SourcesResource(SyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -216,6 +222,8 @@ class SourcesResource(SyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
+          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -232,6 +240,7 @@ class SourcesResource(SyncAPIResource):
                     "user_instruction": user_instruction,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "thinking_level": thinking_level,
                 },
                 source_extract_params.SourceExtractParams,
             ),
@@ -648,6 +657,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -675,6 +685,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           reset: When true, starts a new conversation and ignores history
 
+          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -693,6 +705,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "file_names": file_names,
                     "output_schema": output_schema,
                     "reset": reset,
+                    "thinking_level": thinking_level,
                 },
                 source_ask_params.SourceAskParams,
             ),
@@ -709,6 +722,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -729,6 +743,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
+          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -745,6 +761,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "user_instruction": user_instruction,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "thinking_level": thinking_level,
                 },
                 source_extract_params.SourceExtractParams,
             ),
