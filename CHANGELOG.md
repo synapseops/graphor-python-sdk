@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 (2026-01-26)
+
+Full Changelog: [v0.4.0...v0.5.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.4.0...v0.5.0)
+
+### Features
+
+* **api:** api update ([14d6eae](https://github.com/synapseops/graphor-python-sdk/commit/14d6eaeff741233fe8dd830f64c24b01a046d2fb))
+
 ## 0.4.0 (2026-01-26)
 
 Full Changelog: [v0.3.1...v0.4.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.3.1...v0.4.0)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Dict, Optional
-from typing_extensions import Required, TypedDict
+from typing_extensions import Literal, Required, TypedDict
 
 from .._types import SequenceNotStr
 
@@ -25,3 +25,6 @@ class SourceExtractParams(TypedDict, total=False):
 
     file_names: Optional[SequenceNotStr[str]]
     """List of file names to extract from (deprecated, use file_ids)"""
+
+    thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
+    """Controls model and thinking configuration: 'fast', 'balanced', 'accurate'"""
