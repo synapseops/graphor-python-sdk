@@ -8,7 +8,6 @@ from typing_extensions import Literal
 import httpx
 
 from ..types import (
-    PartitionMethod,
     source_ask_params,
     source_parse_params,
     source_delete_params,
@@ -32,7 +31,6 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.public_source import PublicSource
-from ..types.partition_method import PartitionMethod
 from ..types.source_ask_response import SourceAskResponse
 from ..types.source_list_response import SourceListResponse
 from ..types.source_delete_response import SourceDeleteResponse
@@ -312,7 +310,7 @@ class SourcesResource(SyncAPIResource):
         *,
         file_id: Optional[str] | Omit = omit,
         file_name: Optional[str] | Omit = omit,
-        partition_method: PartitionMethod | Omit = omit,
+        partition_method: Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -413,6 +411,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file: FileTypes,
+        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -424,6 +423,8 @@ class SourcesResource(SyncAPIResource):
         Upload
 
         Args:
+          partition_method: Partition methods available for public API endpoints.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -432,7 +433,12 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_minimal({"file": file})
+        body = deepcopy_minimal(
+            {
+                "file": file,
+                "partition_method": partition_method,
+            }
+        )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
         # It should be noted that the actual Content-Type header that will be
         # sent to the server will contain a `boundary` parameter, e.g.
@@ -488,6 +494,7 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
+        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -505,6 +512,8 @@ class SourcesResource(SyncAPIResource):
 
           crawl_urls: Whether to crawl urls from the source
 
+          partition_method: Partition methods available for public API endpoints.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -519,6 +528,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
+                    "partition_method": partition_method,
                 },
                 source_upload_url_params.SourceUploadURLParams,
             ),
@@ -833,7 +843,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         file_id: Optional[str] | Omit = omit,
         file_name: Optional[str] | Omit = omit,
-        partition_method: PartitionMethod | Omit = omit,
+        partition_method: Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -934,6 +944,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file: FileTypes,
+        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -945,6 +956,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         Upload
 
         Args:
+          partition_method: Partition methods available for public API endpoints.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -953,7 +966,12 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_minimal({"file": file})
+        body = deepcopy_minimal(
+            {
+                "file": file,
+                "partition_method": partition_method,
+            }
+        )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
         # It should be noted that the actual Content-Type header that will be
         # sent to the server will contain a `boundary` parameter, e.g.
@@ -1009,6 +1027,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
+        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1026,6 +1045,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           crawl_urls: Whether to crawl urls from the source
 
+          partition_method: Partition methods available for public API endpoints.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -1040,6 +1061,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
+                    "partition_method": partition_method,
                 },
                 source_upload_url_params.SourceUploadURLParams,
             ),
