@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
-from typing_extensions import TypedDict
-
-from .partition_method import PartitionMethod
+from typing_extensions import Literal, TypedDict
 
 __all__ = ["SourceParseParams"]
 
@@ -17,5 +15,5 @@ class SourceParseParams(TypedDict, total=False):
     file_name: Optional[str]
     """The name of the file (deprecated, use file_id)"""
 
-    partition_method: PartitionMethod
+    partition_method: Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]
     """The method used to partition the file"""

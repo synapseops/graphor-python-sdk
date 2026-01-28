@@ -323,6 +323,15 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
+    def test_method_upload_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.upload(
+            file=b"raw file contents",
+            partition_method="basic",
+        )
+        assert_matches_type(PublicSource, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
     def test_raw_response_upload(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload(
             file=b"raw file contents",
@@ -395,6 +404,7 @@ class TestSources:
         source = client.sources.upload_url(
             url="url",
             crawl_urls=True,
+            partition_method="basic",
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
@@ -762,6 +772,15 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
+    async def test_method_upload_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.upload(
+            file=b"raw file contents",
+            partition_method="basic",
+        )
+        assert_matches_type(PublicSource, source, path=["response"])
+
+    @pytest.mark.skip(reason="Prism tests are disabled")
+    @parametrize
     async def test_raw_response_upload(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload(
             file=b"raw file contents",
@@ -834,6 +853,7 @@ class TestAsyncSources:
         source = await async_client.sources.upload_url(
             url="url",
             crawl_urls=True,
+            partition_method="basic",
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
