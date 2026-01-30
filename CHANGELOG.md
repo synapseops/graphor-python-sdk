@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 (2026-01-30)
+
+Full Changelog: [v0.6.0...v0.7.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.6.0...v0.7.0)
+
+### Features
+
+* **client:** add custom JSON encoder for extended type support ([9a5e3bc](https://github.com/synapseops/graphor-python-sdk/commit/9a5e3bc260358347354aaeb508a1d679f40d4f8d))
+
 ## 0.6.0 (2026-01-28)
 
 Full Changelog: [v0.5.0...v0.6.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.5.0...v0.6.0)
