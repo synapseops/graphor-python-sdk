@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1 (2026-02-03)
+
+Full Changelog: [v0.7.0...v0.7.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.7.0...v0.7.1)
+
+### Chores
+
+* configure new SDK language ([13f3cb2](https://github.com/synapseops/graphor-python-sdk/commit/13f3cb20cd5aaf117292d32198ecc853c46c0ac3))
+* update SDK settings ([8604de9](https://github.com/synapseops/graphor-python-sdk/commit/8604de954ff177984d1f88b8ae626057423f0c6c))
+
 ## 0.7.0 (2026-01-30)
 
 Full Changelog: [v0.6.0...v0.7.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.6.0...v0.7.0)
