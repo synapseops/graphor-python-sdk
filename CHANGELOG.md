@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1 (2026-02-09)
+
+Full Changelog: [v0.8.0...v0.8.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.8.0...v0.8.1)
+
+### Chores
+
+* update SDK settings ([d9868f7](https://github.com/synapseops/graphor-python-sdk/commit/d9868f70c7c41860f0a45afaa181019b3fc9bc74))
+
 ## 0.8.0 (2026-02-09)
 
 Full Changelog: [v0.7.1...v0.8.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.7.1...v0.8.0)
