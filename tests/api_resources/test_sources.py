@@ -7,9 +7,9 @@ from typing import Any, cast
 
 import pytest
 
-from graphor_prd import GraphorPrd, AsyncGraphorPrd
+from graphor import Graphor, AsyncGraphor
 from tests.utils import assert_matches_type
-from graphor_prd.types import (
+from graphor.types import (
     PublicSource,
     SourceAskResponse,
     SourceListResponse,
@@ -27,13 +27,13 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_list(self, client: GraphorPrd) -> None:
+    def test_method_list(self, client: Graphor) -> None:
         source = client.sources.list()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_list(self, client: GraphorPrd) -> None:
+    def test_raw_response_list(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.list()
 
         assert response.is_closed is True
@@ -43,7 +43,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_list(self, client: GraphorPrd) -> None:
+    def test_streaming_response_list(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.list() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -55,13 +55,13 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_delete(self, client: GraphorPrd) -> None:
+    def test_method_delete(self, client: Graphor) -> None:
         source = client.sources.delete()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_delete_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_delete_with_all_params(self, client: Graphor) -> None:
         source = client.sources.delete(
             file_id="file_id",
             file_name="file_name",
@@ -70,7 +70,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_delete(self, client: GraphorPrd) -> None:
+    def test_raw_response_delete(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.delete()
 
         assert response.is_closed is True
@@ -80,7 +80,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_delete(self, client: GraphorPrd) -> None:
+    def test_streaming_response_delete(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.delete() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -92,7 +92,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_ask(self, client: GraphorPrd) -> None:
+    def test_method_ask(self, client: Graphor) -> None:
         source = client.sources.ask(
             question="question",
         )
@@ -100,7 +100,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_ask_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_ask_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ask(
             question="question",
             conversation_id="conversation_id",
@@ -114,7 +114,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_ask(self, client: GraphorPrd) -> None:
+    def test_raw_response_ask(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ask(
             question="question",
         )
@@ -126,7 +126,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_ask(self, client: GraphorPrd) -> None:
+    def test_streaming_response_ask(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ask(
             question="question",
         ) as response:
@@ -140,7 +140,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_extract(self, client: GraphorPrd) -> None:
+    def test_method_extract(self, client: Graphor) -> None:
         source = client.sources.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -149,7 +149,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_extract_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_extract_with_all_params(self, client: Graphor) -> None:
         source = client.sources.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -161,7 +161,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_extract(self, client: GraphorPrd) -> None:
+    def test_raw_response_extract(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -174,7 +174,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_extract(self, client: GraphorPrd) -> None:
+    def test_streaming_response_extract(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -189,13 +189,13 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_load_elements(self, client: GraphorPrd) -> None:
+    def test_method_load_elements(self, client: Graphor) -> None:
         source = client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_load_elements_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_load_elements_with_all_params(self, client: Graphor) -> None:
         source = client.sources.load_elements(
             file_id="file_id",
             file_name="file_name",
@@ -211,7 +211,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_load_elements(self, client: GraphorPrd) -> None:
+    def test_raw_response_load_elements(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.load_elements()
 
         assert response.is_closed is True
@@ -221,7 +221,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_load_elements(self, client: GraphorPrd) -> None:
+    def test_streaming_response_load_elements(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.load_elements() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -233,13 +233,13 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_parse(self, client: GraphorPrd) -> None:
+    def test_method_parse(self, client: Graphor) -> None:
         source = client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_parse_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_parse_with_all_params(self, client: Graphor) -> None:
         source = client.sources.parse(
             file_id="file_id",
             file_name="file_name",
@@ -249,7 +249,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_parse(self, client: GraphorPrd) -> None:
+    def test_raw_response_parse(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.parse()
 
         assert response.is_closed is True
@@ -259,7 +259,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_parse(self, client: GraphorPrd) -> None:
+    def test_streaming_response_parse(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.parse() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -271,7 +271,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_retrieve_chunks(self, client: GraphorPrd) -> None:
+    def test_method_retrieve_chunks(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
             query="query",
         )
@@ -279,7 +279,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_retrieve_chunks_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_retrieve_chunks_with_all_params(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
             query="query",
             file_ids=["string"],
@@ -289,7 +289,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_retrieve_chunks(self, client: GraphorPrd) -> None:
+    def test_raw_response_retrieve_chunks(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.retrieve_chunks(
             query="query",
         )
@@ -301,7 +301,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_retrieve_chunks(self, client: GraphorPrd) -> None:
+    def test_streaming_response_retrieve_chunks(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.retrieve_chunks(
             query="query",
         ) as response:
@@ -315,7 +315,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload(self, client: GraphorPrd) -> None:
+    def test_method_upload(self, client: Graphor) -> None:
         source = client.sources.upload(
             file=b"raw file contents",
         )
@@ -323,7 +323,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_upload_with_all_params(self, client: Graphor) -> None:
         source = client.sources.upload(
             file=b"raw file contents",
             partition_method="basic",
@@ -332,7 +332,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_upload(self, client: GraphorPrd) -> None:
+    def test_raw_response_upload(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload(
             file=b"raw file contents",
         )
@@ -344,7 +344,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_upload(self, client: GraphorPrd) -> None:
+    def test_streaming_response_upload(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload(
             file=b"raw file contents",
         ) as response:
@@ -358,7 +358,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload_github(self, client: GraphorPrd) -> None:
+    def test_method_upload_github(self, client: Graphor) -> None:
         source = client.sources.upload_github(
             url="url",
         )
@@ -366,7 +366,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_upload_github(self, client: GraphorPrd) -> None:
+    def test_raw_response_upload_github(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_github(
             url="url",
         )
@@ -378,7 +378,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_upload_github(self, client: GraphorPrd) -> None:
+    def test_streaming_response_upload_github(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_github(
             url="url",
         ) as response:
@@ -392,7 +392,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload_url(self, client: GraphorPrd) -> None:
+    def test_method_upload_url(self, client: Graphor) -> None:
         source = client.sources.upload_url(
             url="url",
         )
@@ -400,7 +400,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload_url_with_all_params(self, client: GraphorPrd) -> None:
+    def test_method_upload_url_with_all_params(self, client: Graphor) -> None:
         source = client.sources.upload_url(
             url="url",
             crawl_urls=True,
@@ -410,7 +410,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_upload_url(self, client: GraphorPrd) -> None:
+    def test_raw_response_upload_url(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_url(
             url="url",
         )
@@ -422,7 +422,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_upload_url(self, client: GraphorPrd) -> None:
+    def test_streaming_response_upload_url(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_url(
             url="url",
         ) as response:
@@ -436,7 +436,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_method_upload_youtube(self, client: GraphorPrd) -> None:
+    def test_method_upload_youtube(self, client: Graphor) -> None:
         source = client.sources.upload_youtube(
             url="url",
         )
@@ -444,7 +444,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_raw_response_upload_youtube(self, client: GraphorPrd) -> None:
+    def test_raw_response_upload_youtube(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_youtube(
             url="url",
         )
@@ -456,7 +456,7 @@ class TestSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    def test_streaming_response_upload_youtube(self, client: GraphorPrd) -> None:
+    def test_streaming_response_upload_youtube(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_youtube(
             url="url",
         ) as response:
@@ -476,13 +476,13 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_list(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_list(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.list()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_list(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_list(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.list()
 
         assert response.is_closed is True
@@ -492,7 +492,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_list(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_list(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.list() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -504,13 +504,13 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_delete(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_delete(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_delete_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_delete_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete(
             file_id="file_id",
             file_name="file_name",
@@ -519,7 +519,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_delete(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_delete(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.delete()
 
         assert response.is_closed is True
@@ -529,7 +529,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_delete(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_delete(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.delete() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -541,7 +541,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_ask(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_ask(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
             question="question",
         )
@@ -549,7 +549,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_ask_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_ask_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
             question="question",
             conversation_id="conversation_id",
@@ -563,7 +563,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_ask(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_ask(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ask(
             question="question",
         )
@@ -575,7 +575,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_ask(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_ask(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ask(
             question="question",
         ) as response:
@@ -589,7 +589,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_extract(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_extract(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -598,7 +598,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_extract_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_extract_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -610,7 +610,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_extract(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_extract(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -623,7 +623,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_extract(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_extract(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.extract(
             output_schema={"foo": "bar"},
             user_instruction="user_instruction",
@@ -638,13 +638,13 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_load_elements(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_load_elements(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_load_elements_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_load_elements_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.load_elements(
             file_id="file_id",
             file_name="file_name",
@@ -660,7 +660,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_load_elements(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_load_elements(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.load_elements()
 
         assert response.is_closed is True
@@ -670,7 +670,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_load_elements(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_load_elements(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.load_elements() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -682,13 +682,13 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_parse(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_parse(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_parse_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_parse_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.parse(
             file_id="file_id",
             file_name="file_name",
@@ -698,7 +698,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_parse(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_parse(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.parse()
 
         assert response.is_closed is True
@@ -708,7 +708,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_parse(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_parse(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.parse() as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -720,7 +720,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_retrieve_chunks(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
             query="query",
         )
@@ -728,7 +728,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_retrieve_chunks_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_retrieve_chunks_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
             query="query",
             file_ids=["string"],
@@ -738,7 +738,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_retrieve_chunks(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.retrieve_chunks(
             query="query",
         )
@@ -750,7 +750,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_retrieve_chunks(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.retrieve_chunks(
             query="query",
         ) as response:
@@ -764,7 +764,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
             file=b"raw file contents",
         )
@@ -772,7 +772,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
             file=b"raw file contents",
             partition_method="basic",
@@ -781,7 +781,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_upload(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_upload(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload(
             file=b"raw file contents",
         )
@@ -793,7 +793,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_upload(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_upload(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload(
             file=b"raw file contents",
         ) as response:
@@ -807,7 +807,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload_github(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload_github(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_github(
             url="url",
         )
@@ -815,7 +815,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_upload_github(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_upload_github(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_github(
             url="url",
         )
@@ -827,7 +827,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_upload_github(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_upload_github(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_github(
             url="url",
         ) as response:
@@ -841,7 +841,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload_url(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload_url(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_url(
             url="url",
         )
@@ -849,7 +849,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload_url_with_all_params(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload_url_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_url(
             url="url",
             crawl_urls=True,
@@ -859,7 +859,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_upload_url(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_upload_url(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_url(
             url="url",
         )
@@ -871,7 +871,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_upload_url(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_upload_url(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_url(
             url="url",
         ) as response:
@@ -885,7 +885,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_method_upload_youtube(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_method_upload_youtube(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_youtube(
             url="url",
         )
@@ -893,7 +893,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_raw_response_upload_youtube(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_upload_youtube(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_youtube(
             url="url",
         )
@@ -905,7 +905,7 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Prism tests are disabled")
     @parametrize
-    async def test_streaming_response_upload_youtube(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_streaming_response_upload_youtube(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_youtube(
             url="url",
         ) as response:

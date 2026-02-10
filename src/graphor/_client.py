@@ -23,7 +23,7 @@ from ._utils import is_given, get_async_library
 from ._compat import cached_property
 from ._version import __version__
 from ._streaming import Stream as Stream, AsyncStream as AsyncStream
-from ._exceptions import APIStatusError, GraphorPrdError
+from ._exceptions import GraphorError, APIStatusError
 from ._base_client import (
     DEFAULT_MAX_RETRIES,
     SyncAPIClient,
@@ -34,19 +34,10 @@ if TYPE_CHECKING:
     from .resources import sources
     from .resources.sources import SourcesResource, AsyncSourcesResource
 
-__all__ = [
-    "Timeout",
-    "Transport",
-    "ProxiesTypes",
-    "RequestOptions",
-    "GraphorPrd",
-    "AsyncGraphorPrd",
-    "Client",
-    "AsyncClient",
-]
+__all__ = ["Timeout", "Transport", "ProxiesTypes", "RequestOptions", "Graphor", "AsyncGraphor", "Client", "AsyncClient"]
 
 
-class GraphorPrd(SyncAPIClient):
+class Graphor(SyncAPIClient):
     # client options
     api_key: str
 
@@ -73,20 +64,20 @@ class GraphorPrd(SyncAPIClient):
         # part of our public interface in the future.
         _strict_response_validation: bool = False,
     ) -> None:
-        """Construct a new synchronous GraphorPrd client instance.
+        """Construct a new synchronous Graphor client instance.
 
         This automatically infers the `api_key` argument from the `GRAPHOR_API_KEY` environment variable if it is not provided.
         """
         if api_key is None:
             api_key = os.environ.get("GRAPHOR_API_KEY")
         if api_key is None:
-            raise GraphorPrdError(
+            raise GraphorError(
                 "The api_key client option must be set either by passing api_key to the client or by setting the GRAPHOR_API_KEY environment variable"
             )
         self.api_key = api_key
 
         if base_url is None:
-            base_url = os.environ.get("GRAPHOR_PRD_BASE_URL")
+            base_url = os.environ.get("GRAPHOR_BASE_URL")
         if base_url is None:
             base_url = f"https://api.graphorlm.com/api/public/v1"
 
@@ -108,12 +99,12 @@ class GraphorPrd(SyncAPIClient):
         return SourcesResource(self)
 
     @cached_property
-    def with_raw_response(self) -> GraphorPrdWithRawResponse:
-        return GraphorPrdWithRawResponse(self)
+    def with_raw_response(self) -> GraphorWithRawResponse:
+        return GraphorWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> GraphorPrdWithStreamedResponse:
-        return GraphorPrdWithStreamedResponse(self)
+    def with_streaming_response(self) -> GraphorWithStreamedResponse:
+        return GraphorWithStreamedResponse(self)
 
     @property
     @override
@@ -220,7 +211,7 @@ class GraphorPrd(SyncAPIClient):
         return APIStatusError(err_msg, response=response, body=body)
 
 
-class AsyncGraphorPrd(AsyncAPIClient):
+class AsyncGraphor(AsyncAPIClient):
     # client options
     api_key: str
 
@@ -247,20 +238,20 @@ class AsyncGraphorPrd(AsyncAPIClient):
         # part of our public interface in the future.
         _strict_response_validation: bool = False,
     ) -> None:
-        """Construct a new async AsyncGraphorPrd client instance.
+        """Construct a new async AsyncGraphor client instance.
 
         This automatically infers the `api_key` argument from the `GRAPHOR_API_KEY` environment variable if it is not provided.
         """
         if api_key is None:
             api_key = os.environ.get("GRAPHOR_API_KEY")
         if api_key is None:
-            raise GraphorPrdError(
+            raise GraphorError(
                 "The api_key client option must be set either by passing api_key to the client or by setting the GRAPHOR_API_KEY environment variable"
             )
         self.api_key = api_key
 
         if base_url is None:
-            base_url = os.environ.get("GRAPHOR_PRD_BASE_URL")
+            base_url = os.environ.get("GRAPHOR_BASE_URL")
         if base_url is None:
             base_url = f"https://api.graphorlm.com/api/public/v1"
 
@@ -282,12 +273,12 @@ class AsyncGraphorPrd(AsyncAPIClient):
         return AsyncSourcesResource(self)
 
     @cached_property
-    def with_raw_response(self) -> AsyncGraphorPrdWithRawResponse:
-        return AsyncGraphorPrdWithRawResponse(self)
+    def with_raw_response(self) -> AsyncGraphorWithRawResponse:
+        return AsyncGraphorWithRawResponse(self)
 
     @cached_property
-    def with_streaming_response(self) -> AsyncGraphorPrdWithStreamedResponse:
-        return AsyncGraphorPrdWithStreamedResponse(self)
+    def with_streaming_response(self) -> AsyncGraphorWithStreamedResponse:
+        return AsyncGraphorWithStreamedResponse(self)
 
     @property
     @override
@@ -394,10 +385,10 @@ class AsyncGraphorPrd(AsyncAPIClient):
         return APIStatusError(err_msg, response=response, body=body)
 
 
-class GraphorPrdWithRawResponse:
-    _client: GraphorPrd
+class GraphorWithRawResponse:
+    _client: Graphor
 
-    def __init__(self, client: GraphorPrd) -> None:
+    def __init__(self, client: Graphor) -> None:
         self._client = client
 
     @cached_property
@@ -407,10 +398,10 @@ class GraphorPrdWithRawResponse:
         return SourcesResourceWithRawResponse(self._client.sources)
 
 
-class AsyncGraphorPrdWithRawResponse:
-    _client: AsyncGraphorPrd
+class AsyncGraphorWithRawResponse:
+    _client: AsyncGraphor
 
-    def __init__(self, client: AsyncGraphorPrd) -> None:
+    def __init__(self, client: AsyncGraphor) -> None:
         self._client = client
 
     @cached_property
@@ -420,10 +411,10 @@ class AsyncGraphorPrdWithRawResponse:
         return AsyncSourcesResourceWithRawResponse(self._client.sources)
 
 
-class GraphorPrdWithStreamedResponse:
-    _client: GraphorPrd
+class GraphorWithStreamedResponse:
+    _client: Graphor
 
-    def __init__(self, client: GraphorPrd) -> None:
+    def __init__(self, client: Graphor) -> None:
         self._client = client
 
     @cached_property
@@ -433,10 +424,10 @@ class GraphorPrdWithStreamedResponse:
         return SourcesResourceWithStreamingResponse(self._client.sources)
 
 
-class AsyncGraphorPrdWithStreamedResponse:
-    _client: AsyncGraphorPrd
+class AsyncGraphorWithStreamedResponse:
+    _client: AsyncGraphor
 
-    def __init__(self, client: AsyncGraphorPrd) -> None:
+    def __init__(self, client: AsyncGraphor) -> None:
         self._client = client
 
     @cached_property
@@ -446,6 +437,6 @@ class AsyncGraphorPrdWithStreamedResponse:
         return AsyncSourcesResourceWithStreamingResponse(self._client.sources)
 
 
-Client = GraphorPrd
+Client = Graphor
 
-AsyncClient = AsyncGraphorPrd
+AsyncClient = AsyncGraphor

@@ -19,12 +19,12 @@ import pytest
 from respx import MockRouter
 from pydantic import ValidationError
 
-from graphor_prd import GraphorPrd, AsyncGraphorPrd, APIResponseValidationError
-from graphor_prd._types import Omit
-from graphor_prd._utils import asyncify
-from graphor_prd._models import BaseModel, FinalRequestOptions
-from graphor_prd._exceptions import APIStatusError, APITimeoutError, GraphorPrdError, APIResponseValidationError
-from graphor_prd._base_client import (
+from graphor import Graphor, AsyncGraphor, APIResponseValidationError
+from graphor._types import Omit
+from graphor._utils import asyncify
+from graphor._models import BaseModel, FinalRequestOptions
+from graphor._exceptions import GraphorError, APIStatusError, APITimeoutError, APIResponseValidationError
+from graphor._base_client import (
     DEFAULT_TIMEOUT,
     HTTPX_DEFAULT_TIMEOUT,
     BaseClient,
@@ -103,7 +103,7 @@ async def _make_async_iterator(iterable: Iterable[T], counter: Optional[Counter]
         yield item
 
 
-def _get_open_connections(client: GraphorPrd | AsyncGraphorPrd) -> int:
+def _get_open_connections(client: Graphor | AsyncGraphor) -> int:
     transport = client._client._transport
     assert isinstance(transport, httpx.HTTPTransport) or isinstance(transport, httpx.AsyncHTTPTransport)
 
@@ -111,9 +111,9 @@ def _get_open_connections(client: GraphorPrd | AsyncGraphorPrd) -> int:
     return len(pool._requests)
 
 
-class TestGraphorPrd:
+class TestGraphor:
     @pytest.mark.respx(base_url=base_url)
-    def test_raw_response(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_raw_response(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/foo").mock(return_value=httpx.Response(200, json={"foo": "bar"}))
 
         response = client.post("/foo", cast_to=httpx.Response)
@@ -122,7 +122,7 @@ class TestGraphorPrd:
         assert response.json() == {"foo": "bar"}
 
     @pytest.mark.respx(base_url=base_url)
-    def test_raw_response_for_binary(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_raw_response_for_binary(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/foo").mock(
             return_value=httpx.Response(200, headers={"Content-Type": "application/binary"}, content='{"foo": "bar"}')
         )
@@ -132,7 +132,7 @@ class TestGraphorPrd:
         assert isinstance(response, httpx.Response)
         assert response.json() == {"foo": "bar"}
 
-    def test_copy(self, client: GraphorPrd) -> None:
+    def test_copy(self, client: Graphor) -> None:
         copied = client.copy()
         assert id(copied) != id(client)
 
@@ -140,7 +140,7 @@ class TestGraphorPrd:
         assert copied.api_key == "another My API Key"
         assert client.api_key == "My API Key"
 
-    def test_copy_default_options(self, client: GraphorPrd) -> None:
+    def test_copy_default_options(self, client: Graphor) -> None:
         # options that have a default are overridden correctly
         copied = client.copy(max_retries=7)
         assert copied.max_retries == 7
@@ -157,7 +157,7 @@ class TestGraphorPrd:
         assert isinstance(client.timeout, httpx.Timeout)
 
     def test_copy_default_headers(self) -> None:
-        client = GraphorPrd(
+        client = Graphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_headers={"X-Foo": "bar"}
         )
         assert client.default_headers["X-Foo"] == "bar"
@@ -192,7 +192,7 @@ class TestGraphorPrd:
         client.close()
 
     def test_copy_default_query(self) -> None:
-        client = GraphorPrd(
+        client = Graphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_query={"foo": "bar"}
         )
         assert _get_params(client)["foo"] == "bar"
@@ -229,7 +229,7 @@ class TestGraphorPrd:
 
         client.close()
 
-    def test_copy_signature(self, client: GraphorPrd) -> None:
+    def test_copy_signature(self, client: Graphor) -> None:
         # ensure the same parameters that can be passed to the client are defined in the `.copy()` method
         init_signature = inspect.signature(
             # mypy doesn't like that we access the `__init__` property.
@@ -246,7 +246,7 @@ class TestGraphorPrd:
             assert copy_param is not None, f"copy() signature is missing the {name} param"
 
     @pytest.mark.skipif(sys.version_info >= (3, 10), reason="fails because of a memory leak that started from 3.12")
-    def test_copy_build_request(self, client: GraphorPrd) -> None:
+    def test_copy_build_request(self, client: Graphor) -> None:
         options = FinalRequestOptions(method="get", url="/foo")
 
         def build_request(options: FinalRequestOptions) -> None:
@@ -286,10 +286,10 @@ class TestGraphorPrd:
                         # to_raw_response_wrapper leaks through the @functools.wraps() decorator.
                         #
                         # removing the decorator fixes the leak for reasons we don't understand.
-                        "graphor_prd/_legacy_response.py",
-                        "graphor_prd/_response.py",
+                        "graphor/_legacy_response.py",
+                        "graphor/_response.py",
                         # pydantic.BaseModel.model_dump || pydantic.BaseModel.dict leak memory for some reason.
-                        "graphor_prd/_compat.py",
+                        "graphor/_compat.py",
                         # Standard library leaks we don't care about.
                         "/logging/__init__.py",
                     ]
@@ -308,7 +308,7 @@ class TestGraphorPrd:
                     print(frame)
             raise AssertionError()
 
-    def test_request_timeout(self, client: GraphorPrd) -> None:
+    def test_request_timeout(self, client: Graphor) -> None:
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
         assert timeout == DEFAULT_TIMEOUT
@@ -318,9 +318,7 @@ class TestGraphorPrd:
         assert timeout == httpx.Timeout(100.0)
 
     def test_client_timeout_option(self) -> None:
-        client = GraphorPrd(
-            base_url=base_url, api_key=api_key, _strict_response_validation=True, timeout=httpx.Timeout(0)
-        )
+        client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True, timeout=httpx.Timeout(0))
 
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -331,7 +329,7 @@ class TestGraphorPrd:
     def test_http_client_timeout_option(self) -> None:
         # custom timeout given to the httpx client should be used
         with httpx.Client(timeout=None) as http_client:
-            client = GraphorPrd(
+            client = Graphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -343,7 +341,7 @@ class TestGraphorPrd:
 
         # no timeout given to the httpx client should not use the httpx default
         with httpx.Client() as http_client:
-            client = GraphorPrd(
+            client = Graphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -355,7 +353,7 @@ class TestGraphorPrd:
 
         # explicitly passing the default timeout currently results in it being ignored
         with httpx.Client(timeout=HTTPX_DEFAULT_TIMEOUT) as http_client:
-            client = GraphorPrd(
+            client = Graphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -368,7 +366,7 @@ class TestGraphorPrd:
     async def test_invalid_http_client(self) -> None:
         with pytest.raises(TypeError, match="Invalid `http_client` arg"):
             async with httpx.AsyncClient() as http_client:
-                GraphorPrd(
+                Graphor(
                     base_url=base_url,
                     api_key=api_key,
                     _strict_response_validation=True,
@@ -376,14 +374,14 @@ class TestGraphorPrd:
                 )
 
     def test_default_headers_option(self) -> None:
-        test_client = GraphorPrd(
+        test_client = Graphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_headers={"X-Foo": "bar"}
         )
         request = test_client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("x-foo") == "bar"
         assert request.headers.get("x-stainless-lang") == "python"
 
-        test_client2 = GraphorPrd(
+        test_client2 = Graphor(
             base_url=base_url,
             api_key=api_key,
             _strict_response_validation=True,
@@ -400,17 +398,17 @@ class TestGraphorPrd:
         test_client2.close()
 
     def test_validate_headers(self) -> None:
-        client = GraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("Authorization") == f"Bearer {api_key}"
 
-        with pytest.raises(GraphorPrdError):
+        with pytest.raises(GraphorError):
             with update_env(**{"GRAPHOR_API_KEY": Omit()}):
-                client2 = GraphorPrd(base_url=base_url, api_key=None, _strict_response_validation=True)
+                client2 = Graphor(base_url=base_url, api_key=None, _strict_response_validation=True)
             _ = client2
 
     def test_default_query_option(self) -> None:
-        client = GraphorPrd(
+        client = Graphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_query={"query_param": "bar"}
         )
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
@@ -429,7 +427,7 @@ class TestGraphorPrd:
 
         client.close()
 
-    def test_request_extra_json(self, client: GraphorPrd) -> None:
+    def test_request_extra_json(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -463,7 +461,7 @@ class TestGraphorPrd:
         data = json.loads(request.content.decode("utf-8"))
         assert data == {"foo": "bar", "baz": None}
 
-    def test_request_extra_headers(self, client: GraphorPrd) -> None:
+    def test_request_extra_headers(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -485,7 +483,7 @@ class TestGraphorPrd:
         )
         assert request.headers.get("X-Bar") == "false"
 
-    def test_request_extra_query(self, client: GraphorPrd) -> None:
+    def test_request_extra_query(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -526,7 +524,7 @@ class TestGraphorPrd:
         params = dict(request.url.params)
         assert params == {"foo": "2"}
 
-    def test_multipart_repeating_array(self, client: GraphorPrd) -> None:
+    def test_multipart_repeating_array(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions.construct(
                 method="post",
@@ -556,7 +554,7 @@ class TestGraphorPrd:
         ]
 
     @pytest.mark.respx(base_url=base_url)
-    def test_binary_content_upload(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_binary_content_upload(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/upload").mock(side_effect=mirror_request_content)
 
         file_content = b"Hello, this is a test file."
@@ -581,7 +579,7 @@ class TestGraphorPrd:
             assert counter.value == 0, "the request body should not have been read"
             return httpx.Response(200, content=request.read())
 
-        with GraphorPrd(
+        with Graphor(
             base_url=base_url,
             api_key=api_key,
             _strict_response_validation=True,
@@ -600,7 +598,7 @@ class TestGraphorPrd:
             assert counter.value == 1
 
     @pytest.mark.respx(base_url=base_url)
-    def test_binary_content_upload_with_body_is_deprecated(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_binary_content_upload_with_body_is_deprecated(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/upload").mock(side_effect=mirror_request_content)
 
         file_content = b"Hello, this is a test file."
@@ -620,7 +618,7 @@ class TestGraphorPrd:
         assert response.content == file_content
 
     @pytest.mark.respx(base_url=base_url)
-    def test_basic_union_response(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_basic_union_response(self, respx_mock: MockRouter, client: Graphor) -> None:
         class Model1(BaseModel):
             name: str
 
@@ -634,7 +632,7 @@ class TestGraphorPrd:
         assert response.foo == "bar"
 
     @pytest.mark.respx(base_url=base_url)
-    def test_union_response_different_types(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_union_response_different_types(self, respx_mock: MockRouter, client: Graphor) -> None:
         """Union of objects with the same field name using a different type"""
 
         class Model1(BaseModel):
@@ -656,7 +654,7 @@ class TestGraphorPrd:
         assert response.foo == 1
 
     @pytest.mark.respx(base_url=base_url)
-    def test_non_application_json_content_type_for_json_data(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_non_application_json_content_type_for_json_data(self, respx_mock: MockRouter, client: Graphor) -> None:
         """
         Response that sets Content-Type to something other than application/json but returns json data
         """
@@ -677,7 +675,7 @@ class TestGraphorPrd:
         assert response.foo == 2
 
     def test_base_url_setter(self) -> None:
-        client = GraphorPrd(base_url="https://example.com/from_init", api_key=api_key, _strict_response_validation=True)
+        client = Graphor(base_url="https://example.com/from_init", api_key=api_key, _strict_response_validation=True)
         assert client.base_url == "https://example.com/from_init/"
 
         client.base_url = "https://example.com/from_setter"  # type: ignore[assignment]
@@ -687,17 +685,15 @@ class TestGraphorPrd:
         client.close()
 
     def test_base_url_env(self) -> None:
-        with update_env(GRAPHOR_PRD_BASE_URL="http://localhost:5000/from/env"):
-            client = GraphorPrd(api_key=api_key, _strict_response_validation=True)
+        with update_env(GRAPHOR_BASE_URL="http://localhost:5000/from/env"):
+            client = Graphor(api_key=api_key, _strict_response_validation=True)
             assert client.base_url == "http://localhost:5000/from/env/"
 
     @pytest.mark.parametrize(
         "client",
         [
-            GraphorPrd(
-                base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
-            ),
-            GraphorPrd(
+            Graphor(base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True),
+            Graphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -706,7 +702,7 @@ class TestGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    def test_base_url_trailing_slash(self, client: GraphorPrd) -> None:
+    def test_base_url_trailing_slash(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -720,10 +716,8 @@ class TestGraphorPrd:
     @pytest.mark.parametrize(
         "client",
         [
-            GraphorPrd(
-                base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
-            ),
-            GraphorPrd(
+            Graphor(base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True),
+            Graphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -732,7 +726,7 @@ class TestGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    def test_base_url_no_trailing_slash(self, client: GraphorPrd) -> None:
+    def test_base_url_no_trailing_slash(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -746,10 +740,8 @@ class TestGraphorPrd:
     @pytest.mark.parametrize(
         "client",
         [
-            GraphorPrd(
-                base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
-            ),
-            GraphorPrd(
+            Graphor(base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True),
+            Graphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -758,7 +750,7 @@ class TestGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    def test_absolute_request_url(self, client: GraphorPrd) -> None:
+    def test_absolute_request_url(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -770,7 +762,7 @@ class TestGraphorPrd:
         client.close()
 
     def test_copied_client_does_not_close_http(self) -> None:
-        test_client = GraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        test_client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         assert not test_client.is_closed()
 
         copied = test_client.copy()
@@ -781,7 +773,7 @@ class TestGraphorPrd:
         assert not test_client.is_closed()
 
     def test_client_context_manager(self) -> None:
-        test_client = GraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        test_client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         with test_client as c2:
             assert c2 is test_client
             assert not c2.is_closed()
@@ -789,7 +781,7 @@ class TestGraphorPrd:
         assert test_client.is_closed()
 
     @pytest.mark.respx(base_url=base_url)
-    def test_client_response_validation_error(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_client_response_validation_error(self, respx_mock: MockRouter, client: Graphor) -> None:
         class Model(BaseModel):
             foo: str
 
@@ -802,9 +794,7 @@ class TestGraphorPrd:
 
     def test_client_max_retries_validation(self) -> None:
         with pytest.raises(TypeError, match=r"max_retries cannot be None"):
-            GraphorPrd(
-                base_url=base_url, api_key=api_key, _strict_response_validation=True, max_retries=cast(Any, None)
-            )
+            Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True, max_retries=cast(Any, None))
 
     @pytest.mark.respx(base_url=base_url)
     def test_received_text_for_expected_json(self, respx_mock: MockRouter) -> None:
@@ -813,12 +803,12 @@ class TestGraphorPrd:
 
         respx_mock.get("/foo").mock(return_value=httpx.Response(200, text="my-custom-format"))
 
-        strict_client = GraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        strict_client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
 
         with pytest.raises(APIResponseValidationError):
             strict_client.get("/foo", cast_to=Model)
 
-        non_strict_client = GraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=False)
+        non_strict_client = Graphor(base_url=base_url, api_key=api_key, _strict_response_validation=False)
 
         response = non_strict_client.get("/foo", cast_to=Model)
         assert isinstance(response, str)  # type: ignore[unreachable]
@@ -849,16 +839,16 @@ class TestGraphorPrd:
     )
     @mock.patch("time.time", mock.MagicMock(return_value=1696004797))
     def test_parse_retry_after_header(
-        self, remaining_retries: int, retry_after: str, timeout: float, client: GraphorPrd
+        self, remaining_retries: int, retry_after: str, timeout: float, client: Graphor
     ) -> None:
         headers = httpx.Headers({"retry-after": retry_after})
         options = FinalRequestOptions(method="get", url="/foo", max_retries=3)
         calculated = client._calculate_retry_timeout(remaining_retries, options, headers)
         assert calculated == pytest.approx(timeout, 0.5 * 0.875)  # pyright: ignore[reportUnknownMemberType]
 
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
-    def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/sources/upload").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
@@ -866,9 +856,9 @@ class TestGraphorPrd:
 
         assert _get_open_connections(client) == 0
 
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
-    def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter, client: Graphor) -> None:
         respx_mock.post("/sources/upload").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
@@ -876,12 +866,12 @@ class TestGraphorPrd:
         assert _get_open_connections(client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     @pytest.mark.parametrize("failure_mode", ["status", "exception"])
     def test_retries_taken(
         self,
-        client: GraphorPrd,
+        client: Graphor,
         failures_before_success: int,
         failure_mode: Literal["status", "exception"],
         respx_mock: MockRouter,
@@ -907,10 +897,10 @@ class TestGraphorPrd:
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_omit_retry_count_header(
-        self, client: GraphorPrd, failures_before_success: int, respx_mock: MockRouter
+        self, client: Graphor, failures_before_success: int, respx_mock: MockRouter
     ) -> None:
         client = client.with_options(max_retries=4)
 
@@ -932,10 +922,10 @@ class TestGraphorPrd:
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_overwrite_retry_count_header(
-        self, client: GraphorPrd, failures_before_success: int, respx_mock: MockRouter
+        self, client: Graphor, failures_before_success: int, respx_mock: MockRouter
     ) -> None:
         client = client.with_options(max_retries=4)
 
@@ -979,7 +969,7 @@ class TestGraphorPrd:
         )
 
     @pytest.mark.respx(base_url=base_url)
-    def test_follow_redirects(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_follow_redirects(self, respx_mock: MockRouter, client: Graphor) -> None:
         # Test that the default follow_redirects=True allows following redirects
         respx_mock.post("/redirect").mock(
             return_value=httpx.Response(302, headers={"Location": f"{base_url}/redirected"})
@@ -991,7 +981,7 @@ class TestGraphorPrd:
         assert response.json() == {"status": "ok"}
 
     @pytest.mark.respx(base_url=base_url)
-    def test_follow_redirects_disabled(self, respx_mock: MockRouter, client: GraphorPrd) -> None:
+    def test_follow_redirects_disabled(self, respx_mock: MockRouter, client: Graphor) -> None:
         # Test that follow_redirects=False prevents following redirects
         respx_mock.post("/redirect").mock(
             return_value=httpx.Response(302, headers={"Location": f"{base_url}/redirected"})
@@ -1004,9 +994,9 @@ class TestGraphorPrd:
         assert exc_info.value.response.headers["Location"] == f"{base_url}/redirected"
 
 
-class TestAsyncGraphorPrd:
+class TestAsyncGraphor:
     @pytest.mark.respx(base_url=base_url)
-    async def test_raw_response(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         respx_mock.post("/foo").mock(return_value=httpx.Response(200, json={"foo": "bar"}))
 
         response = await async_client.post("/foo", cast_to=httpx.Response)
@@ -1015,7 +1005,7 @@ class TestAsyncGraphorPrd:
         assert response.json() == {"foo": "bar"}
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_raw_response_for_binary(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_raw_response_for_binary(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         respx_mock.post("/foo").mock(
             return_value=httpx.Response(200, headers={"Content-Type": "application/binary"}, content='{"foo": "bar"}')
         )
@@ -1025,7 +1015,7 @@ class TestAsyncGraphorPrd:
         assert isinstance(response, httpx.Response)
         assert response.json() == {"foo": "bar"}
 
-    def test_copy(self, async_client: AsyncGraphorPrd) -> None:
+    def test_copy(self, async_client: AsyncGraphor) -> None:
         copied = async_client.copy()
         assert id(copied) != id(async_client)
 
@@ -1033,7 +1023,7 @@ class TestAsyncGraphorPrd:
         assert copied.api_key == "another My API Key"
         assert async_client.api_key == "My API Key"
 
-    def test_copy_default_options(self, async_client: AsyncGraphorPrd) -> None:
+    def test_copy_default_options(self, async_client: AsyncGraphor) -> None:
         # options that have a default are overridden correctly
         copied = async_client.copy(max_retries=7)
         assert copied.max_retries == 7
@@ -1050,7 +1040,7 @@ class TestAsyncGraphorPrd:
         assert isinstance(async_client.timeout, httpx.Timeout)
 
     async def test_copy_default_headers(self) -> None:
-        client = AsyncGraphorPrd(
+        client = AsyncGraphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_headers={"X-Foo": "bar"}
         )
         assert client.default_headers["X-Foo"] == "bar"
@@ -1085,7 +1075,7 @@ class TestAsyncGraphorPrd:
         await client.close()
 
     async def test_copy_default_query(self) -> None:
-        client = AsyncGraphorPrd(
+        client = AsyncGraphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_query={"foo": "bar"}
         )
         assert _get_params(client)["foo"] == "bar"
@@ -1122,7 +1112,7 @@ class TestAsyncGraphorPrd:
 
         await client.close()
 
-    def test_copy_signature(self, async_client: AsyncGraphorPrd) -> None:
+    def test_copy_signature(self, async_client: AsyncGraphor) -> None:
         # ensure the same parameters that can be passed to the client are defined in the `.copy()` method
         init_signature = inspect.signature(
             # mypy doesn't like that we access the `__init__` property.
@@ -1139,7 +1129,7 @@ class TestAsyncGraphorPrd:
             assert copy_param is not None, f"copy() signature is missing the {name} param"
 
     @pytest.mark.skipif(sys.version_info >= (3, 10), reason="fails because of a memory leak that started from 3.12")
-    def test_copy_build_request(self, async_client: AsyncGraphorPrd) -> None:
+    def test_copy_build_request(self, async_client: AsyncGraphor) -> None:
         options = FinalRequestOptions(method="get", url="/foo")
 
         def build_request(options: FinalRequestOptions) -> None:
@@ -1179,10 +1169,10 @@ class TestAsyncGraphorPrd:
                         # to_raw_response_wrapper leaks through the @functools.wraps() decorator.
                         #
                         # removing the decorator fixes the leak for reasons we don't understand.
-                        "graphor_prd/_legacy_response.py",
-                        "graphor_prd/_response.py",
+                        "graphor/_legacy_response.py",
+                        "graphor/_response.py",
                         # pydantic.BaseModel.model_dump || pydantic.BaseModel.dict leak memory for some reason.
-                        "graphor_prd/_compat.py",
+                        "graphor/_compat.py",
                         # Standard library leaks we don't care about.
                         "/logging/__init__.py",
                     ]
@@ -1201,7 +1191,7 @@ class TestAsyncGraphorPrd:
                     print(frame)
             raise AssertionError()
 
-    async def test_request_timeout(self, async_client: AsyncGraphorPrd) -> None:
+    async def test_request_timeout(self, async_client: AsyncGraphor) -> None:
         request = async_client._build_request(FinalRequestOptions(method="get", url="/foo"))
         timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
         assert timeout == DEFAULT_TIMEOUT
@@ -1213,7 +1203,7 @@ class TestAsyncGraphorPrd:
         assert timeout == httpx.Timeout(100.0)
 
     async def test_client_timeout_option(self) -> None:
-        client = AsyncGraphorPrd(
+        client = AsyncGraphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, timeout=httpx.Timeout(0)
         )
 
@@ -1226,7 +1216,7 @@ class TestAsyncGraphorPrd:
     async def test_http_client_timeout_option(self) -> None:
         # custom timeout given to the httpx client should be used
         async with httpx.AsyncClient(timeout=None) as http_client:
-            client = AsyncGraphorPrd(
+            client = AsyncGraphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -1238,7 +1228,7 @@ class TestAsyncGraphorPrd:
 
         # no timeout given to the httpx client should not use the httpx default
         async with httpx.AsyncClient() as http_client:
-            client = AsyncGraphorPrd(
+            client = AsyncGraphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -1250,7 +1240,7 @@ class TestAsyncGraphorPrd:
 
         # explicitly passing the default timeout currently results in it being ignored
         async with httpx.AsyncClient(timeout=HTTPX_DEFAULT_TIMEOUT) as http_client:
-            client = AsyncGraphorPrd(
+            client = AsyncGraphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, http_client=http_client
             )
 
@@ -1263,7 +1253,7 @@ class TestAsyncGraphorPrd:
     def test_invalid_http_client(self) -> None:
         with pytest.raises(TypeError, match="Invalid `http_client` arg"):
             with httpx.Client() as http_client:
-                AsyncGraphorPrd(
+                AsyncGraphor(
                     base_url=base_url,
                     api_key=api_key,
                     _strict_response_validation=True,
@@ -1271,14 +1261,14 @@ class TestAsyncGraphorPrd:
                 )
 
     async def test_default_headers_option(self) -> None:
-        test_client = AsyncGraphorPrd(
+        test_client = AsyncGraphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_headers={"X-Foo": "bar"}
         )
         request = test_client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("x-foo") == "bar"
         assert request.headers.get("x-stainless-lang") == "python"
 
-        test_client2 = AsyncGraphorPrd(
+        test_client2 = AsyncGraphor(
             base_url=base_url,
             api_key=api_key,
             _strict_response_validation=True,
@@ -1295,17 +1285,17 @@ class TestAsyncGraphorPrd:
         await test_client2.close()
 
     def test_validate_headers(self) -> None:
-        client = AsyncGraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        client = AsyncGraphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("Authorization") == f"Bearer {api_key}"
 
-        with pytest.raises(GraphorPrdError):
+        with pytest.raises(GraphorError):
             with update_env(**{"GRAPHOR_API_KEY": Omit()}):
-                client2 = AsyncGraphorPrd(base_url=base_url, api_key=None, _strict_response_validation=True)
+                client2 = AsyncGraphor(base_url=base_url, api_key=None, _strict_response_validation=True)
             _ = client2
 
     async def test_default_query_option(self) -> None:
-        client = AsyncGraphorPrd(
+        client = AsyncGraphor(
             base_url=base_url, api_key=api_key, _strict_response_validation=True, default_query={"query_param": "bar"}
         )
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
@@ -1324,7 +1314,7 @@ class TestAsyncGraphorPrd:
 
         await client.close()
 
-    def test_request_extra_json(self, client: GraphorPrd) -> None:
+    def test_request_extra_json(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1358,7 +1348,7 @@ class TestAsyncGraphorPrd:
         data = json.loads(request.content.decode("utf-8"))
         assert data == {"foo": "bar", "baz": None}
 
-    def test_request_extra_headers(self, client: GraphorPrd) -> None:
+    def test_request_extra_headers(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1380,7 +1370,7 @@ class TestAsyncGraphorPrd:
         )
         assert request.headers.get("X-Bar") == "false"
 
-    def test_request_extra_query(self, client: GraphorPrd) -> None:
+    def test_request_extra_query(self, client: Graphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1421,7 +1411,7 @@ class TestAsyncGraphorPrd:
         params = dict(request.url.params)
         assert params == {"foo": "2"}
 
-    def test_multipart_repeating_array(self, async_client: AsyncGraphorPrd) -> None:
+    def test_multipart_repeating_array(self, async_client: AsyncGraphor) -> None:
         request = async_client._build_request(
             FinalRequestOptions.construct(
                 method="post",
@@ -1451,7 +1441,7 @@ class TestAsyncGraphorPrd:
         ]
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_binary_content_upload(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_binary_content_upload(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         respx_mock.post("/upload").mock(side_effect=mirror_request_content)
 
         file_content = b"Hello, this is a test file."
@@ -1476,7 +1466,7 @@ class TestAsyncGraphorPrd:
             assert counter.value == 0, "the request body should not have been read"
             return httpx.Response(200, content=await request.aread())
 
-        async with AsyncGraphorPrd(
+        async with AsyncGraphor(
             base_url=base_url,
             api_key=api_key,
             _strict_response_validation=True,
@@ -1496,7 +1486,7 @@ class TestAsyncGraphorPrd:
 
     @pytest.mark.respx(base_url=base_url)
     async def test_binary_content_upload_with_body_is_deprecated(
-        self, respx_mock: MockRouter, async_client: AsyncGraphorPrd
+        self, respx_mock: MockRouter, async_client: AsyncGraphor
     ) -> None:
         respx_mock.post("/upload").mock(side_effect=mirror_request_content)
 
@@ -1517,7 +1507,7 @@ class TestAsyncGraphorPrd:
         assert response.content == file_content
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_basic_union_response(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_basic_union_response(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         class Model1(BaseModel):
             name: str
 
@@ -1531,7 +1521,7 @@ class TestAsyncGraphorPrd:
         assert response.foo == "bar"
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_union_response_different_types(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_union_response_different_types(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         """Union of objects with the same field name using a different type"""
 
         class Model1(BaseModel):
@@ -1554,7 +1544,7 @@ class TestAsyncGraphorPrd:
 
     @pytest.mark.respx(base_url=base_url)
     async def test_non_application_json_content_type_for_json_data(
-        self, respx_mock: MockRouter, async_client: AsyncGraphorPrd
+        self, respx_mock: MockRouter, async_client: AsyncGraphor
     ) -> None:
         """
         Response that sets Content-Type to something other than application/json but returns json data
@@ -1576,7 +1566,7 @@ class TestAsyncGraphorPrd:
         assert response.foo == 2
 
     async def test_base_url_setter(self) -> None:
-        client = AsyncGraphorPrd(
+        client = AsyncGraphor(
             base_url="https://example.com/from_init", api_key=api_key, _strict_response_validation=True
         )
         assert client.base_url == "https://example.com/from_init/"
@@ -1588,17 +1578,17 @@ class TestAsyncGraphorPrd:
         await client.close()
 
     async def test_base_url_env(self) -> None:
-        with update_env(GRAPHOR_PRD_BASE_URL="http://localhost:5000/from/env"):
-            client = AsyncGraphorPrd(api_key=api_key, _strict_response_validation=True)
+        with update_env(GRAPHOR_BASE_URL="http://localhost:5000/from/env"):
+            client = AsyncGraphor(api_key=api_key, _strict_response_validation=True)
             assert client.base_url == "http://localhost:5000/from/env/"
 
     @pytest.mark.parametrize(
         "client",
         [
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
             ),
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -1607,7 +1597,7 @@ class TestAsyncGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    async def test_base_url_trailing_slash(self, client: AsyncGraphorPrd) -> None:
+    async def test_base_url_trailing_slash(self, client: AsyncGraphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1621,10 +1611,10 @@ class TestAsyncGraphorPrd:
     @pytest.mark.parametrize(
         "client",
         [
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
             ),
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -1633,7 +1623,7 @@ class TestAsyncGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    async def test_base_url_no_trailing_slash(self, client: AsyncGraphorPrd) -> None:
+    async def test_base_url_no_trailing_slash(self, client: AsyncGraphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1647,10 +1637,10 @@ class TestAsyncGraphorPrd:
     @pytest.mark.parametrize(
         "client",
         [
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/", api_key=api_key, _strict_response_validation=True
             ),
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url="http://localhost:5000/custom/path/",
                 api_key=api_key,
                 _strict_response_validation=True,
@@ -1659,7 +1649,7 @@ class TestAsyncGraphorPrd:
         ],
         ids=["standard", "custom http client"],
     )
-    async def test_absolute_request_url(self, client: AsyncGraphorPrd) -> None:
+    async def test_absolute_request_url(self, client: AsyncGraphor) -> None:
         request = client._build_request(
             FinalRequestOptions(
                 method="post",
@@ -1671,7 +1661,7 @@ class TestAsyncGraphorPrd:
         await client.close()
 
     async def test_copied_client_does_not_close_http(self) -> None:
-        test_client = AsyncGraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        test_client = AsyncGraphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         assert not test_client.is_closed()
 
         copied = test_client.copy()
@@ -1683,7 +1673,7 @@ class TestAsyncGraphorPrd:
         assert not test_client.is_closed()
 
     async def test_client_context_manager(self) -> None:
-        test_client = AsyncGraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        test_client = AsyncGraphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
         async with test_client as c2:
             assert c2 is test_client
             assert not c2.is_closed()
@@ -1691,9 +1681,7 @@ class TestAsyncGraphorPrd:
         assert test_client.is_closed()
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_client_response_validation_error(
-        self, respx_mock: MockRouter, async_client: AsyncGraphorPrd
-    ) -> None:
+    async def test_client_response_validation_error(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         class Model(BaseModel):
             foo: str
 
@@ -1706,7 +1694,7 @@ class TestAsyncGraphorPrd:
 
     async def test_client_max_retries_validation(self) -> None:
         with pytest.raises(TypeError, match=r"max_retries cannot be None"):
-            AsyncGraphorPrd(
+            AsyncGraphor(
                 base_url=base_url, api_key=api_key, _strict_response_validation=True, max_retries=cast(Any, None)
             )
 
@@ -1717,12 +1705,12 @@ class TestAsyncGraphorPrd:
 
         respx_mock.get("/foo").mock(return_value=httpx.Response(200, text="my-custom-format"))
 
-        strict_client = AsyncGraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=True)
+        strict_client = AsyncGraphor(base_url=base_url, api_key=api_key, _strict_response_validation=True)
 
         with pytest.raises(APIResponseValidationError):
             await strict_client.get("/foo", cast_to=Model)
 
-        non_strict_client = AsyncGraphorPrd(base_url=base_url, api_key=api_key, _strict_response_validation=False)
+        non_strict_client = AsyncGraphor(base_url=base_url, api_key=api_key, _strict_response_validation=False)
 
         response = await non_strict_client.get("/foo", cast_to=Model)
         assert isinstance(response, str)  # type: ignore[unreachable]
@@ -1753,17 +1741,17 @@ class TestAsyncGraphorPrd:
     )
     @mock.patch("time.time", mock.MagicMock(return_value=1696004797))
     async def test_parse_retry_after_header(
-        self, remaining_retries: int, retry_after: str, timeout: float, async_client: AsyncGraphorPrd
+        self, remaining_retries: int, retry_after: str, timeout: float, async_client: AsyncGraphor
     ) -> None:
         headers = httpx.Headers({"retry-after": retry_after})
         options = FinalRequestOptions(method="get", url="/foo", max_retries=3)
         calculated = async_client._calculate_retry_timeout(remaining_retries, options, headers)
         assert calculated == pytest.approx(timeout, 0.5 * 0.875)  # pyright: ignore[reportUnknownMemberType]
 
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_retrying_timeout_errors_doesnt_leak(
-        self, respx_mock: MockRouter, async_client: AsyncGraphorPrd
+        self, respx_mock: MockRouter, async_client: AsyncGraphor
     ) -> None:
         respx_mock.post("/sources/upload").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
@@ -1772,11 +1760,9 @@ class TestAsyncGraphorPrd:
 
         assert _get_open_connections(async_client) == 0
 
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
-    async def test_retrying_status_errors_doesnt_leak(
-        self, respx_mock: MockRouter, async_client: AsyncGraphorPrd
-    ) -> None:
+    async def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         respx_mock.post("/sources/upload").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
@@ -1784,12 +1770,12 @@ class TestAsyncGraphorPrd:
         assert _get_open_connections(async_client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     @pytest.mark.parametrize("failure_mode", ["status", "exception"])
     async def test_retries_taken(
         self,
-        async_client: AsyncGraphorPrd,
+        async_client: AsyncGraphor,
         failures_before_success: int,
         failure_mode: Literal["status", "exception"],
         respx_mock: MockRouter,
@@ -1815,10 +1801,10 @@ class TestAsyncGraphorPrd:
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_omit_retry_count_header(
-        self, async_client: AsyncGraphorPrd, failures_before_success: int, respx_mock: MockRouter
+        self, async_client: AsyncGraphor, failures_before_success: int, respx_mock: MockRouter
     ) -> None:
         client = async_client.with_options(max_retries=4)
 
@@ -1840,10 +1826,10 @@ class TestAsyncGraphorPrd:
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("graphor_prd._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("graphor._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_overwrite_retry_count_header(
-        self, async_client: AsyncGraphorPrd, failures_before_success: int, respx_mock: MockRouter
+        self, async_client: AsyncGraphor, failures_before_success: int, respx_mock: MockRouter
     ) -> None:
         client = async_client.with_options(max_retries=4)
 
@@ -1891,7 +1877,7 @@ class TestAsyncGraphorPrd:
         )
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_follow_redirects(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_follow_redirects(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         # Test that the default follow_redirects=True allows following redirects
         respx_mock.post("/redirect").mock(
             return_value=httpx.Response(302, headers={"Location": f"{base_url}/redirected"})
@@ -1903,7 +1889,7 @@ class TestAsyncGraphorPrd:
         assert response.json() == {"status": "ok"}
 
     @pytest.mark.respx(base_url=base_url)
-    async def test_follow_redirects_disabled(self, respx_mock: MockRouter, async_client: AsyncGraphorPrd) -> None:
+    async def test_follow_redirects_disabled(self, respx_mock: MockRouter, async_client: AsyncGraphor) -> None:
         # Test that follow_redirects=False prevents following redirects
         respx_mock.post("/redirect").mock(
             return_value=httpx.Response(302, headers={"Location": f"{base_url}/redirected"})
