@@ -1,7 +1,7 @@
 # Graphor Prd Python API library
 
 <!-- prettier-ignore -->
-[![PyPI version](https://img.shields.io/pypi/v/graphor_prd.svg?label=pypi%20(stable))](https://pypi.org/project/graphor_prd/)
+[![PyPI version](https://img.shields.io/pypi/v/graphor.svg?label=pypi%20(stable))](https://pypi.org/project/graphor/)
 
 The Graphor Prd Python library provides convenient access to the Graphor Prd REST API from any Python 3.9+
 application. The library includes type definitions for all request params and response fields,
@@ -16,12 +16,9 @@ The full API of this library can be found in [api.md](api.md).
 ## Installation
 
 ```sh
-# install from the production repo
-pip install git+ssh://git@github.com/synapseops/graphor-python-sdk.git
+# install from PyPI
+pip install graphor
 ```
-
-> [!NOTE]
-> Once this package is [published to PyPI](https://www.stainless.com/docs/guides/publish), this will become: `pip install graphor_prd`
 
 ## Usage
 
@@ -79,8 +76,8 @@ By default, the async client uses `httpx` for HTTP requests. However, for improv
 You can enable this by installing `aiohttp`:
 
 ```sh
-# install from the production repo
-pip install 'graphor_prd[aiohttp] @ git+ssh://git@github.com/synapseops/graphor-python-sdk.git'
+# install from PyPI
+pip install graphor[aiohttp]
 ```
 
 Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:

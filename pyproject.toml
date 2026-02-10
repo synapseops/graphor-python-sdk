@@ -1,5 +1,5 @@
 [project]
-name = "graphor_prd"
+name = "graphor"
 version = "0.0.1"
 description = "The official Python library for the graphor-prd API"
 dynamic = ["readme"]
