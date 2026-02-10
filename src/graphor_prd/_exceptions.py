@@ -18,11 +18,11 @@ __all__ = [
 ]
 
 
-class GraphorError(Exception):
+class GraphorPrdError(Exception):
     pass
 
 
-class APIError(GraphorError):
+class APIError(GraphorPrdError):
     message: str
     request: httpx.Request
 

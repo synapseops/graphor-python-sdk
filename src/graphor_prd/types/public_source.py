@@ -1,9 +1,9 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 from typing import Optional
+from typing_extensions import Literal
 
 from .._models import BaseModel
-from .partition_method import PartitionMethod
 
 __all__ = ["PublicSource"]
 
@@ -28,4 +28,6 @@ class PublicSource(BaseModel):
     file_id: Optional[str] = None
     """Unique identifier for the source"""
 
-    partition_method: Optional[PartitionMethod] = None
+    partition_method: Optional[
+        Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm", "ocr", "advanced", "yolox"]
+    ] = None

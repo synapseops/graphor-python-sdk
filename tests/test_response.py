@@ -6,8 +6,8 @@ import httpx
 import pytest
 import pydantic
 
-from graphor import Graphor, BaseModel, AsyncGraphor
-from graphor._response import (
+from graphor_prd import BaseModel, GraphorPrd, AsyncGraphorPrd
+from graphor_prd._response import (
     APIResponse,
     BaseAPIResponse,
     AsyncAPIResponse,
@@ -15,8 +15,8 @@ from graphor._response import (
     AsyncBinaryAPIResponse,
     extract_response_type,
 )
-from graphor._streaming import Stream
-from graphor._base_client import FinalRequestOptions
+from graphor_prd._streaming import Stream
+from graphor_prd._base_client import FinalRequestOptions
 
 
 class ConcreteBaseAPIResponse(APIResponse[bytes]): ...
@@ -37,7 +37,7 @@ def test_extract_response_type_direct_classes() -> None:
 def test_extract_response_type_direct_class_missing_type_arg() -> None:
     with pytest.raises(
         RuntimeError,
-        match="Expected type <class 'graphor._response.AsyncAPIResponse'> to have a type argument at index 0 but it did not",
+        match="Expected type <class 'graphor_prd._response.AsyncAPIResponse'> to have a type argument at index 0 but it did not",
     ):
         extract_response_type(AsyncAPIResponse)
 
@@ -56,7 +56,7 @@ def test_extract_response_type_binary_response() -> None:
 class PydanticModel(pydantic.BaseModel): ...
 
 
-def test_response_parse_mismatched_basemodel(client: Graphor) -> None:
+def test_response_parse_mismatched_basemodel(client: GraphorPrd) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=b"foo"),
         client=client,
@@ -68,13 +68,13 @@ def test_response_parse_mismatched_basemodel(client: Graphor) -> None:
 
     with pytest.raises(
         TypeError,
-        match="Pydantic models must subclass our base model type, e.g. `from graphor import BaseModel`",
+        match="Pydantic models must subclass our base model type, e.g. `from graphor_prd import BaseModel`",
     ):
         response.parse(to=PydanticModel)
 
 
 @pytest.mark.asyncio
-async def test_async_response_parse_mismatched_basemodel(async_client: AsyncGraphor) -> None:
+async def test_async_response_parse_mismatched_basemodel(async_client: AsyncGraphorPrd) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=b"foo"),
         client=async_client,
@@ -86,12 +86,12 @@ async def test_async_response_parse_mismatched_basemodel(async_client: AsyncGrap
 
     with pytest.raises(
         TypeError,
-        match="Pydantic models must subclass our base model type, e.g. `from graphor import BaseModel`",
+        match="Pydantic models must subclass our base model type, e.g. `from graphor_prd import BaseModel`",
     ):
         await response.parse(to=PydanticModel)
 
 
-def test_response_parse_custom_stream(client: Graphor) -> None:
+def test_response_parse_custom_stream(client: GraphorPrd) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=b"foo"),
         client=client,
@@ -106,7 +106,7 @@ def test_response_parse_custom_stream(client: Graphor) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_response_parse_custom_stream(async_client: AsyncGraphor) -> None:
+async def test_async_response_parse_custom_stream(async_client: AsyncGraphorPrd) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=b"foo"),
         client=async_client,
@@ -125,7 +125,7 @@ class CustomModel(BaseModel):
     bar: int
 
 
-def test_response_parse_custom_model(client: Graphor) -> None:
+def test_response_parse_custom_model(client: GraphorPrd) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=json.dumps({"foo": "hello!", "bar": 2})),
         client=client,
@@ -141,7 +141,7 @@ def test_response_parse_custom_model(client: Graphor) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_response_parse_custom_model(async_client: AsyncGraphor) -> None:
+async def test_async_response_parse_custom_model(async_client: AsyncGraphorPrd) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=json.dumps({"foo": "hello!", "bar": 2})),
         client=async_client,
@@ -156,7 +156,7 @@ async def test_async_response_parse_custom_model(async_client: AsyncGraphor) -> 
     assert obj.bar == 2
 
 
-def test_response_parse_annotated_type(client: Graphor) -> None:
+def test_response_parse_annotated_type(client: GraphorPrd) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=json.dumps({"foo": "hello!", "bar": 2})),
         client=client,
@@ -173,7 +173,7 @@ def test_response_parse_annotated_type(client: Graphor) -> None:
     assert obj.bar == 2
 
 
-async def test_async_response_parse_annotated_type(async_client: AsyncGraphor) -> None:
+async def test_async_response_parse_annotated_type(async_client: AsyncGraphorPrd) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=json.dumps({"foo": "hello!", "bar": 2})),
         client=async_client,
@@ -201,7 +201,7 @@ async def test_async_response_parse_annotated_type(async_client: AsyncGraphor) -
         ("FalSe", False),
     ],
 )
-def test_response_parse_bool(client: Graphor, content: str, expected: bool) -> None:
+def test_response_parse_bool(client: GraphorPrd, content: str, expected: bool) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=content),
         client=client,
@@ -226,7 +226,7 @@ def test_response_parse_bool(client: Graphor, content: str, expected: bool) -> N
         ("FalSe", False),
     ],
 )
-async def test_async_response_parse_bool(client: AsyncGraphor, content: str, expected: bool) -> None:
+async def test_async_response_parse_bool(client: AsyncGraphorPrd, content: str, expected: bool) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=content),
         client=client,
@@ -245,7 +245,7 @@ class OtherModel(BaseModel):
 
 
 @pytest.mark.parametrize("client", [False], indirect=True)  # loose validation
-def test_response_parse_expect_model_union_non_json_content(client: Graphor) -> None:
+def test_response_parse_expect_model_union_non_json_content(client: GraphorPrd) -> None:
     response = APIResponse(
         raw=httpx.Response(200, content=b"foo", headers={"Content-Type": "application/text"}),
         client=client,
@@ -262,7 +262,7 @@ def test_response_parse_expect_model_union_non_json_content(client: Graphor) -> 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("async_client", [False], indirect=True)  # loose validation
-async def test_async_response_parse_expect_model_union_non_json_content(async_client: AsyncGraphor) -> None:
+async def test_async_response_parse_expect_model_union_non_json_content(async_client: AsyncGraphorPrd) -> None:
     response = AsyncAPIResponse(
         raw=httpx.Response(200, content=b"foo", headers={"Content-Type": "application/text"}),
         client=async_client,

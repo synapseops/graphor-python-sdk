@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 import anyio
 
 if TYPE_CHECKING:
-    from ._client import Graphor, AsyncGraphor
+    from ._client import GraphorPrd, AsyncGraphorPrd
 
 
 class SyncAPIResource:
-    _client: Graphor
+    _client: GraphorPrd
 
-    def __init__(self, client: Graphor) -> None:
+    def __init__(self, client: GraphorPrd) -> None:
         self._client = client
         self._get = client.get
         self._post = client.post
@@ -28,9 +28,9 @@ class SyncAPIResource:
 
 
 class AsyncAPIResource:
-    _client: AsyncGraphor
+    _client: AsyncGraphorPrd
 
-    def __init__(self, client: AsyncGraphor) -> None:
+    def __init__(self, client: AsyncGraphorPrd) -> None:
         self._client = client
         self._get = client.get
         self._post = client.post

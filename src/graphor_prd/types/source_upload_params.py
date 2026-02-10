@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from typing import Optional
-from typing_extensions import Literal, Required, TypedDict
+from typing_extensions import Required, TypedDict
 
 from .._types import FileTypes
+from .public_partition_method import PublicPartitionMethod
 
 __all__ = ["SourceUploadParams"]
 
@@ -13,5 +14,5 @@ __all__ = ["SourceUploadParams"]
 class SourceUploadParams(TypedDict, total=False):
     file: Required[FileTypes]
 
-    partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]]
+    partition_method: Optional[PublicPartitionMethod]
     """Partition methods available for public API endpoints."""

@@ -8,15 +8,15 @@ from typing_extensions import Required, Annotated, TypedDict
 
 import pytest
 
-from graphor._types import Base64FileInput, omit, not_given
-from graphor._utils import (
+from graphor_prd._types import Base64FileInput, omit, not_given
+from graphor_prd._utils import (
     PropertyInfo,
     transform as _transform,
     parse_datetime,
     async_transform as _async_transform,
 )
-from graphor._compat import PYDANTIC_V1
-from graphor._models import BaseModel
+from graphor_prd._compat import PYDANTIC_V1
+from graphor_prd._models import BaseModel
 
 _T = TypeVar("_T")
 

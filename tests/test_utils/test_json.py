@@ -5,8 +5,8 @@ from typing import Union
 
 import pydantic
 
-from graphor import _compat
-from graphor._utils._json import openapi_dumps
+from graphor_prd import _compat
+from graphor_prd._utils._json import openapi_dumps
 
 
 class TestOpenapiDumps:

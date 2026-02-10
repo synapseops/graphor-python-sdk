@@ -1,4 +1,4 @@
-from graphor._utils import deepcopy_minimal
+from graphor_prd._utils import deepcopy_minimal
 
 
 def assert_different_identities(obj1: object, obj2: object) -> None:

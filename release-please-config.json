@@ -61,6 +61,6 @@
   ],
   "release-type": "python",
   "extra-files": [
-    "src/graphor/_version.py"
+    "src/graphor_prd/_version.py"
   ]
 }
