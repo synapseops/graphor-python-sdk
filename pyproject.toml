@@ -1,6 +1,6 @@
 [project]
 name = "graphor"
-version = "0.9.2"
+version = "0.9.3"
 description = "The official Python library for the graphor-prd API"
 dynamic = ["readme"]
 license = "Apache-2.0"
