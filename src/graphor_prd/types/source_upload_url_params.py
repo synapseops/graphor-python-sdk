@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from typing import Optional
-from typing_extensions import Literal, Required, Annotated, TypedDict
+from typing_extensions import Required, Annotated, TypedDict
 
 from .._utils import PropertyInfo
+from .public_partition_method import PublicPartitionMethod
 
 __all__ = ["SourceUploadURLParams"]
 
@@ -17,5 +18,5 @@ class SourceUploadURLParams(TypedDict, total=False):
     crawl_urls: Annotated[bool, PropertyInfo(alias="crawlUrls")]
     """Whether to crawl urls from the source"""
 
-    partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]]
+    partition_method: Optional[PublicPartitionMethod]
     """Partition methods available for public API endpoints."""

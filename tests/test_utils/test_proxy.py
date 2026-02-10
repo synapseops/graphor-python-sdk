@@ -2,7 +2,7 @@ import operator
 from typing import Any
 from typing_extensions import override
 
-from graphor._utils import LazyProxy
+from graphor_prd._utils import LazyProxy
 
 
 class RecursiveLazyProxy(LazyProxy[Any]):

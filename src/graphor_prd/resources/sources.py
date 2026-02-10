@@ -8,6 +8,7 @@ from typing_extensions import Literal
 import httpx
 
 from ..types import (
+    PublicPartitionMethod,
     source_ask_params,
     source_parse_params,
     source_delete_params,
@@ -34,6 +35,7 @@ from ..types.public_source import PublicSource
 from ..types.source_ask_response import SourceAskResponse
 from ..types.source_list_response import SourceListResponse
 from ..types.source_delete_response import SourceDeleteResponse
+from ..types.public_partition_method import PublicPartitionMethod
 from ..types.source_extract_response import SourceExtractResponse
 from ..types.source_load_elements_response import SourceLoadElementsResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
@@ -48,7 +50,7 @@ class SourcesResource(SyncAPIResource):
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
-        For more information, see https://www.github.com/synapseops/graphor-python-sdk#accessing-raw-response-data-eg-headers
+        For more information, see https://www.github.com/stainless-sdks/graphor-prd-python#accessing-raw-response-data-eg-headers
         """
         return SourcesResourceWithRawResponse(self)
 
@@ -57,7 +59,7 @@ class SourcesResource(SyncAPIResource):
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
-        For more information, see https://www.github.com/synapseops/graphor-python-sdk#with_streaming_response
+        For more information, see https://www.github.com/stainless-sdks/graphor-prd-python#with_streaming_response
         """
         return SourcesResourceWithStreamingResponse(self)
 
@@ -310,7 +312,7 @@ class SourcesResource(SyncAPIResource):
         *,
         file_id: Optional[str] | Omit = omit,
         file_name: Optional[str] | Omit = omit,
-        partition_method: Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"] | Omit = omit,
+        partition_method: PublicPartitionMethod | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -411,7 +413,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file: FileTypes,
-        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
+        partition_method: Optional[PublicPartitionMethod] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -494,7 +496,7 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
-        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
+        partition_method: Optional[PublicPartitionMethod] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -581,7 +583,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
-        For more information, see https://www.github.com/synapseops/graphor-python-sdk#accessing-raw-response-data-eg-headers
+        For more information, see https://www.github.com/stainless-sdks/graphor-prd-python#accessing-raw-response-data-eg-headers
         """
         return AsyncSourcesResourceWithRawResponse(self)
 
@@ -590,7 +592,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
-        For more information, see https://www.github.com/synapseops/graphor-python-sdk#with_streaming_response
+        For more information, see https://www.github.com/stainless-sdks/graphor-prd-python#with_streaming_response
         """
         return AsyncSourcesResourceWithStreamingResponse(self)
 
@@ -843,7 +845,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         file_id: Optional[str] | Omit = omit,
         file_name: Optional[str] | Omit = omit,
-        partition_method: Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"] | Omit = omit,
+        partition_method: PublicPartitionMethod | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -944,7 +946,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file: FileTypes,
-        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
+        partition_method: Optional[PublicPartitionMethod] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1027,7 +1029,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
-        partition_method: Optional[Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]] | Omit = omit,
+        partition_method: Optional[PublicPartitionMethod] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,

@@ -5,13 +5,13 @@ from typing import Iterator, AsyncIterator
 import httpx
 import pytest
 
-from graphor import Graphor, AsyncGraphor
-from graphor._streaming import Stream, AsyncStream, ServerSentEvent
+from graphor_prd import GraphorPrd, AsyncGraphorPrd
+from graphor_prd._streaming import Stream, AsyncStream, ServerSentEvent
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_basic(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_basic(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: completion\n"
         yield b'data: {"foo":true}\n'
@@ -28,7 +28,7 @@ async def test_basic(sync: bool, client: Graphor, async_client: AsyncGraphor) ->
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_data_missing_event(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_data_missing_event(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b'data: {"foo":true}\n'
         yield b"\n"
@@ -44,7 +44,7 @@ async def test_data_missing_event(sync: bool, client: Graphor, async_client: Asy
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_event_missing_data(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_event_missing_data(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b"\n"
@@ -60,7 +60,7 @@ async def test_event_missing_data(sync: bool, client: Graphor, async_client: Asy
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_multiple_events(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_multiple_events(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b"\n"
@@ -82,7 +82,7 @@ async def test_multiple_events(sync: bool, client: Graphor, async_client: AsyncG
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_multiple_events_with_data(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_multiple_events_with_data(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b'data: {"foo":true}\n'
@@ -106,7 +106,9 @@ async def test_multiple_events_with_data(sync: bool, client: Graphor, async_clie
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_multiple_data_lines_with_empty_line(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_multiple_data_lines_with_empty_line(
+    sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd
+) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b"data: {\n"
@@ -128,7 +130,7 @@ async def test_multiple_data_lines_with_empty_line(sync: bool, client: Graphor, 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_data_json_escaped_double_new_line(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_data_json_escaped_double_new_line(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b'data: {"foo": "my long\\n\\ncontent"}'
@@ -145,7 +147,7 @@ async def test_data_json_escaped_double_new_line(sync: bool, client: Graphor, as
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
-async def test_multiple_data_lines(sync: bool, client: Graphor, async_client: AsyncGraphor) -> None:
+async def test_multiple_data_lines(sync: bool, client: GraphorPrd, async_client: AsyncGraphorPrd) -> None:
     def body() -> Iterator[bytes]:
         yield b"event: ping\n"
         yield b"data: {\n"
@@ -165,8 +167,8 @@ async def test_multiple_data_lines(sync: bool, client: Graphor, async_client: As
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
 async def test_special_new_line_character(
     sync: bool,
-    client: Graphor,
-    async_client: AsyncGraphor,
+    client: GraphorPrd,
+    async_client: AsyncGraphorPrd,
 ) -> None:
     def body() -> Iterator[bytes]:
         yield b'data: {"content":" culpa"}\n'
@@ -196,8 +198,8 @@ async def test_special_new_line_character(
 @pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
 async def test_multi_byte_character_multiple_chunks(
     sync: bool,
-    client: Graphor,
-    async_client: AsyncGraphor,
+    client: GraphorPrd,
+    async_client: AsyncGraphorPrd,
 ) -> None:
     def body() -> Iterator[bytes]:
         yield b'data: {"content":"'
@@ -237,8 +239,8 @@ def make_event_iterator(
     content: Iterator[bytes],
     *,
     sync: bool,
-    client: Graphor,
-    async_client: AsyncGraphor,
+    client: GraphorPrd,
+    async_client: AsyncGraphorPrd,
 ) -> Iterator[ServerSentEvent] | AsyncIterator[ServerSentEvent]:
     if sync:
         return Stream(cast_to=object, client=client, response=httpx.Response(200, content=content))._iter_events()

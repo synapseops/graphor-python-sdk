@@ -8,8 +8,8 @@ from typing import Any, TypeVar, Iterator, Sequence, cast
 from datetime import date, datetime
 from typing_extensions import Literal, get_args, get_origin, assert_type
 
-from graphor._types import Omit, NoneType
-from graphor._utils import (
+from graphor_prd._types import Omit, NoneType
+from graphor_prd._utils import (
     is_dict,
     is_list,
     is_list_type,
@@ -19,8 +19,8 @@ from graphor._utils import (
     is_annotated_type,
     is_type_alias_type,
 )
-from graphor._compat import PYDANTIC_V1, field_outer_type, get_model_fields
-from graphor._models import BaseModel
+from graphor_prd._compat import PYDANTIC_V1, field_outer_type, get_model_fields
+from graphor_prd._models import BaseModel
 
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
