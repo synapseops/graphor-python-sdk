@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.1 (2026-02-10)
+
+Full Changelog: [v0.9.0...v0.9.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.9.0...v0.9.1)
+
+### Chores
+
+* **internal:** bump dependencies ([00443fe](https://github.com/synapseops/graphor-python-sdk/commit/00443fe29917729071838ccf1792dc9db78de0ca))
+* update SDK settings ([537f485](https://github.com/synapseops/graphor-python-sdk/commit/537f4854551d1e90054c6720b189e13d1972958c))
+* update SDK settings ([5cd084e](https://github.com/synapseops/graphor-python-sdk/commit/5cd084ed8d292eb7c8a032b760ffcd2014410d39))
+* update SDK settings ([66fa45c](https://github.com/synapseops/graphor-python-sdk/commit/66fa45c5d81fdc7844cfd087402ccef4fef640f6))
+* update SDK settings ([bc8071e](https://github.com/synapseops/graphor-python-sdk/commit/bc8071e93301daf9827045da08daa2640d5dbcef))
+* update SDK settings ([33a40d1](https://github.com/synapseops/graphor-python-sdk/commit/33a40d1047da3d79aebb8869c943ea3f6e835ca7))
+* update SDK settings ([94f0de7](https://github.com/synapseops/graphor-python-sdk/commit/94f0de70825b6227639d4464a973f2ca62276101))
+* update SDK settings ([857d1c7](https://github.com/synapseops/graphor-python-sdk/commit/857d1c7e4d3db182f82c58f53278532fd767b714))
+* update SDK settings ([4ba7825](https://github.com/synapseops/graphor-python-sdk/commit/4ba7825240e6ce494f9b54dacc6ed184af1bd892))
+
 ## 0.9.0 (2026-02-09)
 
 Full Changelog: [v0.8.2...v0.9.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.8.2...v0.9.0)
