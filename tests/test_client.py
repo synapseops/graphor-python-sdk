@@ -144,7 +144,7 @@ class TestGraphorPrd:
         # options that have a default are overridden correctly
         copied = client.copy(max_retries=7)
         assert copied.max_retries == 7
-        assert client.max_retries == 2
+        assert client.max_retries == 0
 
         copied2 = copied.copy(max_retries=6)
         assert copied2.max_retries == 6
@@ -405,7 +405,7 @@ class TestGraphorPrd:
         assert request.headers.get("Authorization") == f"Bearer {api_key}"
 
         with pytest.raises(GraphorPrdError):
-            with update_env(**{"GRAPHOR_PRD_API_KEY": Omit()}):
+            with update_env(**{"GRAPHOR_API_KEY": Omit()}):
                 client2 = GraphorPrd(base_url=base_url, api_key=None, _strict_response_validation=True)
             _ = client2
 
@@ -1037,7 +1037,7 @@ class TestAsyncGraphorPrd:
         # options that have a default are overridden correctly
         copied = async_client.copy(max_retries=7)
         assert copied.max_retries == 7
-        assert async_client.max_retries == 2
+        assert async_client.max_retries == 0
 
         copied2 = copied.copy(max_retries=6)
         assert copied2.max_retries == 6
@@ -1300,7 +1300,7 @@ class TestAsyncGraphorPrd:
         assert request.headers.get("Authorization") == f"Bearer {api_key}"
 
         with pytest.raises(GraphorPrdError):
-            with update_env(**{"GRAPHOR_PRD_API_KEY": Omit()}):
+            with update_env(**{"GRAPHOR_API_KEY": Omit()}):
                 client2 = AsyncGraphorPrd(base_url=base_url, api_key=None, _strict_response_validation=True)
             _ = client2
 
