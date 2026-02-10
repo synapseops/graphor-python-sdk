@@ -5,30 +5,20 @@ import typing as _t
 from . import types
 from ._types import NOT_GIVEN, Omit, NoneType, NotGiven, Transport, ProxiesTypes, omit, not_given
 from ._utils import file_from_path
-from ._client import (
-    Client,
-    Stream,
-    Timeout,
-    Transport,
-    GraphorPrd,
-    AsyncClient,
-    AsyncStream,
-    RequestOptions,
-    AsyncGraphorPrd,
-)
+from ._client import Client, Stream, Graphor, Timeout, Transport, AsyncClient, AsyncStream, AsyncGraphor, RequestOptions
 from ._models import BaseModel
 from ._version import __title__, __version__
 from ._response import APIResponse as APIResponse, AsyncAPIResponse as AsyncAPIResponse
 from ._constants import DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES, DEFAULT_CONNECTION_LIMITS
 from ._exceptions import (
     APIError,
+    GraphorError,
     ConflictError,
     NotFoundError,
     APIStatusError,
     RateLimitError,
     APITimeoutError,
     BadRequestError,
-    GraphorPrdError,
     APIConnectionError,
     AuthenticationError,
     InternalServerError,
@@ -51,7 +41,7 @@ __all__ = [
     "not_given",
     "Omit",
     "omit",
-    "GraphorPrdError",
+    "GraphorError",
     "APIError",
     "APIStatusError",
     "APITimeoutError",
@@ -71,8 +61,8 @@ __all__ = [
     "AsyncClient",
     "Stream",
     "AsyncStream",
-    "GraphorPrd",
-    "AsyncGraphorPrd",
+    "Graphor",
+    "AsyncGraphor",
     "file_from_path",
     "BaseModel",
     "DEFAULT_TIMEOUT",
@@ -91,12 +81,12 @@ _setup_logging()
 # Update the __module__ attribute for exported symbols so that
 # error messages point to this module instead of the module
 # it was originally defined in, e.g.
-# graphor_prd._exceptions.NotFoundError -> graphor_prd.NotFoundError
+# graphor._exceptions.NotFoundError -> graphor.NotFoundError
 __locals = locals()
 for __name in __all__:
     if not __name.startswith("__"):
         try:
-            __locals[__name].__module__ = "graphor_prd"
+            __locals[__name].__module__ = "graphor"
         except (TypeError, AttributeError):
             # Some of our exported symbols are builtins which we can't set attributes for.
             pass

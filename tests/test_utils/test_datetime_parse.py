@@ -8,7 +8,7 @@ from datetime import date, datetime, timezone, timedelta
 
 import pytest
 
-from graphor_prd._utils import parse_date, parse_datetime
+from graphor._utils import parse_date, parse_datetime
 
 
 def create_tz(minutes: int) -> timezone:

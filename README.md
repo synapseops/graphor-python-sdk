@@ -1,9 +1,9 @@
-# Graphor Prd Python API library
+# Graphor Python API library
 
 <!-- prettier-ignore -->
 [![PyPI version](https://img.shields.io/pypi/v/graphor.svg?label=pypi%20(stable))](https://pypi.org/project/graphor/)
 
-The Graphor Prd Python library provides convenient access to the Graphor Prd REST API from any Python 3.9+
+The Graphor Python library provides convenient access to the Graphor REST API from any Python 3.9+
 application. The library includes type definitions for all request params and response fields,
 and offers both synchronous and asynchronous clients powered by [httpx](https://github.com/encode/httpx).
 
@@ -11,7 +11,7 @@ It is generated with [Stainless](https://www.stainless.com/).
 
 ## MCP Server
 
-Use the Graphor Prd MCP Server to enable AI assistants to interact with this API, allowing them to explore endpoints, make test requests, and use documentation to help integrate this SDK into your application.
+Use the Graphor MCP Server to enable AI assistants to interact with this API, allowing them to explore endpoints, make test requests, and use documentation to help integrate this SDK into your application.
 
 [![Add to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=graphor-mcp&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImdyYXBob3ItbWNwIl0sImVudiI6eyJHUkFQSE9SX0FQSV9LRVkiOiJNeSBBUEkgS2V5In19)
 [![Install in VS Code](https://img.shields.io/badge/_-Add_to_VS_Code-blue?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCA0MCA0MCI+PHBhdGggZmlsbD0iI0VFRSIgZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMzAuMjM1IDM5Ljg4NGEyLjQ5MSAyLjQ5MSAwIDAgMS0xLjc4MS0uNzNMMTIuNyAyNC43OGwtMy40NiAyLjYyNC0zLjQwNiAyLjU4MmExLjY2NSAxLjY2NSAwIDAgMS0xLjA4Mi4zMzggMS42NjQgMS42NjQgMCAwIDEtMS4wNDYtLjQzMWwtMi4yLTJhMS42NjYgMS42NjYgMCAwIDEgMC0yLjQ2M0w3LjQ1OCAyMCA0LjY3IDE3LjQ1MyAxLjUwNyAxNC41N2ExLjY2NSAxLjY2NSAwIDAgMSAwLTIuNDYzbDIuMi0yYTEuNjY1IDEuNjY1IDAgMCAxIDIuMTMtLjA5N2w2Ljg2MyA1LjIwOUwyOC40NTIuODQ0YTIuNDg4IDIuNDg4IDAgMCAxIDEuODQxLS43MjljLjM1MS4wMDkuNjk5LjA5MSAxLjAxOS4yNDVsOC4yMzYgMy45NjFhMi41IDIuNSAwIDAgMSAxLjQxNSAyLjI1M3YuMDk5LS4wNDVWMzMuMzd2LS4wNDUuMDk1YTIuNTAxIDIuNTAxIDAgMCAxLTEuNDE2IDIuMjU3bC04LjIzNSAzLjk2MWEyLjQ5MiAyLjQ5MiAwIDAgMS0xLjA3Ny4yNDZabS43MTYtMjguOTQ3LTExLjk0OCA5LjA2MiAxMS45NTIgOS4wNjUtLjAwNC0xOC4xMjdaIi8+PC9zdmc+)](https://vscode.stainless.com/mcp/%7B%22name%22%3A%22graphor-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22graphor-mcp%22%5D%2C%22env%22%3A%7B%22GRAPHOR_API_KEY%22%3A%22My%20API%20Key%22%7D%7D)
@@ -20,7 +20,7 @@ Use the Graphor Prd MCP Server to enable AI assistants to interact with this API
 
 ## Documentation
 
-The full API of this library can be found in [api.md](api.md).
+The REST API documentation can be found on [docs.graphorlm.com](https://docs.graphorlm.com). The full API of this library can be found in [api.md](api.md).
 
 ## Installation
 
@@ -35,9 +35,9 @@ The full API of this library can be found in [api.md](api.md).
 
 ```python
 import os
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
-client = GraphorPrd(
+client = Graphor(
     api_key=os.environ.get("GRAPHOR_API_KEY"),  # This is the default and can be omitted
 )
 
@@ -54,14 +54,14 @@ so that your API Key is not stored in source control.
 
 ## Async usage
 
-Simply import `AsyncGraphorPrd` instead of `GraphorPrd` and use `await` with each API call:
+Simply import `AsyncGraphor` instead of `Graphor` and use `await` with each API call:
 
 ```python
 import os
 import asyncio
-from graphor_prd import AsyncGraphorPrd
+from graphor import AsyncGraphor
 
-client = AsyncGraphorPrd(
+client = AsyncGraphor(
     api_key=os.environ.get("GRAPHOR_API_KEY"),  # This is the default and can be omitted
 )
 
@@ -94,12 +94,12 @@ Then you can enable it by instantiating the client with `http_client=DefaultAioH
 ```python
 import os
 import asyncio
-from graphor_prd import DefaultAioHttpClient
-from graphor_prd import AsyncGraphorPrd
+from graphor import DefaultAioHttpClient
+from graphor import AsyncGraphor
 
 
 async def main() -> None:
-    async with AsyncGraphorPrd(
+    async with AsyncGraphor(
         api_key=os.environ.get("GRAPHOR_API_KEY"),  # This is the default and can be omitted
         http_client=DefaultAioHttpClient(),
     ) as client:
@@ -126,9 +126,9 @@ Typed requests and responses provide autocomplete and documentation within your 
 Nested parameters are dictionaries, typed using `TypedDict`, for example:
 
 ```python
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
-client = GraphorPrd()
+client = Graphor()
 
 response = client.sources.load_elements(
     filter={},
@@ -142,9 +142,9 @@ Request parameters that correspond to file uploads can be passed as `bytes`, or 
 
 ```python
 from pathlib import Path
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
-client = GraphorPrd()
+client = Graphor()
 
 client.sources.upload(
     file=Path("/path/to/file"),
@@ -155,29 +155,29 @@ The async client uses the exact same interface. If you pass a [`PathLike`](https
 
 ## Handling errors
 
-When the library is unable to connect to the API (for example, due to network connection problems or a timeout), a subclass of `graphor_prd.APIConnectionError` is raised.
+When the library is unable to connect to the API (for example, due to network connection problems or a timeout), a subclass of `graphor.APIConnectionError` is raised.
 
 When the API returns a non-success status code (that is, 4xx or 5xx
-response), a subclass of `graphor_prd.APIStatusError` is raised, containing `status_code` and `response` properties.
+response), a subclass of `graphor.APIStatusError` is raised, containing `status_code` and `response` properties.
 
-All errors inherit from `graphor_prd.APIError`.
+All errors inherit from `graphor.APIError`.
 
 ```python
-import graphor_prd
-from graphor_prd import GraphorPrd
+import graphor
+from graphor import Graphor
 
-client = GraphorPrd()
+client = Graphor()
 
 try:
     client.sources.upload(
         file=b"raw file contents",
     )
-except graphor_prd.APIConnectionError as e:
+except graphor.APIConnectionError as e:
     print("The server could not be reached")
     print(e.__cause__)  # an underlying Exception, likely raised within httpx.
-except graphor_prd.RateLimitError as e:
+except graphor.RateLimitError as e:
     print("A 429 status code was received; we should back off a bit.")
-except graphor_prd.APIStatusError as e:
+except graphor.APIStatusError as e:
     print("Another non-200-range status code was received")
     print(e.status_code)
     print(e.response)
@@ -205,10 +205,10 @@ Connection errors (for example, due to a network connectivity problem), 408 Requ
 You can use the `max_retries` option to configure or disable retry settings:
 
 ```python
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
 # Configure the default for all requests:
-client = GraphorPrd(
+client = Graphor(
     # default is 2
     max_retries=0,
 )
@@ -225,16 +225,16 @@ By default requests time out after 10 minutes. You can configure this with a `ti
 which accepts a float or an [`httpx.Timeout`](https://www.python-httpx.org/advanced/timeouts/#fine-tuning-the-configuration) object:
 
 ```python
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
 # Configure the default for all requests:
-client = GraphorPrd(
+client = Graphor(
     # 20 seconds (default is 10 minutes)
     timeout=20.0,
 )
 
 # More granular control:
-client = GraphorPrd(
+client = Graphor(
     timeout=httpx.Timeout(60.0, read=5.0, write=10.0, connect=2.0),
 )
 
@@ -254,10 +254,10 @@ Note that requests that time out are [retried twice by default](#retries).
 
 We use the standard library [`logging`](https://docs.python.org/3/library/logging.html) module.
 
-You can enable logging by setting the environment variable `GRAPHOR_PRD_LOG` to `info`.
+You can enable logging by setting the environment variable `GRAPHOR_LOG` to `info`.
 
 ```shell
-$ export GRAPHOR_PRD_LOG=info
+$ export GRAPHOR_LOG=info
 ```
 
 Or to `debug` for more verbose logging.
@@ -279,9 +279,9 @@ if response.my_field is None:
 The "raw" Response object can be accessed by prefixing `.with_raw_response.` to any HTTP method call, e.g.,
 
 ```py
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
-client = GraphorPrd()
+client = Graphor()
 response = client.sources.with_raw_response.upload(
     file=b"raw file contents",
 )
@@ -291,9 +291,9 @@ source = response.parse()  # get the object that `sources.upload()` would have r
 print(source.project_id)
 ```
 
-These methods return an [`APIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor_prd/_response.py) object.
+These methods return an [`APIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) object.
 
-The async client returns an [`AsyncAPIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor_prd/_response.py) with the same structure, the only difference being `await`able methods for reading the response content.
+The async client returns an [`AsyncAPIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) with the same structure, the only difference being `await`able methods for reading the response content.
 
 #### `.with_streaming_response`
 
@@ -357,10 +357,10 @@ You can directly override the [httpx client](https://www.python-httpx.org/api/#c
 
 ```python
 import httpx
-from graphor_prd import GraphorPrd, DefaultHttpxClient
+from graphor import Graphor, DefaultHttpxClient
 
-client = GraphorPrd(
-    # Or use the `GRAPHOR_PRD_BASE_URL` env var
+client = Graphor(
+    # Or use the `GRAPHOR_BASE_URL` env var
     base_url="http://my.test.server.example.com:8083",
     http_client=DefaultHttpxClient(
         proxy="http://my.test.proxy.example.com",
@@ -380,9 +380,9 @@ client.with_options(http_client=DefaultHttpxClient(...))
 By default the library closes underlying HTTP connections whenever the client is [garbage collected](https://docs.python.org/3/reference/datamodel.html#object.__del__). You can manually close the client using the `.close()` method if desired, or with a context manager that closes when exiting.
 
 ```py
-from graphor_prd import GraphorPrd
+from graphor import Graphor
 
-with GraphorPrd() as client:
+with Graphor() as client:
   # make requests here
   ...
 
@@ -408,8 +408,8 @@ If you've upgraded to the latest version but aren't seeing any new features you 
 You can determine the version that is being used at runtime with:
 
 ```py
-import graphor_prd
-print(graphor_prd.__version__)
+import graphor
+print(graphor.__version__)
 ```
 
 ## Requirements

@@ -4,8 +4,8 @@ from typing import Sequence
 
 import pytest
 
-from graphor_prd._types import FileTypes
-from graphor_prd._utils import extract_files
+from graphor._types import FileTypes
+from graphor._utils import extract_files
 
 
 def test_removes_files_from_input() -> None:

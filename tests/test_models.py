@@ -7,9 +7,9 @@ import pytest
 import pydantic
 from pydantic import Field
 
-from graphor_prd._utils import PropertyInfo
-from graphor_prd._compat import PYDANTIC_V1, parse_obj, model_dump, model_json
-from graphor_prd._models import DISCRIMINATOR_CACHE, BaseModel, construct_type
+from graphor._utils import PropertyInfo
+from graphor._compat import PYDANTIC_V1, parse_obj, model_dump, model_json
+from graphor._models import DISCRIMINATOR_CACHE, BaseModel, construct_type
 
 
 class BasicModel(BaseModel):
