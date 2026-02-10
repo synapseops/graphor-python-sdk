@@ -88,7 +88,7 @@ class GraphorPrd(SyncAPIClient):
         if base_url is None:
             base_url = os.environ.get("GRAPHOR_PRD_BASE_URL")
         if base_url is None:
-            base_url = f"https://graphorlm.com/api/public/v1"
+            base_url = f"https://api.graphorlm.com/api/public/v1"
 
         super().__init__(
             version=__version__,
@@ -262,7 +262,7 @@ class AsyncGraphorPrd(AsyncAPIClient):
         if base_url is None:
             base_url = os.environ.get("GRAPHOR_PRD_BASE_URL")
         if base_url is None:
-            base_url = f"https://graphorlm.com/api/public/v1"
+            base_url = f"https://api.graphorlm.com/api/public/v1"
 
         super().__init__(
             version=__version__,
