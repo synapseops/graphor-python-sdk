@@ -19,7 +19,7 @@ class SourceLoadElementsParams(TypedDict, total=False):
     """The name of the file (deprecated, use file_id)"""
 
     filter: Optional[Filter]
-    """The filter of the elements"""
+    """Optional filter to narrow down the returned elements"""
 
     page: Optional[int]
     """Current page number"""
@@ -29,13 +29,13 @@ class SourceLoadElementsParams(TypedDict, total=False):
 
 
 class Filter(TypedDict, total=False):
-    """The filter of the elements"""
+    """Optional filter to narrow down the returned elements"""
 
     elements_to_remove: Annotated[Optional[SequenceNotStr[str]], PropertyInfo(alias="elementsToRemove")]
-    """The elements to remove"""
+    """List of element types to exclude from the results"""
 
     page_numbers: Optional[Iterable[int]]
-    """The page numbers of the elements"""
+    """Restrict results to specific page numbers from the original document"""
 
     type: Optional[str]
-    """The type of the element"""
+    """Filter by element type (e.g. NarrativeText, Title, Table)"""

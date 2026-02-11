@@ -12,32 +12,32 @@ __all__ = ["SourceAskParams"]
 
 class SourceAskParams(TypedDict, total=False):
     question: Required[str]
-    """The question to ask about the sources"""
+    """The natural-language question to ask about the sources"""
 
     conversation_id: Optional[str]
-    """Conversation identifier to maintain memory context"""
+    """Conversation identifier to maintain memory context across multiple turns"""
 
     file_ids: Optional[SequenceNotStr[str]]
-    """
-    Optional list of file IDs to restrict search to one or more documents
-    (preferred)
-    """
+    """Optional list of file IDs to restrict search scope (preferred)"""
 
     file_names: Optional[SequenceNotStr[str]]
     """
-    Optional list of file display names to restrict search to one or more documents
-    (deprecated, use file_ids)
+    Optional list of file display names to restrict search scope (deprecated, use
+    file_ids)
     """
 
     output_schema: Optional[Dict[str, object]]
-    """Optional JSON Schema used to request a structured output.
+    """Optional JSON Schema for requesting structured output.
 
-    When provided, the system will first ask the sources model to output JSON-text,
-    then validate/correct it with gemini-3-flash-preview.
+    When provided, the answer field will contain a short status message and the
+    structured data will be in structured_output.
     """
 
     reset: Optional[bool]
-    """When true, starts a new conversation and ignores history"""
+    """When true, starts a new conversation discarding any previous history"""
 
     thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
-    """Controls model and thinking configuration: 'fast', 'balanced', 'accurate'"""
+    """
+    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+    'accurate' (most thorough)
+    """

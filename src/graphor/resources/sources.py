@@ -73,7 +73,27 @@ class SourcesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceListResponse:
-        """Get the source nodes of the knowledge graph for public access."""
+        """
+        List all sources in the project's knowledge graph.
+
+        Returns every source node currently stored in the knowledge graph for the
+        authenticated project. Each item includes the file metadata (ID, name, size,
+        type, origin) along with its current processing status and a human-readable
+        status message.
+
+        **Status messages returned per source:**
+
+        - `"completed"` → _"Source processed successfully"_
+        - `"processing"` → _"Source is being processed"_
+        - `"failed"` → _"Source processing failed"_
+        - `"new"` → _"Source uploaded, awaiting processing"_
+
+        **Returns** a JSON array of `PublicSourceResponse` objects.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error while retrieving sources.
+        """
         return self._get(
             "/sources",
             options=make_request_options(
@@ -95,9 +115,28 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceDeleteResponse:
         """
-        Delete a source from the project for public access.
+        Delete a source from the project's knowledge graph and all associated data.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Removes the source node, its partitions/chunks, embeddings, and any stored files
+        from the knowledge graph and object storage. The operation is irreversible.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          to delete.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` instead when possible. At least one of `file_id` or `file_name`
+          must be provided.
+
+        **Returns** a `PublicDeleteSourceResponse` with the deletion status, file ID,
+        file name, project ID, and project name.
+
+        **Error responses:**
+
+        - `400` — Invalid input (e.g. neither identifier provided).
+        - `403` — Permission denied.
+        - `404` — Source not found.
+        - `500` — Unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
@@ -145,26 +184,66 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceAskResponse:
         """
-        Public endpoint to ask questions about the sources.
+        Ask a natural-language question grounded on the project's ingested sources.
+
+        This is the primary Q&A endpoint. It sends the question through the GenAI File
+        Search pipeline, which retrieves relevant chunks from the knowledge graph,
+        grounds the answer in the source documents, and returns a natural-language
+        response. Optionally, you can request a structured JSON output by supplying an
+        `output_schema`.
+
+        Conversation memory is supported: pass a `conversation_id` to continue an
+        existing conversation, or set `reset` to `true` to start fresh.
+
+        **Parameters (JSON body):**
+
+        - **question** (str, required): The question to ask about the sources.
+        - **conversation_id** (str, optional): An existing conversation identifier to
+          maintain context across multiple turns.
+        - **reset** (bool, optional, default `false`): When `true`, starts a new
+          conversation discarding any previous history.
+        - **file_ids** (list[str], optional — preferred): Restrict the search scope to
+          specific source file IDs.
+        - **file_names** (list[str], optional — deprecated): Restrict the search scope
+          to specific source file names. Use `file_ids` when possible.
+        - **output_schema** (dict, optional): A JSON Schema for requesting structured
+          output. When provided, the response includes a `structured_output` field
+          validated against this schema and the `raw_json` produced by the model.
+        - **thinking_level** (str, optional, default `"accurate"`): Controls the
+          model/thinking budget — one of `"fast"`, `"balanced"`, or `"accurate"`.
+
+        **Returns** a `PublicAskSourcesResponse` containing:
+
+        - `answer` — the natural-language answer (or a status message when
+          `output_schema` is provided).
+        - `structured_output` — the validated structured object (when `output_schema` is
+          provided).
+        - `raw_json` — the raw JSON text before validation (when `output_schema` is
+          provided).
+        - `conversation_id` — the conversation identifier for follow-up questions.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error while asking sources.
 
         Args:
-          question: The question to ask about the sources
+          question: The natural-language question to ask about the sources
 
-          conversation_id: Conversation identifier to maintain memory context
+          conversation_id: Conversation identifier to maintain memory context across multiple turns
 
-          file_ids: Optional list of file IDs to restrict search to one or more documents
-              (preferred)
+          file_ids: Optional list of file IDs to restrict search scope (preferred)
 
-          file_names: Optional list of file display names to restrict search to one or more documents
-              (deprecated, use file_ids)
+          file_names: Optional list of file display names to restrict search scope (deprecated, use
+              file_ids)
 
-          output_schema: Optional JSON Schema used to request a structured output. When provided, the
-              system will first ask the sources model to output JSON-text, then
-              validate/correct it with gemini-3-flash-preview.
+          output_schema: Optional JSON Schema for requesting structured output. When provided, the answer
+              field will contain a short status message and the structured data will be in
+              structured_output.
 
-          reset: When true, starts a new conversation and ignores history
+          reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+              'accurate' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -210,19 +289,50 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceExtractResponse:
         """
-        Run a one-off public extraction for files using the provided output schema.
+        Run a one-off structured data extraction against one or more sources.
+
+        This endpoint uses the GenAI File Search pipeline to read the specified sources,
+        apply the user-provided instruction, and return structured JSON output
+        conforming to the supplied `output_schema`. Internally it builds a grounded
+        prompt, queries the model, and validates/corrects the raw JSON against the
+        schema.
+
+        **Parameters (JSON body):**
+
+        - **file_ids** (list[str], optional — preferred): List of source file IDs to
+          extract from.
+        - **file_names** (list[str], optional — deprecated): List of source file names
+          to extract from. Use `file_ids` when possible. At least one of the two lists
+          must be provided and non-empty.
+        - **user_instruction** (str, required): A natural-language instruction that
+          guides what information to extract from the documents.
+        - **output_schema** (dict, required): A JSON Schema object describing the
+          desired structured output shape. The model will produce data conforming to
+          this schema.
+        - **thinking_level** (str, optional, default `"accurate"`): Controls the
+          model/thinking budget — one of `"fast"`, `"balanced"`, or `"accurate"`.
+
+        **Returns** a `PublicRunExtractionResultResponse` containing:
+
+        - `structured_output` — the validated structured object.
+        - `raw_json` — the raw JSON text produced by the model before validation.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during extraction.
 
         Args:
-          output_schema: JSON Schema used to request a structured output. The system will extract data
-              according to this schema.
+          output_schema: JSON Schema describing the desired structured output shape. The model will
+              produce data conforming to this schema.
 
-          user_instruction: User instruction to guide the extraction
+          user_instruction: Natural-language instruction guiding what information to extract
 
           file_ids: List of file IDs to extract from (preferred)
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+              'accurate' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -266,16 +376,48 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceLoadElementsResponse:
         """
-        Loads elements from a file with optional pagination for public access.
+        Retrieve the parsed elements (chunks/partitions) of a specific source with
+        pagination.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Returns the individual document partitions (text chunks) that were generated
+        during ingestion for a given source. This is useful for inspecting how a file
+        was segmented, reviewing chunk content, or building custom retrieval logic on
+        top of the raw partitions.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          whose elements to retrieve.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` when possible. At least one of `file_id` or `file_name` must be
+          provided.
+        - **page** (int, optional): The 1-based page number for pagination.
+        - **page_size** (int, optional): The number of elements per page. Both `page`
+          and `page_size` must be provided together to enable pagination.
+        - **filter** (object, optional): An optional filter object with:
+          - `type` — filter by element type.
+          - `page_numbers` — restrict to specific source page numbers.
+          - `elementsToRemove` — list of element types to exclude.
+
+        **Returns** a `PaginatedResponse[Document]` containing:
+
+        - `items` — list of `Document` objects (LangChain format) with `page_content`
+          and `metadata`.
+        - `total` — total number of matching elements.
+        - `page`, `page_size`, `total_pages` — pagination metadata.
+
+        **Error responses:**
+
+        - `400` — Invalid input (e.g. neither identifier provided).
+        - `404` — Source file not found.
+        - `500` — Unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
 
           file_name: The name of the file (deprecated, use file_id)
 
-          filter: The filter of the elements
+          filter: Optional filter to narrow down the returned elements
 
           page: Current page number
 
@@ -321,16 +463,38 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Process/parse an existing source.
+        Re-process (re-parse) an existing source that has already been uploaded.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Use this endpoint to re-run the data-ingestion pipeline on a source that is
+        already present in the knowledge graph — for example, after changing the
+        partitioning strategy. The endpoint locates the source node, sets its status to
+        `PROCESSING`, applies the requested partition method, and executes the full
+        ingestion pipeline synchronously (partitioning, chunking, embedding, and graph
+        persistence).
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          to re-process.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` instead when possible. At least one of `file_id` or `file_name`
+          must be provided.
+        - **partition_method** (str, default `"basic"`): The partitioning strategy to
+          apply (e.g. `"basic"`, `"hi_res"`, `"fast"`).
+
+        **Returns** a `PublicSourceResponse` with the updated source metadata.
+
+        **Error responses:**
+
+        - `404` — Source node not found for the given identifier.
+        - `500` — Processing or unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
 
           file_name: The name of the file (deprecated, use file_id)
 
-          partition_method: The method used to partition the file
+          partition_method: The partitioning strategy to apply (basic, hi_res, hi_res_ft, mai, graphorlm)
 
           extra_headers: Send extra headers
 
@@ -369,21 +533,42 @@ class SourcesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceRetrieveChunksResponse:
-        """Public endpoint to retrieve relevant chunks from the prebuild RAG store.
+        """
+        Retrieve relevant document chunks from the prebuilt RAG vector store.
 
-        Uses
-        Google File Search with grounding to find relevant document chunks.
+        Performs a semantic similarity search over the project's prebuilt RAG store
+        using Google File Search with grounding. Returns the most relevant text chunks
+        along with their source metadata (file name, page number, relevance score). This
+        is a pure retrieval endpoint — it does **not** generate an answer; use
+        `/ask-sources` for Q&A.
 
-        Accepts either file_ids (preferred) or file_names (deprecated) as identifier.
+        **Parameters (JSON body):**
+
+        - **query** (str, required): The natural-language search query used to find
+          relevant chunks.
+        - **file_ids** (list[str], optional — preferred): Restrict retrieval to specific
+          source file IDs.
+        - **file_names** (list[str], optional — deprecated): Restrict retrieval to
+          specific source file names. Use `file_ids` when possible.
+
+        **Returns** a `PublicRetrieveResponse` containing:
+
+        - `query` — the original search query.
+        - `chunks` — a list of `PublicRetrieveChunk` objects, each with `text`,
+          `file_name`, `page_number`, `score`, and additional `metadata`.
+        - `total` — the total number of chunks returned.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during retrieval.
 
         Args:
-          query: The search query to retrieve relevant chunks
+          query: The natural-language search query to find relevant chunks
 
-          file_ids: Optional list of file IDs to restrict retrieval to one or more documents
-              (preferred)
+          file_ids: Optional list of file IDs to restrict retrieval scope (preferred)
 
-          file_names: Optional list of file names to restrict retrieval to one or more documents
-              (deprecated, use file_ids)
+          file_names: Optional list of file names to restrict retrieval scope (deprecated, use
+              file_ids)
 
           extra_headers: Send extra headers
 
@@ -422,7 +607,32 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Upload
+        Upload a local file and ingest it as a source into the project's knowledge
+        graph.
+
+        This endpoint accepts a multipart file upload, validates the file size (max 100
+        MB) and extension against the list of allowed ingestion types, stores the file,
+        and then runs the full data-ingestion pipeline synchronously — including
+        partitioning, chunking, embedding, and graph persistence.
+
+        **Parameters:**
+
+        - **file** (multipart): The file to upload. Must include a `Content-Length`
+          header and have a supported extension (e.g. pdf, docx, txt, csv, etc.).
+        - **partition_method** (form, optional): The partitioning strategy to apply to
+          the document. When omitted the system default is used.
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `400` — Unsupported file type or missing file name.
+        - `411` — Missing `Content-Length` header (file size cannot be determined).
+        - `413` — File exceeds the 100 MB size limit.
+        - `403` — Permission denied.
+        - `404` — File not found during processing.
+        - `500` — Unexpected internal error.
 
         Args:
           partition_method: Partition methods available for public API endpoints.
@@ -468,11 +678,26 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Public endpoint to process a source from a GitHub repository using synchronous
-        ingestion.
+        Ingest a GitHub repository as a source into the project's knowledge graph.
+
+        The endpoint clones or fetches the repository at the given URL, extracts its
+        text-based files, partitions them using the system default method, generates
+        embeddings, and persists everything in the knowledge graph synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The GitHub repository URL to ingest (e.g.
+          `https://github.com/owner/repo`).
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during GitHub source processing.
 
         Args:
-          url: The url of the github repository
+          url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
 
           extra_headers: Send extra headers
 
@@ -504,15 +729,34 @@ class SourcesResource(SyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
-        """Public endpoint to upload and process a source from a URL.
+        """
+        Ingest a web page (or a set of crawled pages) as a source into the project's
+        knowledge graph.
 
-        Triggers background
-        ingestion and returns immediately.
+        The endpoint fetches the content at the given URL, optionally crawls linked
+        pages (when `crawlUrls` is `true`), partitions the resulting HTML/text,
+        generates embeddings, and persists everything in the knowledge graph
+        synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The web page URL to ingest.
+        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+          also follow and ingest links found on the page.
+        - **partition_method** (str, optional): The partitioning strategy to use. When
+          omitted the system default is applied.
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during URL processing.
 
         Args:
-          url: The url of the source
+          url: The web page URL to ingest
 
-          crawl_urls: Whether to crawl urls from the source
+          crawl_urls: When true, also follows and ingests links found on the page
 
           partition_method: Partition methods available for public API endpoints.
 
@@ -552,11 +796,27 @@ class SourcesResource(SyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Public endpoint to process a source from a YouTube video using synchronous
-        ingestion.
+        Ingest a YouTube video as a source into the project's knowledge graph.
+
+        The endpoint downloads the transcript/captions of the given YouTube video,
+        partitions the text using the system default method, generates embeddings, and
+        persists everything in the knowledge graph synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The YouTube video URL to ingest (e.g.
+          `https://www.youtube.com/watch?v=...`).
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during YouTube source processing.
 
         Args:
-          url: The url of the youtube video
+          url: The YouTube video URL to ingest (e.g.
+              https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
           extra_headers: Send extra headers
 
@@ -606,7 +866,27 @@ class AsyncSourcesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceListResponse:
-        """Get the source nodes of the knowledge graph for public access."""
+        """
+        List all sources in the project's knowledge graph.
+
+        Returns every source node currently stored in the knowledge graph for the
+        authenticated project. Each item includes the file metadata (ID, name, size,
+        type, origin) along with its current processing status and a human-readable
+        status message.
+
+        **Status messages returned per source:**
+
+        - `"completed"` → _"Source processed successfully"_
+        - `"processing"` → _"Source is being processed"_
+        - `"failed"` → _"Source processing failed"_
+        - `"new"` → _"Source uploaded, awaiting processing"_
+
+        **Returns** a JSON array of `PublicSourceResponse` objects.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error while retrieving sources.
+        """
         return await self._get(
             "/sources",
             options=make_request_options(
@@ -628,9 +908,28 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceDeleteResponse:
         """
-        Delete a source from the project for public access.
+        Delete a source from the project's knowledge graph and all associated data.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Removes the source node, its partitions/chunks, embeddings, and any stored files
+        from the knowledge graph and object storage. The operation is irreversible.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          to delete.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` instead when possible. At least one of `file_id` or `file_name`
+          must be provided.
+
+        **Returns** a `PublicDeleteSourceResponse` with the deletion status, file ID,
+        file name, project ID, and project name.
+
+        **Error responses:**
+
+        - `400` — Invalid input (e.g. neither identifier provided).
+        - `403` — Permission denied.
+        - `404` — Source not found.
+        - `500` — Unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
@@ -678,26 +977,66 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceAskResponse:
         """
-        Public endpoint to ask questions about the sources.
+        Ask a natural-language question grounded on the project's ingested sources.
+
+        This is the primary Q&A endpoint. It sends the question through the GenAI File
+        Search pipeline, which retrieves relevant chunks from the knowledge graph,
+        grounds the answer in the source documents, and returns a natural-language
+        response. Optionally, you can request a structured JSON output by supplying an
+        `output_schema`.
+
+        Conversation memory is supported: pass a `conversation_id` to continue an
+        existing conversation, or set `reset` to `true` to start fresh.
+
+        **Parameters (JSON body):**
+
+        - **question** (str, required): The question to ask about the sources.
+        - **conversation_id** (str, optional): An existing conversation identifier to
+          maintain context across multiple turns.
+        - **reset** (bool, optional, default `false`): When `true`, starts a new
+          conversation discarding any previous history.
+        - **file_ids** (list[str], optional — preferred): Restrict the search scope to
+          specific source file IDs.
+        - **file_names** (list[str], optional — deprecated): Restrict the search scope
+          to specific source file names. Use `file_ids` when possible.
+        - **output_schema** (dict, optional): A JSON Schema for requesting structured
+          output. When provided, the response includes a `structured_output` field
+          validated against this schema and the `raw_json` produced by the model.
+        - **thinking_level** (str, optional, default `"accurate"`): Controls the
+          model/thinking budget — one of `"fast"`, `"balanced"`, or `"accurate"`.
+
+        **Returns** a `PublicAskSourcesResponse` containing:
+
+        - `answer` — the natural-language answer (or a status message when
+          `output_schema` is provided).
+        - `structured_output` — the validated structured object (when `output_schema` is
+          provided).
+        - `raw_json` — the raw JSON text before validation (when `output_schema` is
+          provided).
+        - `conversation_id` — the conversation identifier for follow-up questions.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error while asking sources.
 
         Args:
-          question: The question to ask about the sources
+          question: The natural-language question to ask about the sources
 
-          conversation_id: Conversation identifier to maintain memory context
+          conversation_id: Conversation identifier to maintain memory context across multiple turns
 
-          file_ids: Optional list of file IDs to restrict search to one or more documents
-              (preferred)
+          file_ids: Optional list of file IDs to restrict search scope (preferred)
 
-          file_names: Optional list of file display names to restrict search to one or more documents
-              (deprecated, use file_ids)
+          file_names: Optional list of file display names to restrict search scope (deprecated, use
+              file_ids)
 
-          output_schema: Optional JSON Schema used to request a structured output. When provided, the
-              system will first ask the sources model to output JSON-text, then
-              validate/correct it with gemini-3-flash-preview.
+          output_schema: Optional JSON Schema for requesting structured output. When provided, the answer
+              field will contain a short status message and the structured data will be in
+              structured_output.
 
-          reset: When true, starts a new conversation and ignores history
+          reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+              'accurate' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -743,19 +1082,50 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceExtractResponse:
         """
-        Run a one-off public extraction for files using the provided output schema.
+        Run a one-off structured data extraction against one or more sources.
+
+        This endpoint uses the GenAI File Search pipeline to read the specified sources,
+        apply the user-provided instruction, and return structured JSON output
+        conforming to the supplied `output_schema`. Internally it builds a grounded
+        prompt, queries the model, and validates/corrects the raw JSON against the
+        schema.
+
+        **Parameters (JSON body):**
+
+        - **file_ids** (list[str], optional — preferred): List of source file IDs to
+          extract from.
+        - **file_names** (list[str], optional — deprecated): List of source file names
+          to extract from. Use `file_ids` when possible. At least one of the two lists
+          must be provided and non-empty.
+        - **user_instruction** (str, required): A natural-language instruction that
+          guides what information to extract from the documents.
+        - **output_schema** (dict, required): A JSON Schema object describing the
+          desired structured output shape. The model will produce data conforming to
+          this schema.
+        - **thinking_level** (str, optional, default `"accurate"`): Controls the
+          model/thinking budget — one of `"fast"`, `"balanced"`, or `"accurate"`.
+
+        **Returns** a `PublicRunExtractionResultResponse` containing:
+
+        - `structured_output` — the validated structured object.
+        - `raw_json` — the raw JSON text produced by the model before validation.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during extraction.
 
         Args:
-          output_schema: JSON Schema used to request a structured output. The system will extract data
-              according to this schema.
+          output_schema: JSON Schema describing the desired structured output shape. The model will
+              produce data conforming to this schema.
 
-          user_instruction: User instruction to guide the extraction
+          user_instruction: Natural-language instruction guiding what information to extract
 
           file_ids: List of file IDs to extract from (preferred)
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking configuration: 'fast', 'balanced', 'accurate'
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+              'accurate' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -799,16 +1169,48 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceLoadElementsResponse:
         """
-        Loads elements from a file with optional pagination for public access.
+        Retrieve the parsed elements (chunks/partitions) of a specific source with
+        pagination.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Returns the individual document partitions (text chunks) that were generated
+        during ingestion for a given source. This is useful for inspecting how a file
+        was segmented, reviewing chunk content, or building custom retrieval logic on
+        top of the raw partitions.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          whose elements to retrieve.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` when possible. At least one of `file_id` or `file_name` must be
+          provided.
+        - **page** (int, optional): The 1-based page number for pagination.
+        - **page_size** (int, optional): The number of elements per page. Both `page`
+          and `page_size` must be provided together to enable pagination.
+        - **filter** (object, optional): An optional filter object with:
+          - `type` — filter by element type.
+          - `page_numbers` — restrict to specific source page numbers.
+          - `elementsToRemove` — list of element types to exclude.
+
+        **Returns** a `PaginatedResponse[Document]` containing:
+
+        - `items` — list of `Document` objects (LangChain format) with `page_content`
+          and `metadata`.
+        - `total` — total number of matching elements.
+        - `page`, `page_size`, `total_pages` — pagination metadata.
+
+        **Error responses:**
+
+        - `400` — Invalid input (e.g. neither identifier provided).
+        - `404` — Source file not found.
+        - `500` — Unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
 
           file_name: The name of the file (deprecated, use file_id)
 
-          filter: The filter of the elements
+          filter: Optional filter to narrow down the returned elements
 
           page: Current page number
 
@@ -854,16 +1256,38 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Process/parse an existing source.
+        Re-process (re-parse) an existing source that has already been uploaded.
 
-        Accepts either file_id (preferred) or file_name (deprecated) as identifier.
+        Use this endpoint to re-run the data-ingestion pipeline on a source that is
+        already present in the knowledge graph — for example, after changing the
+        partitioning strategy. The endpoint locates the source node, sets its status to
+        `PROCESSING`, applies the requested partition method, and executes the full
+        ingestion pipeline synchronously (partitioning, chunking, embedding, and graph
+        persistence).
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, optional — preferred): The unique identifier of the source
+          to re-process.
+        - **file_name** (str, optional — deprecated): The display name of the source.
+          Use `file_id` instead when possible. At least one of `file_id` or `file_name`
+          must be provided.
+        - **partition_method** (str, default `"basic"`): The partitioning strategy to
+          apply (e.g. `"basic"`, `"hi_res"`, `"fast"`).
+
+        **Returns** a `PublicSourceResponse` with the updated source metadata.
+
+        **Error responses:**
+
+        - `404` — Source node not found for the given identifier.
+        - `500` — Processing or unexpected internal error.
 
         Args:
           file_id: Unique identifier for the source (preferred)
 
           file_name: The name of the file (deprecated, use file_id)
 
-          partition_method: The method used to partition the file
+          partition_method: The partitioning strategy to apply (basic, hi_res, hi_res_ft, mai, graphorlm)
 
           extra_headers: Send extra headers
 
@@ -902,21 +1326,42 @@ class AsyncSourcesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> SourceRetrieveChunksResponse:
-        """Public endpoint to retrieve relevant chunks from the prebuild RAG store.
+        """
+        Retrieve relevant document chunks from the prebuilt RAG vector store.
 
-        Uses
-        Google File Search with grounding to find relevant document chunks.
+        Performs a semantic similarity search over the project's prebuilt RAG store
+        using Google File Search with grounding. Returns the most relevant text chunks
+        along with their source metadata (file name, page number, relevance score). This
+        is a pure retrieval endpoint — it does **not** generate an answer; use
+        `/ask-sources` for Q&A.
 
-        Accepts either file_ids (preferred) or file_names (deprecated) as identifier.
+        **Parameters (JSON body):**
+
+        - **query** (str, required): The natural-language search query used to find
+          relevant chunks.
+        - **file_ids** (list[str], optional — preferred): Restrict retrieval to specific
+          source file IDs.
+        - **file_names** (list[str], optional — deprecated): Restrict retrieval to
+          specific source file names. Use `file_ids` when possible.
+
+        **Returns** a `PublicRetrieveResponse` containing:
+
+        - `query` — the original search query.
+        - `chunks` — a list of `PublicRetrieveChunk` objects, each with `text`,
+          `file_name`, `page_number`, `score`, and additional `metadata`.
+        - `total` — the total number of chunks returned.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during retrieval.
 
         Args:
-          query: The search query to retrieve relevant chunks
+          query: The natural-language search query to find relevant chunks
 
-          file_ids: Optional list of file IDs to restrict retrieval to one or more documents
-              (preferred)
+          file_ids: Optional list of file IDs to restrict retrieval scope (preferred)
 
-          file_names: Optional list of file names to restrict retrieval to one or more documents
-              (deprecated, use file_ids)
+          file_names: Optional list of file names to restrict retrieval scope (deprecated, use
+              file_ids)
 
           extra_headers: Send extra headers
 
@@ -955,7 +1400,32 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Upload
+        Upload a local file and ingest it as a source into the project's knowledge
+        graph.
+
+        This endpoint accepts a multipart file upload, validates the file size (max 100
+        MB) and extension against the list of allowed ingestion types, stores the file,
+        and then runs the full data-ingestion pipeline synchronously — including
+        partitioning, chunking, embedding, and graph persistence.
+
+        **Parameters:**
+
+        - **file** (multipart): The file to upload. Must include a `Content-Length`
+          header and have a supported extension (e.g. pdf, docx, txt, csv, etc.).
+        - **partition_method** (form, optional): The partitioning strategy to apply to
+          the document. When omitted the system default is used.
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `400` — Unsupported file type or missing file name.
+        - `411` — Missing `Content-Length` header (file size cannot be determined).
+        - `413` — File exceeds the 100 MB size limit.
+        - `403` — Permission denied.
+        - `404` — File not found during processing.
+        - `500` — Unexpected internal error.
 
         Args:
           partition_method: Partition methods available for public API endpoints.
@@ -1001,11 +1471,26 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Public endpoint to process a source from a GitHub repository using synchronous
-        ingestion.
+        Ingest a GitHub repository as a source into the project's knowledge graph.
+
+        The endpoint clones or fetches the repository at the given URL, extracts its
+        text-based files, partitions them using the system default method, generates
+        embeddings, and persists everything in the knowledge graph synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The GitHub repository URL to ingest (e.g.
+          `https://github.com/owner/repo`).
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during GitHub source processing.
 
         Args:
-          url: The url of the github repository
+          url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
 
           extra_headers: Send extra headers
 
@@ -1037,15 +1522,34 @@ class AsyncSourcesResource(AsyncAPIResource):
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
-        """Public endpoint to upload and process a source from a URL.
+        """
+        Ingest a web page (or a set of crawled pages) as a source into the project's
+        knowledge graph.
 
-        Triggers background
-        ingestion and returns immediately.
+        The endpoint fetches the content at the given URL, optionally crawls linked
+        pages (when `crawlUrls` is `true`), partitions the resulting HTML/text,
+        generates embeddings, and persists everything in the knowledge graph
+        synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The web page URL to ingest.
+        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+          also follow and ingest links found on the page.
+        - **partition_method** (str, optional): The partitioning strategy to use. When
+          omitted the system default is applied.
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during URL processing.
 
         Args:
-          url: The url of the source
+          url: The web page URL to ingest
 
-          crawl_urls: Whether to crawl urls from the source
+          crawl_urls: When true, also follows and ingests links found on the page
 
           partition_method: Partition methods available for public API endpoints.
 
@@ -1085,11 +1589,27 @@ class AsyncSourcesResource(AsyncAPIResource):
         timeout: float | httpx.Timeout | None | NotGiven = not_given,
     ) -> PublicSource:
         """
-        Public endpoint to process a source from a YouTube video using synchronous
-        ingestion.
+        Ingest a YouTube video as a source into the project's knowledge graph.
+
+        The endpoint downloads the transcript/captions of the given YouTube video,
+        partitions the text using the system default method, generates embeddings, and
+        persists everything in the knowledge graph synchronously.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The YouTube video URL to ingest (e.g.
+          `https://www.youtube.com/watch?v=...`).
+
+        **Returns** a `PublicSourceResponse` with the resulting source metadata (file
+        ID, name, size, type, source origin, partition method, and processing status).
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error during YouTube source processing.
 
         Args:
-          url: The url of the youtube video
+          url: The YouTube video URL to ingest (e.g.
+              https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
           extra_headers: Send extra headers
 

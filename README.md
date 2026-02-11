@@ -131,7 +131,10 @@ from graphor import Graphor
 client = Graphor()
 
 response = client.sources.load_elements(
-    filter={},
+    filter={
+        "page_numbers": [1, 2, 3],
+        "type": "NarrativeText",
+    },
 )
 print(response.filter)
 ```
