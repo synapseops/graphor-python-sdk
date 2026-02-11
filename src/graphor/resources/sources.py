@@ -610,17 +610,94 @@ class SourcesResource(SyncAPIResource):
         Upload a local file and ingest it as a source into the project's knowledge
         graph.
 
-        This endpoint accepts a multipart file upload, validates the file size (max 100
-        MB) and extension against the list of allowed ingestion types, stores the file,
-        and then runs the full data-ingestion pipeline synchronously — including
-        partitioning, chunking, embedding, and graph persistence.
+        This endpoint accepts a **`multipart/form-data`** request containing the file to
+        upload. It validates the file size (max 100 MB) and extension against the list
+        of allowed types, stores the file, and then runs the full data-ingestion
+        pipeline synchronously — including partitioning, chunking, embedding, and graph
+        persistence.
+
+        **Usage via SDK (AI agent / MCP context):**
+
+        The SDK executes code in a **remote sandboxed container** that does **not** have
+        access to the local filesystem. Because of this, `fs.createReadStream()` with a
+        local file path will **not work** — the file does not exist inside the
+        container.
+
+        For **text-based files** (md, txt, csv, html, etc.), you can read the file
+        content with a local tool (e.g. IDE file-read) and create a `File` object in
+        memory:
+
+        ```
+        const content = `...file contents read locally...`;
+        const file = new File([content], "my-document.md", { type: "text/markdown" });
+        const result = await client.sources.upload({ file });
+        ```
+
+        For **binary files** (pdf, docx, images, video, audio, etc.), the in-memory
+        approach is impractical. Instead, use **`curl`** or **`subprocess`** to call the
+        upload endpoint directly from the local machine, where the file is accessible:
+
+        ```
+        import { execSync } from "child_process";
+
+        const result = execSync(`
+          curl -s -X POST "{base_url}/source/upload" \\
+            -H "Authorization: Bearer {access_key}" \\
+            -F "file=@/local/path/to/document.pdf" \\
+            -F "partition_method=graphorlm"
+        `).toString();
+        ```
+
+        Or with Python `subprocess`:
+
+        ```
+        import subprocess, json
+
+        result = subprocess.run([
+            "curl", "-s", "-X", "POST", "{base_url}/source/upload",
+            "-H", "Authorization: Bearer {access_key}",
+            "-F", "file=@/local/path/to/document.pdf",
+            "-F", "partition_method=graphorlm",
+        ], capture_output=True, text=True)
+        response = json.loads(result.stdout)
+        ```
+
+        **Important:** Do NOT use `fs.createReadStream("/local/path")` inside the SDK
+        code — it will fail because the execution environment cannot access local paths.
+        Always prefer `curl`/`requests` executed locally for binary uploads.
+
+        **Usage via curl:**
+
+        ```
+        curl -X POST "{base_url}/source/upload" \\
+          -H "Authorization: Bearer {access_key}" \\
+          -F "file=@/path/to/document.pdf" \\
+          -F "partition_method=graphorlm"
+        ```
+
+        **Usage via Python `requests`:**
+
+        ```
+        import requests
+
+        with open("document.pdf", "rb") as f:
+            response = requests.post(
+                "{base_url}/source/upload",
+                headers={"Authorization": "Bearer {access_key}"},
+                files={"file": ("document.pdf", f, "application/pdf")},
+                data={"partition_method": "graphorlm"},  # optional
+            )
+        ```
 
         **Parameters:**
 
-        - **file** (multipart): The file to upload. Must include a `Content-Length`
-          header and have a supported extension (e.g. pdf, docx, txt, csv, etc.).
-        - **partition_method** (form, optional): The partitioning strategy to apply to
-          the document. When omitted the system default is used.
+        - **file** (`multipart/form-data`): The file to upload. Must include a
+          `Content-Length` header and have one of the supported extensions: pdf, doc,
+          docx, odt, ppt, pptx, csv, tsv, xls, xlsx, txt, text, md, html, htm, png, jpg,
+          jpeg, tiff, bmp, heic, mp4, mov, avi, mkv, webm, mp3, wav, m4a, ogg, flac.
+        - **partition_method** (`form`, optional): The partitioning strategy to apply.
+          One of: `basic`, `hi_res`, `hi_res_ft`, `mai`, `graphorlm`. When omitted, the
+          system default is used.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
@@ -1403,17 +1480,94 @@ class AsyncSourcesResource(AsyncAPIResource):
         Upload a local file and ingest it as a source into the project's knowledge
         graph.
 
-        This endpoint accepts a multipart file upload, validates the file size (max 100
-        MB) and extension against the list of allowed ingestion types, stores the file,
-        and then runs the full data-ingestion pipeline synchronously — including
-        partitioning, chunking, embedding, and graph persistence.
+        This endpoint accepts a **`multipart/form-data`** request containing the file to
+        upload. It validates the file size (max 100 MB) and extension against the list
+        of allowed types, stores the file, and then runs the full data-ingestion
+        pipeline synchronously — including partitioning, chunking, embedding, and graph
+        persistence.
+
+        **Usage via SDK (AI agent / MCP context):**
+
+        The SDK executes code in a **remote sandboxed container** that does **not** have
+        access to the local filesystem. Because of this, `fs.createReadStream()` with a
+        local file path will **not work** — the file does not exist inside the
+        container.
+
+        For **text-based files** (md, txt, csv, html, etc.), you can read the file
+        content with a local tool (e.g. IDE file-read) and create a `File` object in
+        memory:
+
+        ```
+        const content = `...file contents read locally...`;
+        const file = new File([content], "my-document.md", { type: "text/markdown" });
+        const result = await client.sources.upload({ file });
+        ```
+
+        For **binary files** (pdf, docx, images, video, audio, etc.), the in-memory
+        approach is impractical. Instead, use **`curl`** or **`subprocess`** to call the
+        upload endpoint directly from the local machine, where the file is accessible:
+
+        ```
+        import { execSync } from "child_process";
+
+        const result = execSync(`
+          curl -s -X POST "{base_url}/source/upload" \\
+            -H "Authorization: Bearer {access_key}" \\
+            -F "file=@/local/path/to/document.pdf" \\
+            -F "partition_method=graphorlm"
+        `).toString();
+        ```
+
+        Or with Python `subprocess`:
+
+        ```
+        import subprocess, json
+
+        result = subprocess.run([
+            "curl", "-s", "-X", "POST", "{base_url}/source/upload",
+            "-H", "Authorization: Bearer {access_key}",
+            "-F", "file=@/local/path/to/document.pdf",
+            "-F", "partition_method=graphorlm",
+        ], capture_output=True, text=True)
+        response = json.loads(result.stdout)
+        ```
+
+        **Important:** Do NOT use `fs.createReadStream("/local/path")` inside the SDK
+        code — it will fail because the execution environment cannot access local paths.
+        Always prefer `curl`/`requests` executed locally for binary uploads.
+
+        **Usage via curl:**
+
+        ```
+        curl -X POST "{base_url}/source/upload" \\
+          -H "Authorization: Bearer {access_key}" \\
+          -F "file=@/path/to/document.pdf" \\
+          -F "partition_method=graphorlm"
+        ```
+
+        **Usage via Python `requests`:**
+
+        ```
+        import requests
+
+        with open("document.pdf", "rb") as f:
+            response = requests.post(
+                "{base_url}/source/upload",
+                headers={"Authorization": "Bearer {access_key}"},
+                files={"file": ("document.pdf", f, "application/pdf")},
+                data={"partition_method": "graphorlm"},  # optional
+            )
+        ```
 
         **Parameters:**
 
-        - **file** (multipart): The file to upload. Must include a `Content-Length`
-          header and have a supported extension (e.g. pdf, docx, txt, csv, etc.).
-        - **partition_method** (form, optional): The partitioning strategy to apply to
-          the document. When omitted the system default is used.
+        - **file** (`multipart/form-data`): The file to upload. Must include a
+          `Content-Length` header and have one of the supported extensions: pdf, doc,
+          docx, odt, ppt, pptx, csv, tsv, xls, xlsx, txt, text, md, html, htm, png, jpg,
+          jpeg, tiff, bmp, heic, mp4, mov, avi, mkv, webm, mp3, wav, m4a, ogg, flac.
+        - **partition_method** (`form`, optional): The partitioning strategy to apply.
+          One of: `basic`, `hi_res`, `hi_res_ft`, `mai`, `graphorlm`. When omitted, the
+          system default is used.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
