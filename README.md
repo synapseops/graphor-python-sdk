@@ -44,6 +44,7 @@ client = Graphor(
 public_source = client.sources.upload(
     file=b"raw file contents",
 )
+print(public_source.project_id)
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -69,6 +70,7 @@ async def main() -> None:
     public_source = await client.sources.upload(
         file=b"raw file contents",
     )
+    print(public_source.project_id)
 
 
 asyncio.run(main())
@@ -104,6 +106,7 @@ async def main() -> None:
         public_source = await client.sources.upload(
             file=b"raw file contents",
         )
+        print(public_source.project_id)
 
 
 asyncio.run(main())
@@ -288,7 +291,7 @@ response = client.sources.with_raw_response.upload(
 print(response.headers.get('X-My-Header'))
 
 source = response.parse()  # get the object that `sources.upload()` would have returned
-print(source)
+print(source.project_id)
 ```
 
 These methods return an [`APIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) object.
