@@ -12,8 +12,8 @@ class SourceAskResponse(BaseModel):
     """The answer to the question.
 
     When output_schema is provided, this will be a short status message and the
-    structured data will be in structured_output (and the raw JSON-text from Passo A
-    in raw_json).
+    structured data will be in structured_output (and the raw JSON-text in
+    raw_json).
     """
 
     conversation_id: Optional[str] = None

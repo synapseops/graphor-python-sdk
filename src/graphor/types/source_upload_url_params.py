@@ -13,10 +13,10 @@ __all__ = ["SourceUploadURLParams"]
 
 class SourceUploadURLParams(TypedDict, total=False):
     url: Required[str]
-    """The url of the source"""
+    """The web page URL to ingest"""
 
     crawl_urls: Annotated[bool, PropertyInfo(alias="crawlUrls")]
-    """Whether to crawl urls from the source"""
+    """When true, also follows and ingests links found on the page"""
 
     partition_method: Optional[PublicPartitionMethod]
     """Partition methods available for public API endpoints."""

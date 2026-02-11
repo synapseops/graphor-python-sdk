@@ -9,4 +9,7 @@ __all__ = ["SourceUploadYoutubeParams"]
 
 class SourceUploadYoutubeParams(TypedDict, total=False):
     url: Required[str]
-    """The url of the youtube video"""
+    """The YouTube video URL to ingest (e.g.
+
+    https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+    """

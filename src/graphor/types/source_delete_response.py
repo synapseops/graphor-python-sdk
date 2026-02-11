@@ -9,19 +9,19 @@ __all__ = ["SourceDeleteResponse"]
 
 class SourceDeleteResponse(BaseModel):
     file_name: str
-    """The name of the deleted file"""
+    """Display name of the deleted file"""
 
     message: str
-    """The message of the deletion"""
+    """Human-readable result message"""
 
     project_id: str
-    """The ID of the project"""
+    """UUID of the project"""
 
     project_name: str
-    """The name of the project"""
+    """Display name of the project"""
 
     status: str
-    """The status of the deletion"""
+    """Result status of the deletion (e.g. 'success')"""
 
     file_id: Optional[str] = None
-    """Unique identifier for the source"""
+    """Unique identifier of the deleted source"""

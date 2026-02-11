@@ -9,4 +9,4 @@ __all__ = ["SourceUploadGitHubParams"]
 
 class SourceUploadGitHubParams(TypedDict, total=False):
     url: Required[str]
-    """The url of the github repository"""
+    """The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)"""
