@@ -12,13 +12,13 @@ __all__ = ["SourceExtractParams"]
 
 class SourceExtractParams(TypedDict, total=False):
     output_schema: Required[Dict[str, object]]
-    """JSON Schema used to request a structured output.
+    """JSON Schema describing the desired structured output shape.
 
-    The system will extract data according to this schema.
+    The model will produce data conforming to this schema.
     """
 
     user_instruction: Required[str]
-    """User instruction to guide the extraction"""
+    """Natural-language instruction guiding what information to extract"""
 
     file_ids: Optional[SequenceNotStr[str]]
     """List of file IDs to extract from (preferred)"""
@@ -27,4 +27,7 @@ class SourceExtractParams(TypedDict, total=False):
     """List of file names to extract from (deprecated, use file_ids)"""
 
     thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
-    """Controls model and thinking configuration: 'fast', 'balanced', 'accurate'"""
+    """
+    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
+    'accurate' (most thorough)
+    """

@@ -18,13 +18,13 @@ class Chunk(BaseModel):
     """The source file name"""
 
     metadata: Optional[Dict[str, object]] = None
-    """Additional metadata for the chunk"""
+    """Additional metadata for the chunk (e.g. element type, coordinates)"""
 
     page_number: Optional[int] = None
-    """The page number of the chunk"""
+    """The page number where this chunk appears in the original document"""
 
     score: Optional[float] = None
-    """The relevance score of the chunk"""
+    """Relevance score between 0 and 1 (higher is more relevant)"""
 
 
 class SourceRetrieveChunksResponse(BaseModel):
@@ -35,4 +35,4 @@ class SourceRetrieveChunksResponse(BaseModel):
     """Total number of chunks retrieved"""
 
     chunks: Optional[List[Chunk]] = None
-    """List of retrieved chunks"""
+    """List of retrieved chunks ordered by relevance"""
