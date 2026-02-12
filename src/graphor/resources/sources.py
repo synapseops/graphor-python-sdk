@@ -480,7 +480,8 @@ class SourcesResource(SyncAPIResource):
           Use `file_id` instead when possible. At least one of `file_id` or `file_name`
           must be provided.
         - **partition_method** (str, default `"basic"`): The partitioning strategy to
-          apply (e.g. `"basic"`, `"hi_res"`, `"fast"`).
+          apply. One of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate),
+          `mai` (VLM), `graphorlm` (Agentic).
 
         **Returns** a `PublicSourceResponse` with the updated source metadata.
 
@@ -494,7 +495,8 @@ class SourcesResource(SyncAPIResource):
 
           file_name: The name of the file (deprecated, use file_id)
 
-          partition_method: The partitioning strategy to apply (basic, hi_res, hi_res_ft, mai, graphorlm)
+          partition_method: The partitioning strategy to apply. Available methods: basic (Fast), hi_res
+              (Balanced), hi_res_ft (Accurate), mai (VLM), graphorlm (Agentic)
 
           extra_headers: Send extra headers
 
@@ -696,8 +698,8 @@ class SourcesResource(SyncAPIResource):
           docx, odt, ppt, pptx, csv, tsv, xls, xlsx, txt, text, md, html, htm, png, jpg,
           jpeg, tiff, bmp, heic, mp4, mov, avi, mkv, webm, mp3, wav, m4a, ogg, flac.
         - **partition_method** (`form`, optional): The partitioning strategy to apply.
-          One of: `basic`, `hi_res`, `hi_res_ft`, `mai`, `graphorlm`. When omitted, the
-          system default is used.
+          One of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai`
+          (VLM), `graphorlm` (Agentic). When omitted, the system default is used.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
@@ -713,6 +715,14 @@ class SourcesResource(SyncAPIResource):
 
         Args:
           partition_method: Partition methods available for public API endpoints.
+
+              Each value also has a human-readable alias:
+
+              - `basic` → **Fast**
+              - `hi_res` → **Balanced**
+              - `hi_res_ft` → **Accurate**
+              - `mai` → **VLM**
+              - `graphorlm` → **Agentic**
 
           extra_headers: Send extra headers
 
@@ -820,8 +830,9 @@ class SourcesResource(SyncAPIResource):
         - **url** (str, required): The web page URL to ingest.
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page.
-        - **partition_method** (str, optional): The partitioning strategy to use. When
-          omitted the system default is applied.
+        - **partition_method** (str, optional): The partitioning strategy to use. One
+          of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai` (VLM),
+          `graphorlm` (Agentic). When omitted the system default is applied.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
@@ -836,6 +847,14 @@ class SourcesResource(SyncAPIResource):
           crawl_urls: When true, also follows and ingests links found on the page
 
           partition_method: Partition methods available for public API endpoints.
+
+              Each value also has a human-readable alias:
+
+              - `basic` → **Fast**
+              - `hi_res` → **Balanced**
+              - `hi_res_ft` → **Accurate**
+              - `mai` → **VLM**
+              - `graphorlm` → **Agentic**
 
           extra_headers: Send extra headers
 
@@ -1350,7 +1369,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           Use `file_id` instead when possible. At least one of `file_id` or `file_name`
           must be provided.
         - **partition_method** (str, default `"basic"`): The partitioning strategy to
-          apply (e.g. `"basic"`, `"hi_res"`, `"fast"`).
+          apply. One of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate),
+          `mai` (VLM), `graphorlm` (Agentic).
 
         **Returns** a `PublicSourceResponse` with the updated source metadata.
 
@@ -1364,7 +1384,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_name: The name of the file (deprecated, use file_id)
 
-          partition_method: The partitioning strategy to apply (basic, hi_res, hi_res_ft, mai, graphorlm)
+          partition_method: The partitioning strategy to apply. Available methods: basic (Fast), hi_res
+              (Balanced), hi_res_ft (Accurate), mai (VLM), graphorlm (Agentic)
 
           extra_headers: Send extra headers
 
@@ -1566,8 +1587,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           docx, odt, ppt, pptx, csv, tsv, xls, xlsx, txt, text, md, html, htm, png, jpg,
           jpeg, tiff, bmp, heic, mp4, mov, avi, mkv, webm, mp3, wav, m4a, ogg, flac.
         - **partition_method** (`form`, optional): The partitioning strategy to apply.
-          One of: `basic`, `hi_res`, `hi_res_ft`, `mai`, `graphorlm`. When omitted, the
-          system default is used.
+          One of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai`
+          (VLM), `graphorlm` (Agentic). When omitted, the system default is used.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
@@ -1583,6 +1604,14 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         Args:
           partition_method: Partition methods available for public API endpoints.
+
+              Each value also has a human-readable alias:
+
+              - `basic` → **Fast**
+              - `hi_res` → **Balanced**
+              - `hi_res_ft` → **Accurate**
+              - `mai` → **VLM**
+              - `graphorlm` → **Agentic**
 
           extra_headers: Send extra headers
 
@@ -1690,8 +1719,9 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **url** (str, required): The web page URL to ingest.
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page.
-        - **partition_method** (str, optional): The partitioning strategy to use. When
-          omitted the system default is applied.
+        - **partition_method** (str, optional): The partitioning strategy to use. One
+          of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai` (VLM),
+          `graphorlm` (Agentic). When omitted the system default is applied.
 
         **Returns** a `PublicSourceResponse` with the resulting source metadata (file
         ID, name, size, type, source origin, partition method, and processing status).
@@ -1706,6 +1736,14 @@ class AsyncSourcesResource(AsyncAPIResource):
           crawl_urls: When true, also follows and ingests links found on the page
 
           partition_method: Partition methods available for public API endpoints.
+
+              Each value also has a human-readable alias:
+
+              - `basic` → **Fast**
+              - `hi_res` → **Balanced**
+              - `hi_res_ft` → **Accurate**
+              - `mai` → **VLM**
+              - `graphorlm` → **Agentic**
 
           extra_headers: Send extra headers
 

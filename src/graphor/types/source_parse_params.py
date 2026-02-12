@@ -18,4 +18,8 @@ class SourceParseParams(TypedDict, total=False):
     """The name of the file (deprecated, use file_id)"""
 
     partition_method: PublicPartitionMethod
-    """The partitioning strategy to apply (basic, hi_res, hi_res_ft, mai, graphorlm)"""
+    """The partitioning strategy to apply.
+
+    Available methods: basic (Fast), hi_res (Balanced), hi_res_ft (Accurate), mai
+    (VLM), graphorlm (Agentic)
+    """

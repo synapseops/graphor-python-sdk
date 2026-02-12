@@ -15,4 +15,13 @@ class SourceUploadParams(TypedDict, total=False):
     file: Required[FileTypes]
 
     partition_method: Optional[PublicPartitionMethod]
-    """Partition methods available for public API endpoints."""
+    """Partition methods available for public API endpoints.
+
+    Each value also has a human-readable alias:
+
+    - `basic` → **Fast**
+    - `hi_res` → **Balanced**
+    - `hi_res_ft` → **Accurate**
+    - `mai` → **VLM**
+    - `graphorlm` → **Agentic**
+    """
