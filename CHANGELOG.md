@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.3 (2026-02-12)
+
+Full Changelog: [v0.15.2...v0.15.3](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.2...v0.15.3)
+
+### Documentation
+
+* update readme ([44b6f66](https://github.com/synapseops/graphor-python-sdk/commit/44b6f66faae3a13178c7bb323165b8e066829928))
+
 ## 0.15.2 (2026-02-12)
 
 Full Changelog: [v0.15.1...v0.15.2](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.1...v0.15.2)
