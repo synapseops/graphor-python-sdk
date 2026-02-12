@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.16.0 (2026-02-12)
+
+Full Changelog: [v0.15.3...v0.16.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.3...v0.16.0)
+
+### Features
+
+* **api:** api update ([7eae1f1](https://github.com/synapseops/graphor-python-sdk/commit/7eae1f18be8b7ee4a06f1d39093f6c72a3ff2508))
+
+
+### Documentation
+
+* add parsing to quickstart ([150af10](https://github.com/synapseops/graphor-python-sdk/commit/150af10c1fb1b97297112ff32537ebfa85f18a4c))
+
 ## 0.15.3 (2026-02-12)
 
 Full Changelog: [v0.15.2...v0.15.3](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.2...v0.15.3)
