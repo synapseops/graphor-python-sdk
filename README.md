@@ -95,6 +95,12 @@ client = Graphor()  # Uses GRAPHOR_API_KEY env var
 source = client.sources.upload(file=open("document.pdf", "rb"))
 print(f"Uploaded: {source.file_name}")
 
+# Process with advanced parsing
+client.sources.parse(
+    file_name=source.file_name, 
+    partition_method="graphorlm" # Options: basic (Fast), hi_res (Balanced), hi_res_ft (Accurate), mai (VLM), graphorlm (Agentic)
+)
+
 # Ask questions about your documents
 response = client.sources.ask(question="What are the main topics?")
 print(f"Answer: {response.answer}")

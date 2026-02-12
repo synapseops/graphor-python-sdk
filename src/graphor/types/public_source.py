@@ -42,4 +42,8 @@ class PublicSource(BaseModel):
     partition_method: Optional[
         Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm", "ocr", "advanced", "yolox"]
     ] = None
-    """Partitioning strategy used during ingestion"""
+    """Partitioning strategy used during ingestion.
+
+    Available methods: basic (Fast), hi_res (Balanced), hi_res_ft (Accurate), mai
+    (VLM), graphorlm (Agentic)
+    """

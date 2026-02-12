@@ -19,4 +19,13 @@ class SourceUploadURLParams(TypedDict, total=False):
     """When true, also follows and ingests links found on the page"""
 
     partition_method: Optional[PublicPartitionMethod]
-    """Partition methods available for public API endpoints."""
+    """Partition methods available for public API endpoints.
+
+    Each value also has a human-readable alias:
+
+    - `basic` → **Fast**
+    - `hi_res` → **Balanced**
+    - `hi_res_ft` → **Accurate**
+    - `mai` → **VLM**
+    - `graphorlm` → **Agentic**
+    """
