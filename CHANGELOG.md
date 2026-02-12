@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.1 (2026-02-12)
+
+Full Changelog: [v0.15.0...v0.15.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.0...v0.15.1)
+
+### Documentation
+
+* update mpc deeplinks ([6084a50](https://github.com/synapseops/graphor-python-sdk/commit/6084a5070725b52bbcebcff3e6d698517ee64f72))
+
 ## 0.15.0 (2026-02-12)
 
 Full Changelog: [v0.14.0...v0.15.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.14.0...v0.15.0)
