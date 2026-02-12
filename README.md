@@ -22,6 +22,52 @@ Use the Graphor MCP Server to enable AI assistants to interact with this API, al
 
 > Note: You may need to set environment variables in your MCP client.
 
+### Remote MCP Server (Web Apps & Agentic Workflows)
+
+For web-based AI clients (e.g. [Claude.ai](https://claude.ai)) or agentic frameworks (e.g. LangChain, CrewAI) that cannot run local `npx` processes, use the hosted remote MCP server. Authentication is handled via **OAuth** — a browser window will open for you to log in.
+
+```
+https://mcp.graphor.workers.dev/sse
+```
+
+**Web apps (e.g. Claude.ai)** — in Claude.ai, go to **Settings > Connectors > Add custom connector**, fill in the name and the remote MCP server URL. You will be redirected to log in through the OAuth flow:
+
+```
+https://mcp.graphor.workers.dev/sse
+```
+
+**Desktop clients (e.g. Claude Desktop)** — use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a local proxy:
+
+```json
+{
+  "mcpServers": {
+    "graphor_api": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.graphor.workers.dev/sse"]
+    }
+  }
+}
+```
+
+**Agentic workflows (e.g. LangChain)** — connect via SSE transport:
+
+```python
+from langchain_mcp_adapters.client import MultiServerMCPClient
+
+async with MultiServerMCPClient(
+    {
+        "graphor": {
+            "url": "https://mcp.graphor.workers.dev/sse",
+            "transport": "sse",
+        }
+    }
+) as client:
+    tools = client.get_tools()
+    # Use tools with your LangChain agent
+```
+
+See the [MCP Server README](https://github.com/synapseops/graphor-mcp-server) for more details.
+
 ## Documentation
 
 📚 **Full documentation**: [docs.graphorlm.com/sdk/overview](https://docs.graphorlm.com/sdk/overview)
