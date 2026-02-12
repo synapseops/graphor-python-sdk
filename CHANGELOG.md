@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.15.0 (2026-02-12)
+
+Full Changelog: [v0.14.0...v0.15.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.14.0...v0.15.0)
+
+### Features
+
+* **api:** manual updates ([06021a4](https://github.com/synapseops/graphor-python-sdk/commit/06021a434b677aa1c7d23e0f0c9639d9701e9086))
+* **api:** manual updates ([11c174f](https://github.com/synapseops/graphor-python-sdk/commit/11c174f9bc177d1d5796caf452b83728da7b0440))
+* **api:** manual updates ([7a63b4d](https://github.com/synapseops/graphor-python-sdk/commit/7a63b4dbe7fa871670f86394dcd15f981bbc5663))
+* **api:** manual updates ([492f332](https://github.com/synapseops/graphor-python-sdk/commit/492f33292707600f8812dcd363df99e20ac8cb08))
+
+
+### Chores
+
+* **internal:** fix lint error on Python 3.14 ([5d22a81](https://github.com/synapseops/graphor-python-sdk/commit/5d22a81d928be4564903420f7895fb17ff61cfd9))
+
 ## 0.14.0 (2026-02-11)
 
 Full Changelog: [v0.13.0...v0.14.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.13.0...v0.14.0)
