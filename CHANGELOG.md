@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.16.1 (2026-02-13)
+
+Full Changelog: [v0.16.0...v0.16.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.0...v0.16.1)
+
+### Chores
+
+* format all `api.md` files ([bf8f6a6](https://github.com/synapseops/graphor-python-sdk/commit/bf8f6a6604722ceb43f46fac5d2c7e48857357a1))
+
+
+### Documentation
+
+* update mcp docs ([9604db3](https://github.com/synapseops/graphor-python-sdk/commit/9604db30b794b914c8f0975223776ef3c9e56281))
+
 ## 0.16.0 (2026-02-12)
 
 Full Changelog: [v0.15.3...v0.16.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.15.3...v0.16.0)
