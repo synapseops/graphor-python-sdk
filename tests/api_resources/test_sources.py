@@ -25,13 +25,13 @@ base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 class TestSources:
     parametrize = pytest.mark.parametrize("client", [False, True], indirect=True, ids=["loose", "strict"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_list(self, client: Graphor) -> None:
         source = client.sources.list()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_list(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.list()
@@ -41,7 +41,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_list(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.list() as response:
@@ -53,13 +53,13 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_delete(self, client: Graphor) -> None:
         source = client.sources.delete()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_delete_with_all_params(self, client: Graphor) -> None:
         source = client.sources.delete(
@@ -68,7 +68,7 @@ class TestSources:
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_delete(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.delete()
@@ -78,7 +78,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_delete(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.delete() as response:
@@ -90,7 +90,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_ask(self, client: Graphor) -> None:
         source = client.sources.ask(
@@ -98,7 +98,7 @@ class TestSources:
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_ask_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ask(
@@ -112,7 +112,7 @@ class TestSources:
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_ask(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ask(
@@ -124,7 +124,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_ask(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ask(
@@ -138,7 +138,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_extract(self, client: Graphor) -> None:
         source = client.sources.extract(
@@ -147,7 +147,7 @@ class TestSources:
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_extract_with_all_params(self, client: Graphor) -> None:
         source = client.sources.extract(
@@ -159,7 +159,7 @@ class TestSources:
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_extract(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.extract(
@@ -172,7 +172,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_extract(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.extract(
@@ -187,13 +187,13 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_load_elements(self, client: Graphor) -> None:
         source = client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_load_elements_with_all_params(self, client: Graphor) -> None:
         source = client.sources.load_elements(
@@ -209,7 +209,7 @@ class TestSources:
         )
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_load_elements(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.load_elements()
@@ -219,7 +219,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_load_elements(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.load_elements() as response:
@@ -231,13 +231,13 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_parse(self, client: Graphor) -> None:
         source = client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_parse_with_all_params(self, client: Graphor) -> None:
         source = client.sources.parse(
@@ -247,7 +247,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_parse(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.parse()
@@ -257,7 +257,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_parse(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.parse() as response:
@@ -269,7 +269,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_retrieve_chunks(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
@@ -277,7 +277,7 @@ class TestSources:
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_retrieve_chunks_with_all_params(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
@@ -287,7 +287,7 @@ class TestSources:
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_retrieve_chunks(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.retrieve_chunks(
@@ -299,7 +299,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_retrieve_chunks(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.retrieve_chunks(
@@ -313,7 +313,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload(self, client: Graphor) -> None:
         source = client.sources.upload(
@@ -321,7 +321,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload_with_all_params(self, client: Graphor) -> None:
         source = client.sources.upload(
@@ -330,7 +330,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_upload(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload(
@@ -342,7 +342,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_upload(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload(
@@ -356,7 +356,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload_github(self, client: Graphor) -> None:
         source = client.sources.upload_github(
@@ -364,7 +364,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_upload_github(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_github(
@@ -376,7 +376,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_upload_github(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_github(
@@ -390,7 +390,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload_url(self, client: Graphor) -> None:
         source = client.sources.upload_url(
@@ -398,7 +398,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload_url_with_all_params(self, client: Graphor) -> None:
         source = client.sources.upload_url(
@@ -408,7 +408,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_upload_url(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_url(
@@ -420,7 +420,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_upload_url(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_url(
@@ -434,7 +434,7 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_method_upload_youtube(self, client: Graphor) -> None:
         source = client.sources.upload_youtube(
@@ -442,7 +442,7 @@ class TestSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_raw_response_upload_youtube(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload_youtube(
@@ -454,7 +454,7 @@ class TestSources:
         source = response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     def test_streaming_response_upload_youtube(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload_youtube(
@@ -474,13 +474,13 @@ class TestAsyncSources:
         "async_client", [False, True, {"http_client": "aiohttp"}], indirect=True, ids=["loose", "strict", "aiohttp"]
     )
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_list(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.list()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_list(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.list()
@@ -490,7 +490,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceListResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_list(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.list() as response:
@@ -502,13 +502,13 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_delete(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_delete_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete(
@@ -517,7 +517,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_delete(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.delete()
@@ -527,7 +527,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_delete(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.delete() as response:
@@ -539,7 +539,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_ask(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
@@ -547,7 +547,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_ask_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
@@ -561,7 +561,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_ask(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ask(
@@ -573,7 +573,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_ask(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ask(
@@ -587,7 +587,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_extract(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
@@ -596,7 +596,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_extract_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
@@ -608,7 +608,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_extract(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.extract(
@@ -621,7 +621,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_extract(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.extract(
@@ -636,13 +636,13 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_load_elements(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.load_elements()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_load_elements_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.load_elements(
@@ -658,7 +658,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_load_elements(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.load_elements()
@@ -668,7 +668,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceLoadElementsResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_load_elements(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.load_elements() as response:
@@ -680,13 +680,13 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_parse(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_parse_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.parse(
@@ -696,7 +696,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_parse(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.parse()
@@ -706,7 +706,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_parse(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.parse() as response:
@@ -718,7 +718,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
@@ -726,7 +726,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_retrieve_chunks_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
@@ -736,7 +736,7 @@ class TestAsyncSources:
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.retrieve_chunks(
@@ -748,7 +748,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.retrieve_chunks(
@@ -762,7 +762,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
@@ -770,7 +770,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
@@ -779,7 +779,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_upload(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload(
@@ -791,7 +791,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_upload(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload(
@@ -805,7 +805,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload_github(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_github(
@@ -813,7 +813,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_upload_github(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_github(
@@ -825,7 +825,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_upload_github(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_github(
@@ -839,7 +839,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload_url(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_url(
@@ -847,7 +847,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload_url_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_url(
@@ -857,7 +857,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_upload_url(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_url(
@@ -869,7 +869,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_upload_url(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_url(
@@ -883,7 +883,7 @@ class TestAsyncSources:
 
         assert cast(Any, response.is_closed) is True
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_method_upload_youtube(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload_youtube(
@@ -891,7 +891,7 @@ class TestAsyncSources:
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_raw_response_upload_youtube(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload_youtube(
@@ -903,7 +903,7 @@ class TestAsyncSources:
         source = await response.parse()
         assert_matches_type(PublicSource, source, path=["response"])
 
-    @pytest.mark.skip(reason="Prism tests are disabled")
+    @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
     async def test_streaming_response_upload_youtube(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload_youtube(
