@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.16.2 (2026-02-20)
+
+Full Changelog: [v0.16.1...v0.16.2](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.1...v0.16.2)
+
+### Chores
+
+* **internal:** remove mock server code ([2eadf82](https://github.com/synapseops/graphor-python-sdk/commit/2eadf82cc19d8647ed5d63dcbc1b6cdd5e095963))
+* update mock server docs ([705d15f](https://github.com/synapseops/graphor-python-sdk/commit/705d15f259ed83773db7fefe1d50d7eaed3ca463))
+
 ## 0.16.1 (2026-02-13)
 
 Full Changelog: [v0.16.0...v0.16.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.0...v0.16.1)
