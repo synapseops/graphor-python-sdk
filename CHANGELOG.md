@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.17.0 (2026-02-26)
+
+Full Changelog: [v0.16.1...v0.17.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.1...v0.17.0)
+
+### Features
+
+* **api:** api update ([be7361f](https://github.com/synapseops/graphor-python-sdk/commit/be7361fd3759e8492f5175b6e1ec5aa0d7c255d7))
+
+
+### Chores
+
+* **internal:** add request options to SSE classes ([f3441b1](https://github.com/synapseops/graphor-python-sdk/commit/f3441b11b9995237015200da3890e28aecd969fb))
+* **internal:** make `test_proxy_environment_variables` more resilient ([5dbd8ca](https://github.com/synapseops/graphor-python-sdk/commit/5dbd8ca2b2408d9d9a5dd1cdcf5ee5db6f38d4db))
+* **internal:** make `test_proxy_environment_variables` more resilient to env ([b1866fb](https://github.com/synapseops/graphor-python-sdk/commit/b1866fb949e072f79073dbe9f08fb698251c3831))
+* **internal:** remove mock server code ([2eadf82](https://github.com/synapseops/graphor-python-sdk/commit/2eadf82cc19d8647ed5d63dcbc1b6cdd5e095963))
+* update mock server docs ([705d15f](https://github.com/synapseops/graphor-python-sdk/commit/705d15f259ed83773db7fefe1d50d7eaed3ca463))
+
 ## 0.16.1 (2026-02-13)
 
 Full Changelog: [v0.16.0...v0.16.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.0...v0.16.1)
