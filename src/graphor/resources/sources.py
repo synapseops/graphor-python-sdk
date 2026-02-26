@@ -825,11 +825,17 @@ class SourcesResource(SyncAPIResource):
         generates embeddings, and persists everything in the knowledge graph
         synchronously.
 
+        If the URL points directly to a downloadable file (detected via URL path
+        extension or HTTP Content-Type), the file is downloaded, uploaded to storage,
+        and processed through the local file ingestion pipeline instead of the web-page
+        pipeline.
+
         **Parameters (JSON body):**
 
         - **url** (str, required): The web page URL to ingest.
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
-          also follow and ingest links found on the page.
+          also follow and ingest links found on the page. Ignored when the URL resolves
+          to a file.
         - **partition_method** (str, optional): The partitioning strategy to use. One
           of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai` (VLM),
           `graphorlm` (Agentic). When omitted the system default is applied.
@@ -839,6 +845,7 @@ class SourcesResource(SyncAPIResource):
 
         **Error responses:**
 
+        - `400` — Unsupported file type detected from a file URL.
         - `500` — Unexpected internal error during URL processing.
 
         Args:
@@ -1714,11 +1721,17 @@ class AsyncSourcesResource(AsyncAPIResource):
         generates embeddings, and persists everything in the knowledge graph
         synchronously.
 
+        If the URL points directly to a downloadable file (detected via URL path
+        extension or HTTP Content-Type), the file is downloaded, uploaded to storage,
+        and processed through the local file ingestion pipeline instead of the web-page
+        pipeline.
+
         **Parameters (JSON body):**
 
         - **url** (str, required): The web page URL to ingest.
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
-          also follow and ingest links found on the page.
+          also follow and ingest links found on the page. Ignored when the URL resolves
+          to a file.
         - **partition_method** (str, optional): The partitioning strategy to use. One
           of: `basic` (Fast), `hi_res` (Balanced), `hi_res_ft` (Accurate), `mai` (VLM),
           `graphorlm` (Agentic). When omitted the system default is applied.
@@ -1728,6 +1741,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         **Error responses:**
 
+        - `400` — Unsupported file type detected from a file URL.
         - `500` — Unexpected internal error during URL processing.
 
         Args:
