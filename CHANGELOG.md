@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.17.1 (2026-02-27)
+
+Full Changelog: [v0.17.0...v0.17.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.17.0...v0.17.1)
+
+### Chores
+
+* **ci:** bump uv version ([2324ec4](https://github.com/synapseops/graphor-python-sdk/commit/2324ec41075cff920f6a25a3eb032160b655ddba))
+
 ## 0.17.0 (2026-02-26)
 
 Full Changelog: [v0.16.1...v0.17.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.1...v0.17.0)
