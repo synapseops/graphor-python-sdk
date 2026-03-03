@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.1 (2026-03-03)
+
+Full Changelog: [v0.17.0...v0.17.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.17.0...v0.17.1)
+
+### Chores
+
+* **ci:** bump uv version ([2324ec4](https://github.com/synapseops/graphor-python-sdk/commit/2324ec41075cff920f6a25a3eb032160b655ddba))
+* **internal:** refactor authentication internals ([47cdcdc](https://github.com/synapseops/graphor-python-sdk/commit/47cdcdce6c27dbc1b21bb875e58e49882ecef4b5))
+
 ## 0.17.0 (2026-02-26)
 
 Full Changelog: [v0.16.1...v0.17.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.16.1...v0.17.0)
