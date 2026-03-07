@@ -317,7 +317,7 @@ class TestSources:
     @parametrize
     def test_method_upload(self, client: Graphor) -> None:
         source = client.sources.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
@@ -325,7 +325,7 @@ class TestSources:
     @parametrize
     def test_method_upload_with_all_params(self, client: Graphor) -> None:
         source = client.sources.upload(
-            file=b"raw file contents",
+            file=b"Example data",
             partition_method="basic",
         )
         assert_matches_type(PublicSource, source, path=["response"])
@@ -334,7 +334,7 @@ class TestSources:
     @parametrize
     def test_raw_response_upload(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         )
 
         assert response.is_closed is True
@@ -346,7 +346,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_upload(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -766,7 +766,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_upload(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         )
         assert_matches_type(PublicSource, source, path=["response"])
 
@@ -774,7 +774,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_upload_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.upload(
-            file=b"raw file contents",
+            file=b"Example data",
             partition_method="basic",
         )
         assert_matches_type(PublicSource, source, path=["response"])
@@ -783,7 +783,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_upload(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         )
 
         assert response.is_closed is True
@@ -795,7 +795,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_upload(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"

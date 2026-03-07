@@ -42,7 +42,7 @@ client = Graphor(
 )
 
 public_source = client.sources.upload(
-    file=b"raw file contents",
+    file=b"Example data",
 )
 print(public_source.project_id)
 ```
@@ -68,7 +68,7 @@ client = AsyncGraphor(
 
 async def main() -> None:
     public_source = await client.sources.upload(
-        file=b"raw file contents",
+        file=b"Example data",
     )
     print(public_source.project_id)
 
@@ -104,7 +104,7 @@ async def main() -> None:
         http_client=DefaultAioHttpClient(),
     ) as client:
         public_source = await client.sources.upload(
-            file=b"raw file contents",
+            file=b"Example data",
         )
         print(public_source.project_id)
 
@@ -173,7 +173,7 @@ client = Graphor()
 
 try:
     client.sources.upload(
-        file=b"raw file contents",
+        file=b"Example data",
     )
 except graphor.APIConnectionError as e:
     print("The server could not be reached")
@@ -218,7 +218,7 @@ client = Graphor(
 
 # Or, configure per-request:
 client.with_options(max_retries=5).sources.upload(
-    file=b"raw file contents",
+    file=b"Example data",
 )
 ```
 
@@ -243,7 +243,7 @@ client = Graphor(
 
 # Override per-request:
 client.with_options(timeout=5.0).sources.upload(
-    file=b"raw file contents",
+    file=b"Example data",
 )
 ```
 
@@ -286,7 +286,7 @@ from graphor import Graphor
 
 client = Graphor()
 response = client.sources.with_raw_response.upload(
-    file=b"raw file contents",
+    file=b"Example data",
 )
 print(response.headers.get('X-My-Header'))
 
@@ -306,7 +306,7 @@ To stream the response body, use `.with_streaming_response` instead, which requi
 
 ```python
 with client.sources.with_streaming_response.upload(
-    file=b"raw file contents",
+    file=b"Example data",
 ) as response:
     print(response.headers.get("X-My-Header"))
 
