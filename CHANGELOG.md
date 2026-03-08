@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.18.0 (2026-03-08)
+
+Full Changelog: [v0.17.1...v0.18.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.17.1...v0.18.0)
+
+### Features
+
+* **api:** api update ([5d922e8](https://github.com/synapseops/graphor-python-sdk/commit/5d922e80054bc3d55bb1bf88d92472013307eb00))
+* **api:** api update ([7fc6c4b](https://github.com/synapseops/graphor-python-sdk/commit/7fc6c4b4092d765317b55f1cc145f03ccf1069da))
+* **api:** manual updates ([4e70124](https://github.com/synapseops/graphor-python-sdk/commit/4e70124c3e45c3f7205b62547382874fa2f632f3))
+* **api:** manual updates ([62efd09](https://github.com/synapseops/graphor-python-sdk/commit/62efd098c6005fa42627513ad93de2df877f1294))
+* **api:** manual updates ([137d286](https://github.com/synapseops/graphor-python-sdk/commit/137d2860bde438209e4422479c2577ca27522c02))
+* **api:** manual updates ([b71ef86](https://github.com/synapseops/graphor-python-sdk/commit/b71ef8629b3498facd0df13e9998f16ec5c9f8a9))
+
+
+### Chores
+
+* **ci:** skip uploading artifacts on stainless-internal branches ([53ed9ce](https://github.com/synapseops/graphor-python-sdk/commit/53ed9ce41036e9a7c787ac7f099093ffcb1994c9))
+* update placeholder string ([80726da](https://github.com/synapseops/graphor-python-sdk/commit/80726dafe5251a4505989fc44c8f37b38bde6b4c))
+
 ## 0.17.1 (2026-03-03)
 
 Full Changelog: [v0.17.0...v0.17.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.17.0...v0.17.1)

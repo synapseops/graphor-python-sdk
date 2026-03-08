@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing_extensions import Required, TypedDict
 
-__all__ = ["SourceUploadGitHubParams"]
+__all__ = ["SourceIngestGitHubParams"]
 
 
-class SourceUploadGitHubParams(TypedDict, total=False):
+class SourceIngestGitHubParams(TypedDict, total=False):
     url: Required[str]
     """The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)"""

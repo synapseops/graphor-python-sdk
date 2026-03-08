@@ -1,7 +1,6 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 from typing import Optional
-from typing_extensions import Literal
 
 from .._models import BaseModel
 
@@ -39,11 +38,9 @@ class PublicSource(BaseModel):
     file_id: Optional[str] = None
     """Unique identifier for the source"""
 
-    partition_method: Optional[
-        Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm", "ocr", "advanced", "yolox"]
-    ] = None
+    method: Optional[str] = None
     """Partitioning strategy used during ingestion.
 
-    Available methods: basic (Fast), hi_res (Balanced), hi_res_ft (Accurate), mai
-    (VLM), graphorlm (Agentic)
+    V1 API: basic, hi_res, hi_res_ft, mai, graphorlm. V2 API: fast, balanced,
+    accurate, vlm, agentic.
     """

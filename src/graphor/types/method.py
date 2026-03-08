@@ -2,6 +2,6 @@
 
 from typing_extensions import Literal, TypeAlias
 
-__all__ = ["PublicPartitionMethod"]
+__all__ = ["Method"]
 
-PublicPartitionMethod: TypeAlias = Literal["basic", "hi_res", "hi_res_ft", "mai", "graphorlm"]
+Method: TypeAlias = Literal["fast", "balanced", "accurate", "vlm", "agentic"]

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing_extensions import Required, TypedDict
 
-__all__ = ["SourceUploadYoutubeParams"]
+__all__ = ["SourceIngestYoutubeParams"]
 
 
-class SourceUploadYoutubeParams(TypedDict, total=False):
+class SourceIngestYoutubeParams(TypedDict, total=False):
     url: Required[str]
     """The YouTube video URL to ingest (e.g.
 
