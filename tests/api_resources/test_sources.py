@@ -17,6 +17,7 @@ from graphor.types import (
     SourceIngestURLResponse,
     SourceReprocessResponse,
     SourceIngestFileResponse,
+    SourceGetElementsResponse,
     SourceIngestGitHubResponse,
     SourceIngestYoutubeResponse,
     SourceRetrieveChunksResponse,
@@ -195,6 +196,54 @@ class TestSources:
 
             source = response.parse()
             assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_elements(self, client: Graphor) -> None:
+        source = client.sources.get_elements(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_elements_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.get_elements(
+            file_id="file_id",
+            elements_to_remove=["string"],
+            page=0,
+            page_numbers=[0],
+            page_size=1,
+            suppress_img_base64=True,
+            type="type",
+        )
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_get_elements(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.get_elements(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_get_elements(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.get_elements(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceGetElementsResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -613,6 +662,54 @@ class TestAsyncSources:
 
             source = await response.parse()
             assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_elements(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_elements(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_elements_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_elements(
+            file_id="file_id",
+            elements_to_remove=["string"],
+            page=0,
+            page_numbers=[0],
+            page_size=1,
+            suppress_img_base64=True,
+            type="type",
+        )
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_get_elements(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.get_elements(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceGetElementsResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_get_elements(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.get_elements(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceGetElementsResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
