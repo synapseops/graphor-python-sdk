@@ -20,6 +20,7 @@ from ..types import (
     source_ingest_github_params,
     source_ingest_youtube_params,
     source_retrieve_chunks_params,
+    source_get_build_status_params,
 )
 from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
 from .._utils import extract_files, maybe_transform, deepcopy_minimal, async_maybe_transform
@@ -44,6 +45,7 @@ from ..types.source_get_elements_response import SourceGetElementsResponse
 from ..types.source_ingest_github_response import SourceIngestGitHubResponse
 from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
+from ..types.source_get_build_status_response import SourceGetBuildStatusResponse
 
 __all__ = ["SourcesResource", "AsyncSourcesResource"]
 
@@ -385,6 +387,111 @@ class SourcesResource(SyncAPIResource):
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
             cast_to=SourceExtractResponse,
+        )
+
+    def get_build_status(
+        self,
+        build_id: str,
+        *,
+        page: Optional[int] | Omit = omit,
+        page_size: Optional[int] | Omit = omit,
+        suppress_elements: bool | Omit = omit,
+        suppress_img_base64: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetBuildStatusResponse:
+        """
+        Return the status and optional parsed elements for an async build identified by
+        `build_id`.
+
+        Use this endpoint to poll the result of an async ingestion or re-process
+        request. The `build_id` is returned in the response of:
+
+        - `POST /v2/sources/upload` (async file upload)
+        - `POST /v2/sources/upload-url-source` (async URL ingestion)
+        - `POST /v2/sources/upload-github-source` (async GitHub ingestion)
+        - `POST /v2/sources/upload-youtube-source` (async YouTube ingestion)
+        - `POST /v2/sources/process` (async re-process)
+
+        **Path parameter:**
+
+        - **build_id** (str, required): The build identifier returned when the job was
+          scheduled.
+
+        **Query parameters:**
+
+        - **suppress_elements** (bool, default `false`): When `true`, elements are
+          omitted from the response. When `false` (default), the response includes the
+          parsed elements (chunks/partitions) for the build if it completed
+          successfully. Same structure as `POST /sources/elements` (each element has
+          `page_content` and `metadata`). If `page` and `page_size` are not passed, all
+          elements are returned.
+        - **suppress_img_base64** (bool, default `false`): When `true`, `img_base64` is
+          omitted from each element (useful to reduce payload size when images are not
+          needed).
+        - **page** (int, optional): 1-based page number. Only used when
+          `suppress_elements=false` and pagination is used (pass either `page` or
+          `page_size` to enable pagination).
+        - **page_size** (int, optional): Number of elements per page (max 100). Only
+          used when `suppress_elements=false` and pagination is used.
+
+        **Response fields:**
+
+        - **build_id**: The requested build identifier.
+        - **status**: SourceNodeStatus value when history exists (e.g. Processed,
+          Processing, Processing failed). `not_found` when no history exists (build in
+          progress or invalid id).
+        - **success**: `true` only when `status == "Completed"`
+          (SourceNodeStatus.COMPLETED).
+        - **file_id**, **file_name**: Source identifiers; present when the build has
+          been persisted (history exists).
+        - **error**: Error message from the pipeline when the build failed.
+        - **method**, **total_partitions**, **total_pages**: Build metadata when history
+          exists.
+        - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
+        - **message**: Human-readable message (e.g. when status is `not_found`).
+        - **elements**: List of `{ page_content, metadata }` when
+          `suppress_elements=false` and the build completed successfully.
+        - **total_elements**, **page**, **page_size**, **total_pages_elements**:
+          Pagination metadata for `elements` when `suppress_elements=false`.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error.
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not build_id:
+            raise ValueError(f"Expected a non-empty value for `build_id` but received {build_id!r}")
+        return self._get(
+            f"/sources/builds/{build_id}",
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=maybe_transform(
+                    {
+                        "page": page,
+                        "page_size": page_size,
+                        "suppress_elements": suppress_elements,
+                        "suppress_img_base64": suppress_img_base64,
+                    },
+                    source_get_build_status_params.SourceGetBuildStatusParams,
+                ),
+            ),
+            cast_to=SourceGetBuildStatusResponse,
         )
 
     def get_elements(
@@ -1189,6 +1296,111 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceExtractResponse,
         )
 
+    async def get_build_status(
+        self,
+        build_id: str,
+        *,
+        page: Optional[int] | Omit = omit,
+        page_size: Optional[int] | Omit = omit,
+        suppress_elements: bool | Omit = omit,
+        suppress_img_base64: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetBuildStatusResponse:
+        """
+        Return the status and optional parsed elements for an async build identified by
+        `build_id`.
+
+        Use this endpoint to poll the result of an async ingestion or re-process
+        request. The `build_id` is returned in the response of:
+
+        - `POST /v2/sources/upload` (async file upload)
+        - `POST /v2/sources/upload-url-source` (async URL ingestion)
+        - `POST /v2/sources/upload-github-source` (async GitHub ingestion)
+        - `POST /v2/sources/upload-youtube-source` (async YouTube ingestion)
+        - `POST /v2/sources/process` (async re-process)
+
+        **Path parameter:**
+
+        - **build_id** (str, required): The build identifier returned when the job was
+          scheduled.
+
+        **Query parameters:**
+
+        - **suppress_elements** (bool, default `false`): When `true`, elements are
+          omitted from the response. When `false` (default), the response includes the
+          parsed elements (chunks/partitions) for the build if it completed
+          successfully. Same structure as `POST /sources/elements` (each element has
+          `page_content` and `metadata`). If `page` and `page_size` are not passed, all
+          elements are returned.
+        - **suppress_img_base64** (bool, default `false`): When `true`, `img_base64` is
+          omitted from each element (useful to reduce payload size when images are not
+          needed).
+        - **page** (int, optional): 1-based page number. Only used when
+          `suppress_elements=false` and pagination is used (pass either `page` or
+          `page_size` to enable pagination).
+        - **page_size** (int, optional): Number of elements per page (max 100). Only
+          used when `suppress_elements=false` and pagination is used.
+
+        **Response fields:**
+
+        - **build_id**: The requested build identifier.
+        - **status**: SourceNodeStatus value when history exists (e.g. Processed,
+          Processing, Processing failed). `not_found` when no history exists (build in
+          progress or invalid id).
+        - **success**: `true` only when `status == "Completed"`
+          (SourceNodeStatus.COMPLETED).
+        - **file_id**, **file_name**: Source identifiers; present when the build has
+          been persisted (history exists).
+        - **error**: Error message from the pipeline when the build failed.
+        - **method**, **total_partitions**, **total_pages**: Build metadata when history
+          exists.
+        - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
+        - **message**: Human-readable message (e.g. when status is `not_found`).
+        - **elements**: List of `{ page_content, metadata }` when
+          `suppress_elements=false` and the build completed successfully.
+        - **total_elements**, **page**, **page_size**, **total_pages_elements**:
+          Pagination metadata for `elements` when `suppress_elements=false`.
+
+        **Error responses:**
+
+        - `500` — Unexpected internal error.
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not build_id:
+            raise ValueError(f"Expected a non-empty value for `build_id` but received {build_id!r}")
+        return await self._get(
+            f"/sources/builds/{build_id}",
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=await async_maybe_transform(
+                    {
+                        "page": page,
+                        "page_size": page_size,
+                        "suppress_elements": suppress_elements,
+                        "suppress_img_base64": suppress_img_base64,
+                    },
+                    source_get_build_status_params.SourceGetBuildStatusParams,
+                ),
+            ),
+            cast_to=SourceGetBuildStatusResponse,
+        )
+
     async def get_elements(
         self,
         *,
@@ -1668,6 +1880,9 @@ class SourcesResourceWithRawResponse:
         self.extract = to_raw_response_wrapper(
             sources.extract,
         )
+        self.get_build_status = to_raw_response_wrapper(
+            sources.get_build_status,
+        )
         self.get_elements = to_raw_response_wrapper(
             sources.get_elements,
         )
@@ -1706,6 +1921,9 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.extract = async_to_raw_response_wrapper(
             sources.extract,
+        )
+        self.get_build_status = async_to_raw_response_wrapper(
+            sources.get_build_status,
         )
         self.get_elements = async_to_raw_response_wrapper(
             sources.get_elements,
@@ -1746,6 +1964,9 @@ class SourcesResourceWithStreamingResponse:
         self.extract = to_streamed_response_wrapper(
             sources.extract,
         )
+        self.get_build_status = to_streamed_response_wrapper(
+            sources.get_build_status,
+        )
         self.get_elements = to_streamed_response_wrapper(
             sources.get_elements,
         )
@@ -1784,6 +2005,9 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.extract = async_to_streamed_response_wrapper(
             sources.extract,
+        )
+        self.get_build_status = async_to_streamed_response_wrapper(
+            sources.get_build_status,
         )
         self.get_elements = async_to_streamed_response_wrapper(
             sources.get_elements,

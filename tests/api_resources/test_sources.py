@@ -20,6 +20,7 @@ from graphor.types import (
     SourceGetElementsResponse,
     SourceIngestGitHubResponse,
     SourceIngestYoutubeResponse,
+    SourceGetBuildStatusResponse,
     SourceRetrieveChunksResponse,
 )
 
@@ -198,6 +199,60 @@ class TestSources:
             assert_matches_type(SourceExtractResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_build_status(self, client: Graphor) -> None:
+        source = client.sources.get_build_status(
+            build_id="build_id",
+        )
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_build_status_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.get_build_status(
+            build_id="build_id",
+            page=0,
+            page_size=0,
+            suppress_elements=True,
+            suppress_img_base64=True,
+        )
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_get_build_status(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.get_build_status(
+            build_id="build_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_get_build_status(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.get_build_status(
+            build_id="build_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_path_params_get_build_status(self, client: Graphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `build_id` but received ''"):
+            client.sources.with_raw_response.get_build_status(
+                build_id="",
+            )
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
@@ -664,6 +719,60 @@ class TestAsyncSources:
             assert_matches_type(SourceExtractResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_build_status(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_build_status(
+            build_id="build_id",
+        )
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_build_status_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_build_status(
+            build_id="build_id",
+            page=0,
+            page_size=0,
+            suppress_elements=True,
+            suppress_img_base64=True,
+        )
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_get_build_status(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.get_build_status(
+            build_id="build_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_get_build_status(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.get_build_status(
+            build_id="build_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceGetBuildStatusResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_path_params_get_build_status(self, async_client: AsyncGraphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `build_id` but received ''"):
+            await async_client.sources.with_raw_response.get_build_status(
+                build_id="",
+            )
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
