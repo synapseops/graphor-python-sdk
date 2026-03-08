@@ -14,6 +14,11 @@ from graphor.types import (
     SourceListResponse,
     SourceDeleteResponse,
     SourceExtractResponse,
+    SourceIngestURLResponse,
+    SourceReprocessResponse,
+    SourceIngestFileResponse,
+    SourceIngestGitHubResponse,
+    SourceIngestYoutubeResponse,
     SourceRetrieveChunksResponse,
 )
 
@@ -190,6 +195,204 @@ class TestSources:
 
             source = response.parse()
             assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_file(self, client: Graphor) -> None:
+        source = client.sources.ingest_file(
+            file=b"Example data",
+        )
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_file_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.ingest_file(
+            file=b"Example data",
+            partition_method="fast",
+        )
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_ingest_file(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.ingest_file(
+            file=b"Example data",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_ingest_file(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.ingest_file(
+            file=b"Example data",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_github(self, client: Graphor) -> None:
+        source = client.sources.ingest_github(
+            url="url",
+        )
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_ingest_github(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.ingest_github(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_ingest_github(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.ingest_github(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_url(self, client: Graphor) -> None:
+        source = client.sources.ingest_url(
+            url="url",
+        )
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_url_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.ingest_url(
+            url="url",
+            crawl_urls=True,
+            partition_method="fast",
+        )
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_ingest_url(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.ingest_url(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_ingest_url(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.ingest_url(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_youtube(self, client: Graphor) -> None:
+        source = client.sources.ingest_youtube(
+            url="url",
+        )
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_ingest_youtube(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.ingest_youtube(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_ingest_youtube(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.ingest_youtube(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_reprocess(self, client: Graphor) -> None:
+        source = client.sources.reprocess(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_reprocess_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.reprocess(
+            file_id="file_id",
+            partition_method="fast",
+        )
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_reprocess(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.reprocess(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_reprocess(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.reprocess(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -410,6 +613,204 @@ class TestAsyncSources:
 
             source = await response.parse()
             assert_matches_type(SourceExtractResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_file(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_file(
+            file=b"Example data",
+        )
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_file_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_file(
+            file=b"Example data",
+            partition_method="fast",
+        )
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_ingest_file(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.ingest_file(
+            file=b"Example data",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_ingest_file(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.ingest_file(
+            file=b"Example data",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceIngestFileResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_github(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_github(
+            url="url",
+        )
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_ingest_github(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.ingest_github(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_ingest_github(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.ingest_github(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_url(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_url(
+            url="url",
+        )
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_url_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_url(
+            url="url",
+            crawl_urls=True,
+            partition_method="fast",
+        )
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_ingest_url(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.ingest_url(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_ingest_url(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.ingest_url(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceIngestURLResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_youtube(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_youtube(
+            url="url",
+        )
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_ingest_youtube(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.ingest_youtube(
+            url="url",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_ingest_youtube(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.ingest_youtube(
+            url="url",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_reprocess(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.reprocess(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_reprocess_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.reprocess(
+            file_id="file_id",
+            partition_method="fast",
+        )
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_reprocess(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.reprocess(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceReprocessResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_reprocess(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.reprocess(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .method import Method as Method
 from .public_source import PublicSource as PublicSource
 from .source_ask_params import SourceAskParams as SourceAskParams
 from .source_list_params import SourceListParams as SourceListParams
@@ -11,5 +12,15 @@ from .source_list_response import SourceListResponse as SourceListResponse
 from .source_extract_params import SourceExtractParams as SourceExtractParams
 from .source_delete_response import SourceDeleteResponse as SourceDeleteResponse
 from .source_extract_response import SourceExtractResponse as SourceExtractResponse
+from .source_reprocess_params import SourceReprocessParams as SourceReprocessParams
+from .source_ingest_url_params import SourceIngestURLParams as SourceIngestURLParams
+from .source_ingest_file_params import SourceIngestFileParams as SourceIngestFileParams
+from .source_reprocess_response import SourceReprocessResponse as SourceReprocessResponse
+from .source_ingest_url_response import SourceIngestURLResponse as SourceIngestURLResponse
+from .source_ingest_file_response import SourceIngestFileResponse as SourceIngestFileResponse
+from .source_ingest_github_params import SourceIngestGitHubParams as SourceIngestGitHubParams
+from .source_ingest_youtube_params import SourceIngestYoutubeParams as SourceIngestYoutubeParams
+from .source_ingest_github_response import SourceIngestGitHubResponse as SourceIngestGitHubResponse
 from .source_retrieve_chunks_params import SourceRetrieveChunksParams as SourceRetrieveChunksParams
+from .source_ingest_youtube_response import SourceIngestYoutubeResponse as SourceIngestYoutubeResponse
 from .source_retrieve_chunks_response import SourceRetrieveChunksResponse as SourceRetrieveChunksResponse

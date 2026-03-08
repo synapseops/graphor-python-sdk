@@ -4,11 +4,17 @@ Types:
 
 ```python
 from graphor.types import (
+    Method,
     PublicSource,
     SourceListResponse,
     SourceDeleteResponse,
     SourceAskResponse,
     SourceExtractResponse,
+    SourceIngestFileResponse,
+    SourceIngestGitHubResponse,
+    SourceIngestURLResponse,
+    SourceIngestYoutubeResponse,
+    SourceReprocessResponse,
     SourceRetrieveChunksResponse,
 )
 ```
@@ -19,4 +25,9 @@ Methods:
 - <code title="delete /sources/delete">client.sources.<a href="./src/graphor/resources/sources.py">delete</a>(\*\*<a href="src/graphor/types/source_delete_params.py">params</a>) -> <a href="./src/graphor/types/source_delete_response.py">SourceDeleteResponse</a></code>
 - <code title="post /sources/ask-sources">client.sources.<a href="./src/graphor/resources/sources.py">ask</a>(\*\*<a href="src/graphor/types/source_ask_params.py">params</a>) -> <a href="./src/graphor/types/source_ask_response.py">SourceAskResponse</a></code>
 - <code title="post /sources/run-extraction">client.sources.<a href="./src/graphor/resources/sources.py">extract</a>(\*\*<a href="src/graphor/types/source_extract_params.py">params</a>) -> <a href="./src/graphor/types/source_extract_response.py">SourceExtractResponse</a></code>
+- <code title="post /sources/ingest-file">client.sources.<a href="./src/graphor/resources/sources.py">ingest_file</a>(\*\*<a href="src/graphor/types/source_ingest_file_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_file_response.py">SourceIngestFileResponse</a></code>
+- <code title="post /sources/ingest-github">client.sources.<a href="./src/graphor/resources/sources.py">ingest_github</a>(\*\*<a href="src/graphor/types/source_ingest_github_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_github_response.py">SourceIngestGitHubResponse</a></code>
+- <code title="post /sources/ingest-url">client.sources.<a href="./src/graphor/resources/sources.py">ingest_url</a>(\*\*<a href="src/graphor/types/source_ingest_url_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_url_response.py">SourceIngestURLResponse</a></code>
+- <code title="post /sources/ingest-youtube">client.sources.<a href="./src/graphor/resources/sources.py">ingest_youtube</a>(\*\*<a href="src/graphor/types/source_ingest_youtube_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_youtube_response.py">SourceIngestYoutubeResponse</a></code>
+- <code title="post /sources/reprocess">client.sources.<a href="./src/graphor/resources/sources.py">reprocess</a>(\*\*<a href="src/graphor/types/source_reprocess_params.py">params</a>) -> <a href="./src/graphor/types/source_reprocess_response.py">SourceReprocessResponse</a></code>
 - <code title="post /sources/prebuilt-rag">client.sources.<a href="./src/graphor/resources/sources.py">retrieve_chunks</a>(\*\*<a href="src/graphor/types/source_retrieve_chunks_params.py">params</a>) -> <a href="./src/graphor/types/source_retrieve_chunks_response.py">SourceRetrieveChunksResponse</a></code>
