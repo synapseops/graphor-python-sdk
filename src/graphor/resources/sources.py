@@ -2,20 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, Mapping, Optional, cast
 from typing_extensions import Literal
 
 import httpx
 
 from ..types import (
+    Method,
     source_ask_params,
     source_list_params,
     source_delete_params,
     source_extract_params,
+    source_reprocess_params,
+    source_ingest_url_params,
+    source_ingest_file_params,
+    source_ingest_github_params,
+    source_ingest_youtube_params,
     source_retrieve_chunks_params,
 )
-from .._types import Body, Omit, Query, Headers, NotGiven, SequenceNotStr, omit, not_given
-from .._utils import maybe_transform, async_maybe_transform
+from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
+from .._utils import extract_files, maybe_transform, deepcopy_minimal, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
 from .._response import (
@@ -25,10 +31,16 @@ from .._response import (
     async_to_streamed_response_wrapper,
 )
 from .._base_client import make_request_options
+from ..types.method import Method
 from ..types.source_ask_response import SourceAskResponse
 from ..types.source_list_response import SourceListResponse
 from ..types.source_delete_response import SourceDeleteResponse
 from ..types.source_extract_response import SourceExtractResponse
+from ..types.source_reprocess_response import SourceReprocessResponse
+from ..types.source_ingest_url_response import SourceIngestURLResponse
+from ..types.source_ingest_file_response import SourceIngestFileResponse
+from ..types.source_ingest_github_response import SourceIngestGitHubResponse
+from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
 
 __all__ = ["SourcesResource", "AsyncSourcesResource"]
@@ -371,6 +383,305 @@ class SourcesResource(SyncAPIResource):
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
             cast_to=SourceExtractResponse,
+        )
+
+    def ingest_file(
+        self,
+        *,
+        file: FileTypes,
+        partition_method: Optional[Method] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestFileResponse:
+        """
+        Upload a local file and schedule ingestion in the background.
+
+        Accepts **`multipart/form-data`** with the file. Validates size (max 100 MB) and
+        extension, stores the file, then schedules the full data-ingestion pipeline in
+        the background. Returns immediately with a `build_id` to poll for status.
+
+        **Parameters:**
+
+        - **file** (`multipart/form-data`): The file to upload. Must include
+          `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
+          etc.).
+        - **partition_method** (`form`, optional): Partitioning strategy. One of:
+          `fast`, `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+
+        **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
+        status.
+
+        Args:
+          partition_method: Public-facing partition method names for API v2.
+
+              Maps to internal PartitionMethod as:
+
+              - fast → basic
+              - balanced → hi_res
+              - accurate → hi_res_ft
+              - vlm → mai
+              - agentic → graphorlm
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        body = deepcopy_minimal(
+            {
+                "file": file,
+                "partition_method": partition_method,
+            }
+        )
+        files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
+        # It should be noted that the actual Content-Type header that will be
+        # sent to the server will contain a `boundary` parameter, e.g.
+        # multipart/form-data; boundary=---abc--
+        extra_headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
+        return self._post(
+            "/sources/ingest-file",
+            body=maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
+            files=files,
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestFileResponse,
+        )
+
+    def ingest_github(
+        self,
+        *,
+        url: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestGitHubResponse:
+        """
+        Ingest a GitHub repository as a source into the project's knowledge graph.
+
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. Use the returned `build_id` to poll for processing status.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The GitHub repository URL to ingest (e.g.
+          `https://github.com/owner/repo`).
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/sources/ingest-github",
+            body=maybe_transform({"url": url}, source_ingest_github_params.SourceIngestGitHubParams),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestGitHubResponse,
+        )
+
+    def ingest_url(
+        self,
+        *,
+        url: str,
+        crawl_urls: bool | Omit = omit,
+        partition_method: Optional[Method] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestURLResponse:
+        """
+        Ingest a web page (or a set of crawled pages) as a source into the project's
+        knowledge graph.
+
+        Unlike the synchronous version, this endpoint schedules the ingestion in the
+        background and returns immediately with a `processing` status. The source will
+        be fully available once background processing completes.
+
+        If the URL points directly to a downloadable file (detected via URL path
+        extension or HTTP Content-Type), the file is first downloaded and uploaded to
+        storage synchronously, then the partition/embedding pipeline runs in the
+        background.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The web page URL to ingest.
+        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+          also follow and ingest links found on the page. Ignored when the URL resolves
+          to a file.
+        - **partition_method** (str, optional): The partitioning strategy to use. One
+          of: `fast`, `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system
+          default is applied.
+
+        **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
+        Poll the source status endpoint using the returned `file_id` to track
+        completion.
+
+        **Error responses:**
+
+        - `400` — Unsupported file type detected from a file URL.
+        - `500` — Unexpected internal error during URL processing.
+
+        Args:
+          url: The web page URL to ingest
+
+          crawl_urls: When true, also follows and ingests links found on the page
+
+          partition_method: Public-facing partition method names for API v2.
+
+              Maps to internal PartitionMethod as:
+
+              - fast → basic
+              - balanced → hi_res
+              - accurate → hi_res_ft
+              - vlm → mai
+              - agentic → graphorlm
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/sources/ingest-url",
+            body=maybe_transform(
+                {
+                    "url": url,
+                    "crawl_urls": crawl_urls,
+                    "partition_method": partition_method,
+                },
+                source_ingest_url_params.SourceIngestURLParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestURLResponse,
+        )
+
+    def ingest_youtube(
+        self,
+        *,
+        url: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestYoutubeResponse:
+        """
+        Ingest a YouTube video as a source into the project's knowledge graph.
+
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. The endpoint will download the transcript/captions and process them
+        in the background. Use the returned `build_id` to poll for processing status.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The YouTube video URL to ingest (e.g.
+          `https://www.youtube.com/watch?v=...`).
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          url: The YouTube video URL to ingest (e.g.
+              https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/sources/ingest-youtube",
+            body=maybe_transform({"url": url}, source_ingest_youtube_params.SourceIngestYoutubeParams),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestYoutubeResponse,
+        )
+
+    def reprocess(
+        self,
+        *,
+        file_id: str,
+        partition_method: Method | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceReprocessResponse:
+        """
+        Re-process (re-parse) an existing source in the background.
+
+        Schedules the data-ingestion pipeline (partitioning, chunking, embedding) for an
+        existing source and returns immediately with a `build_id`. Use it to poll for
+        status.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, required): Unique identifier of the source to re-process.
+        - **partition_method** (str, default `"fast"`): Partitioning strategy. One of:
+          `fast`, `balanced`, `accurate`, `vlm`, `agentic`.
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          file_id: Unique identifier of the source to re-process.
+
+          partition_method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/sources/reprocess",
+            body=maybe_transform(
+                {
+                    "file_id": file_id,
+                    "partition_method": partition_method,
+                },
+                source_reprocess_params.SourceReprocessParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceReprocessResponse,
         )
 
     def retrieve_chunks(
@@ -787,6 +1098,305 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceExtractResponse,
         )
 
+    async def ingest_file(
+        self,
+        *,
+        file: FileTypes,
+        partition_method: Optional[Method] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestFileResponse:
+        """
+        Upload a local file and schedule ingestion in the background.
+
+        Accepts **`multipart/form-data`** with the file. Validates size (max 100 MB) and
+        extension, stores the file, then schedules the full data-ingestion pipeline in
+        the background. Returns immediately with a `build_id` to poll for status.
+
+        **Parameters:**
+
+        - **file** (`multipart/form-data`): The file to upload. Must include
+          `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
+          etc.).
+        - **partition_method** (`form`, optional): Partitioning strategy. One of:
+          `fast`, `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+
+        **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
+        status.
+
+        Args:
+          partition_method: Public-facing partition method names for API v2.
+
+              Maps to internal PartitionMethod as:
+
+              - fast → basic
+              - balanced → hi_res
+              - accurate → hi_res_ft
+              - vlm → mai
+              - agentic → graphorlm
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        body = deepcopy_minimal(
+            {
+                "file": file,
+                "partition_method": partition_method,
+            }
+        )
+        files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
+        # It should be noted that the actual Content-Type header that will be
+        # sent to the server will contain a `boundary` parameter, e.g.
+        # multipart/form-data; boundary=---abc--
+        extra_headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
+        return await self._post(
+            "/sources/ingest-file",
+            body=await async_maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
+            files=files,
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestFileResponse,
+        )
+
+    async def ingest_github(
+        self,
+        *,
+        url: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestGitHubResponse:
+        """
+        Ingest a GitHub repository as a source into the project's knowledge graph.
+
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. Use the returned `build_id` to poll for processing status.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The GitHub repository URL to ingest (e.g.
+          `https://github.com/owner/repo`).
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/sources/ingest-github",
+            body=await async_maybe_transform({"url": url}, source_ingest_github_params.SourceIngestGitHubParams),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestGitHubResponse,
+        )
+
+    async def ingest_url(
+        self,
+        *,
+        url: str,
+        crawl_urls: bool | Omit = omit,
+        partition_method: Optional[Method] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestURLResponse:
+        """
+        Ingest a web page (or a set of crawled pages) as a source into the project's
+        knowledge graph.
+
+        Unlike the synchronous version, this endpoint schedules the ingestion in the
+        background and returns immediately with a `processing` status. The source will
+        be fully available once background processing completes.
+
+        If the URL points directly to a downloadable file (detected via URL path
+        extension or HTTP Content-Type), the file is first downloaded and uploaded to
+        storage synchronously, then the partition/embedding pipeline runs in the
+        background.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The web page URL to ingest.
+        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+          also follow and ingest links found on the page. Ignored when the URL resolves
+          to a file.
+        - **partition_method** (str, optional): The partitioning strategy to use. One
+          of: `fast`, `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system
+          default is applied.
+
+        **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
+        Poll the source status endpoint using the returned `file_id` to track
+        completion.
+
+        **Error responses:**
+
+        - `400` — Unsupported file type detected from a file URL.
+        - `500` — Unexpected internal error during URL processing.
+
+        Args:
+          url: The web page URL to ingest
+
+          crawl_urls: When true, also follows and ingests links found on the page
+
+          partition_method: Public-facing partition method names for API v2.
+
+              Maps to internal PartitionMethod as:
+
+              - fast → basic
+              - balanced → hi_res
+              - accurate → hi_res_ft
+              - vlm → mai
+              - agentic → graphorlm
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/sources/ingest-url",
+            body=await async_maybe_transform(
+                {
+                    "url": url,
+                    "crawl_urls": crawl_urls,
+                    "partition_method": partition_method,
+                },
+                source_ingest_url_params.SourceIngestURLParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestURLResponse,
+        )
+
+    async def ingest_youtube(
+        self,
+        *,
+        url: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIngestYoutubeResponse:
+        """
+        Ingest a YouTube video as a source into the project's knowledge graph.
+
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. The endpoint will download the transcript/captions and process them
+        in the background. Use the returned `build_id` to poll for processing status.
+
+        **Parameters (JSON body):**
+
+        - **url** (str, required): The YouTube video URL to ingest (e.g.
+          `https://www.youtube.com/watch?v=...`).
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          url: The YouTube video URL to ingest (e.g.
+              https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/sources/ingest-youtube",
+            body=await async_maybe_transform({"url": url}, source_ingest_youtube_params.SourceIngestYoutubeParams),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIngestYoutubeResponse,
+        )
+
+    async def reprocess(
+        self,
+        *,
+        file_id: str,
+        partition_method: Method | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceReprocessResponse:
+        """
+        Re-process (re-parse) an existing source in the background.
+
+        Schedules the data-ingestion pipeline (partitioning, chunking, embedding) for an
+        existing source and returns immediately with a `build_id`. Use it to poll for
+        status.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, required): Unique identifier of the source to re-process.
+        - **partition_method** (str, default `"fast"`): Partitioning strategy. One of:
+          `fast`, `balanced`, `accurate`, `vlm`, `agentic`.
+
+        **Returns** `AsyncIngestResponse` with `build_id`.
+
+        Args:
+          file_id: Unique identifier of the source to re-process.
+
+          partition_method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/sources/reprocess",
+            body=await async_maybe_transform(
+                {
+                    "file_id": file_id,
+                    "partition_method": partition_method,
+                },
+                source_reprocess_params.SourceReprocessParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceReprocessResponse,
+        )
+
     async def retrieve_chunks(
         self,
         *,
@@ -878,6 +1488,21 @@ class SourcesResourceWithRawResponse:
         self.extract = to_raw_response_wrapper(
             sources.extract,
         )
+        self.ingest_file = to_raw_response_wrapper(
+            sources.ingest_file,
+        )
+        self.ingest_github = to_raw_response_wrapper(
+            sources.ingest_github,
+        )
+        self.ingest_url = to_raw_response_wrapper(
+            sources.ingest_url,
+        )
+        self.ingest_youtube = to_raw_response_wrapper(
+            sources.ingest_youtube,
+        )
+        self.reprocess = to_raw_response_wrapper(
+            sources.reprocess,
+        )
         self.retrieve_chunks = to_raw_response_wrapper(
             sources.retrieve_chunks,
         )
@@ -898,6 +1523,21 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.extract = async_to_raw_response_wrapper(
             sources.extract,
+        )
+        self.ingest_file = async_to_raw_response_wrapper(
+            sources.ingest_file,
+        )
+        self.ingest_github = async_to_raw_response_wrapper(
+            sources.ingest_github,
+        )
+        self.ingest_url = async_to_raw_response_wrapper(
+            sources.ingest_url,
+        )
+        self.ingest_youtube = async_to_raw_response_wrapper(
+            sources.ingest_youtube,
+        )
+        self.reprocess = async_to_raw_response_wrapper(
+            sources.reprocess,
         )
         self.retrieve_chunks = async_to_raw_response_wrapper(
             sources.retrieve_chunks,
@@ -920,6 +1560,21 @@ class SourcesResourceWithStreamingResponse:
         self.extract = to_streamed_response_wrapper(
             sources.extract,
         )
+        self.ingest_file = to_streamed_response_wrapper(
+            sources.ingest_file,
+        )
+        self.ingest_github = to_streamed_response_wrapper(
+            sources.ingest_github,
+        )
+        self.ingest_url = to_streamed_response_wrapper(
+            sources.ingest_url,
+        )
+        self.ingest_youtube = to_streamed_response_wrapper(
+            sources.ingest_youtube,
+        )
+        self.reprocess = to_streamed_response_wrapper(
+            sources.reprocess,
+        )
         self.retrieve_chunks = to_streamed_response_wrapper(
             sources.retrieve_chunks,
         )
@@ -940,6 +1595,21 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.extract = async_to_streamed_response_wrapper(
             sources.extract,
+        )
+        self.ingest_file = async_to_streamed_response_wrapper(
+            sources.ingest_file,
+        )
+        self.ingest_github = async_to_streamed_response_wrapper(
+            sources.ingest_github,
+        )
+        self.ingest_url = async_to_streamed_response_wrapper(
+            sources.ingest_url,
+        )
+        self.ingest_youtube = async_to_streamed_response_wrapper(
+            sources.ingest_youtube,
+        )
+        self.reprocess = async_to_streamed_response_wrapper(
+            sources.reprocess,
         )
         self.retrieve_chunks = async_to_streamed_response_wrapper(
             sources.retrieve_chunks,
