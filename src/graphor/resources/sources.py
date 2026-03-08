@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Mapping, Optional, cast
+from typing import Dict, Mapping, Iterable, Optional, cast
 from typing_extensions import Literal
 
 import httpx
@@ -16,6 +16,7 @@ from ..types import (
     source_reprocess_params,
     source_ingest_url_params,
     source_ingest_file_params,
+    source_get_elements_params,
     source_ingest_github_params,
     source_ingest_youtube_params,
     source_retrieve_chunks_params,
@@ -39,6 +40,7 @@ from ..types.source_extract_response import SourceExtractResponse
 from ..types.source_reprocess_response import SourceReprocessResponse
 from ..types.source_ingest_url_response import SourceIngestURLResponse
 from ..types.source_ingest_file_response import SourceIngestFileResponse
+from ..types.source_get_elements_response import SourceGetElementsResponse
 from ..types.source_ingest_github_response import SourceIngestGitHubResponse
 from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
@@ -383,6 +385,95 @@ class SourcesResource(SyncAPIResource):
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
             cast_to=SourceExtractResponse,
+        )
+
+    def get_elements(
+        self,
+        *,
+        file_id: str,
+        elements_to_remove: Optional[SequenceNotStr[str]] | Omit = omit,
+        page: Optional[int] | Omit = omit,
+        page_numbers: Optional[Iterable[int]] | Omit = omit,
+        page_size: Optional[int] | Omit = omit,
+        suppress_img_base64: bool | Omit = omit,
+        type: Optional[str] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetElementsResponse:
+        """
+        Retrieve the parsed elements (chunks/partitions) of a source in the same format
+        as get_build_status.
+
+        Returns elements with explicit fields: element_id, element_type, text, markdown,
+        html, img_base64 (optional), position, page_number, bounding_box, page_layout,
+        etc.
+
+        **Query parameters:**
+
+        - **file_id** (str, required): Unique identifier of the source.
+        - **page** (int, optional): 1-based page number. Use with page_size to enable
+          pagination.
+        - **page_size** (int, optional): Number of elements per page (max 100).
+        - **suppress_img_base64** (bool, default false): When true, img_base64 is
+          omitted from each element.
+        - **type** (str, optional): Filter by element type (e.g. NarrativeText, Title,
+          Table).
+        - **page_numbers** (list, optional): Restrict to specific page numbers (repeat
+          param for multiple).
+        - **elementsToRemove** (list, optional): Element types to exclude (repeat param
+          for multiple).
+
+        **Returns** Paginated response with items as BuildStatusElement list (same shape
+        as GET /builds/{build_id} elements).
+
+        Args:
+          file_id: Unique identifier of the source
+
+          elements_to_remove: Element types to exclude
+
+          page: 1-based page number (use with page_size)
+
+          page_numbers: Restrict to specific page numbers
+
+          page_size: Number of elements per page
+
+          suppress_img_base64: When true, img_base64 is omitted from each element
+
+          type: Filter by element type (e.g. NarrativeText, Title)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._get(
+            "/sources/get-elements",
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=maybe_transform(
+                    {
+                        "file_id": file_id,
+                        "elements_to_remove": elements_to_remove,
+                        "page": page,
+                        "page_numbers": page_numbers,
+                        "page_size": page_size,
+                        "suppress_img_base64": suppress_img_base64,
+                        "type": type,
+                    },
+                    source_get_elements_params.SourceGetElementsParams,
+                ),
+            ),
+            cast_to=SourceGetElementsResponse,
         )
 
     def ingest_file(
@@ -1098,6 +1189,95 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceExtractResponse,
         )
 
+    async def get_elements(
+        self,
+        *,
+        file_id: str,
+        elements_to_remove: Optional[SequenceNotStr[str]] | Omit = omit,
+        page: Optional[int] | Omit = omit,
+        page_numbers: Optional[Iterable[int]] | Omit = omit,
+        page_size: Optional[int] | Omit = omit,
+        suppress_img_base64: bool | Omit = omit,
+        type: Optional[str] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetElementsResponse:
+        """
+        Retrieve the parsed elements (chunks/partitions) of a source in the same format
+        as get_build_status.
+
+        Returns elements with explicit fields: element_id, element_type, text, markdown,
+        html, img_base64 (optional), position, page_number, bounding_box, page_layout,
+        etc.
+
+        **Query parameters:**
+
+        - **file_id** (str, required): Unique identifier of the source.
+        - **page** (int, optional): 1-based page number. Use with page_size to enable
+          pagination.
+        - **page_size** (int, optional): Number of elements per page (max 100).
+        - **suppress_img_base64** (bool, default false): When true, img_base64 is
+          omitted from each element.
+        - **type** (str, optional): Filter by element type (e.g. NarrativeText, Title,
+          Table).
+        - **page_numbers** (list, optional): Restrict to specific page numbers (repeat
+          param for multiple).
+        - **elementsToRemove** (list, optional): Element types to exclude (repeat param
+          for multiple).
+
+        **Returns** Paginated response with items as BuildStatusElement list (same shape
+        as GET /builds/{build_id} elements).
+
+        Args:
+          file_id: Unique identifier of the source
+
+          elements_to_remove: Element types to exclude
+
+          page: 1-based page number (use with page_size)
+
+          page_numbers: Restrict to specific page numbers
+
+          page_size: Number of elements per page
+
+          suppress_img_base64: When true, img_base64 is omitted from each element
+
+          type: Filter by element type (e.g. NarrativeText, Title)
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._get(
+            "/sources/get-elements",
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=await async_maybe_transform(
+                    {
+                        "file_id": file_id,
+                        "elements_to_remove": elements_to_remove,
+                        "page": page,
+                        "page_numbers": page_numbers,
+                        "page_size": page_size,
+                        "suppress_img_base64": suppress_img_base64,
+                        "type": type,
+                    },
+                    source_get_elements_params.SourceGetElementsParams,
+                ),
+            ),
+            cast_to=SourceGetElementsResponse,
+        )
+
     async def ingest_file(
         self,
         *,
@@ -1488,6 +1668,9 @@ class SourcesResourceWithRawResponse:
         self.extract = to_raw_response_wrapper(
             sources.extract,
         )
+        self.get_elements = to_raw_response_wrapper(
+            sources.get_elements,
+        )
         self.ingest_file = to_raw_response_wrapper(
             sources.ingest_file,
         )
@@ -1523,6 +1706,9 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.extract = async_to_raw_response_wrapper(
             sources.extract,
+        )
+        self.get_elements = async_to_raw_response_wrapper(
+            sources.get_elements,
         )
         self.ingest_file = async_to_raw_response_wrapper(
             sources.ingest_file,
@@ -1560,6 +1746,9 @@ class SourcesResourceWithStreamingResponse:
         self.extract = to_streamed_response_wrapper(
             sources.extract,
         )
+        self.get_elements = to_streamed_response_wrapper(
+            sources.get_elements,
+        )
         self.ingest_file = to_streamed_response_wrapper(
             sources.ingest_file,
         )
@@ -1595,6 +1784,9 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.extract = async_to_streamed_response_wrapper(
             sources.extract,
+        )
+        self.get_elements = async_to_streamed_response_wrapper(
+            sources.get_elements,
         )
         self.ingest_file = async_to_streamed_response_wrapper(
             sources.ingest_file,
