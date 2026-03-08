@@ -13,5 +13,5 @@ class SourceReprocessParams(TypedDict, total=False):
     file_id: Required[str]
     """Unique identifier of the source to re-process."""
 
-    partition_method: Method
+    method: Method
     """Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic."""

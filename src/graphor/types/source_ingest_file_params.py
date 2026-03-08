@@ -14,7 +14,7 @@ __all__ = ["SourceIngestFileParams"]
 class SourceIngestFileParams(TypedDict, total=False):
     file: Required[FileTypes]
 
-    partition_method: Optional[Method]
+    method: Optional[Method]
     """Public-facing partition method names for API v2.
 
     Maps to internal PartitionMethod as:

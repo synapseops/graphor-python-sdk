@@ -260,7 +260,7 @@ class TestSources:
     def test_method_ingest_file_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ingest_file(
             file=b"Example data",
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceIngestFileResponse, source, path=["response"])
 
@@ -338,7 +338,7 @@ class TestSources:
         source = client.sources.ingest_url(
             url="url",
             crawl_urls=True,
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -415,7 +415,7 @@ class TestSources:
     def test_method_reprocess_with_all_params(self, client: Graphor) -> None:
         source = client.sources.reprocess(
             file_id="file_id",
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
@@ -726,7 +726,7 @@ class TestAsyncSources:
     async def test_method_ingest_file_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_file(
             file=b"Example data",
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceIngestFileResponse, source, path=["response"])
 
@@ -804,7 +804,7 @@ class TestAsyncSources:
         source = await async_client.sources.ingest_url(
             url="url",
             crawl_urls=True,
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -881,7 +881,7 @@ class TestAsyncSources:
     async def test_method_reprocess_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.reprocess(
             file_id="file_id",
-            partition_method="fast",
+            method="fast",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 

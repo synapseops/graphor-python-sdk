@@ -18,7 +18,7 @@ class SourceIngestURLParams(TypedDict, total=False):
     crawl_urls: Annotated[bool, PropertyInfo(alias="crawlUrls")]
     """When true, also follows and ingests links found on the page"""
 
-    partition_method: Optional[Method]
+    method: Optional[Method]
     """Public-facing partition method names for API v2.
 
     Maps to internal PartitionMethod as:
