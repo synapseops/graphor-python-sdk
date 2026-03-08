@@ -41,10 +41,7 @@ client = Graphor(
     api_key=os.environ.get("GRAPHOR_API_KEY"),  # This is the default and can be omitted
 )
 
-public_source = client.sources.upload(
-    file=b"Example data",
-)
-print(public_source.project_id)
+public_sources = client.sources.list()
 ```
 
 While you can provide an `api_key` keyword argument,
@@ -67,10 +64,7 @@ client = AsyncGraphor(
 
 
 async def main() -> None:
-    public_source = await client.sources.upload(
-        file=b"Example data",
-    )
-    print(public_source.project_id)
+    public_sources = await client.sources.list()
 
 
 asyncio.run(main())
@@ -103,10 +97,7 @@ async def main() -> None:
         api_key=os.environ.get("GRAPHOR_API_KEY"),  # This is the default and can be omitted
         http_client=DefaultAioHttpClient(),
     ) as client:
-        public_source = await client.sources.upload(
-            file=b"Example data",
-        )
-        print(public_source.project_id)
+        public_sources = await client.sources.list()
 
 
 asyncio.run(main())
@@ -120,41 +111,6 @@ Nested request parameters are [TypedDicts](https://docs.python.org/3/library/typ
 - Converting to a dictionary, `model.to_dict()`
 
 Typed requests and responses provide autocomplete and documentation within your editor. If you would like to see type errors in VS Code to help catch bugs earlier, set `python.analysis.typeCheckingMode` to `basic`.
-
-## Nested params
-
-Nested parameters are dictionaries, typed using `TypedDict`, for example:
-
-```python
-from graphor import Graphor
-
-client = Graphor()
-
-response = client.sources.load_elements(
-    filter={
-        "page_numbers": [1, 2, 3],
-        "type": "NarrativeText",
-    },
-)
-print(response.filter)
-```
-
-## File uploads
-
-Request parameters that correspond to file uploads can be passed as `bytes`, or a [`PathLike`](https://docs.python.org/3/library/os.html#os.PathLike) instance or a tuple of `(filename, contents, media type)`.
-
-```python
-from pathlib import Path
-from graphor import Graphor
-
-client = Graphor()
-
-client.sources.upload(
-    file=Path("/path/to/file"),
-)
-```
-
-The async client uses the exact same interface. If you pass a [`PathLike`](https://docs.python.org/3/library/os.html#os.PathLike) instance, the file contents will be read asynchronously automatically.
 
 ## Handling errors
 
@@ -172,9 +128,7 @@ from graphor import Graphor
 client = Graphor()
 
 try:
-    client.sources.upload(
-        file=b"Example data",
-    )
+    client.sources.list()
 except graphor.APIConnectionError as e:
     print("The server could not be reached")
     print(e.__cause__)  # an underlying Exception, likely raised within httpx.
@@ -217,9 +171,7 @@ client = Graphor(
 )
 
 # Or, configure per-request:
-client.with_options(max_retries=5).sources.upload(
-    file=b"Example data",
-)
+client.with_options(max_retries=5).sources.list()
 ```
 
 ### Timeouts
@@ -242,9 +194,7 @@ client = Graphor(
 )
 
 # Override per-request:
-client.with_options(timeout=5.0).sources.upload(
-    file=b"Example data",
-)
+client.with_options(timeout=5.0).sources.list()
 ```
 
 On timeout, an `APITimeoutError` is thrown.
@@ -285,13 +235,11 @@ The "raw" Response object can be accessed by prefixing `.with_raw_response.` to 
 from graphor import Graphor
 
 client = Graphor()
-response = client.sources.with_raw_response.upload(
-    file=b"Example data",
-)
+response = client.sources.with_raw_response.list()
 print(response.headers.get('X-My-Header'))
 
-source = response.parse()  # get the object that `sources.upload()` would have returned
-print(source.project_id)
+source = response.parse()  # get the object that `sources.list()` would have returned
+print(source)
 ```
 
 These methods return an [`APIResponse`](https://github.com/synapseops/graphor-python-sdk/tree/main/src/graphor/_response.py) object.
@@ -305,9 +253,7 @@ The above interface eagerly reads the full response body when you make the reque
 To stream the response body, use `.with_streaming_response` instead, which requires a context manager and only reads the response body once you call `.read()`, `.text()`, `.json()`, `.iter_bytes()`, `.iter_text()`, `.iter_lines()` or `.parse()`. In the async client, these are async methods.
 
 ```python
-with client.sources.with_streaming_response.upload(
-    file=b"Example data",
-) as response:
+with client.sources.with_streaming_response.list() as response:
     print(response.headers.get("X-My-Header"))
 
     for line in response.iter_lines():
