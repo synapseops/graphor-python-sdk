@@ -480,7 +480,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file: FileTypes,
-        partition_method: Optional[Method] | Omit = omit,
+        method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -500,14 +500,14 @@ class SourcesResource(SyncAPIResource):
         - **file** (`multipart/form-data`): The file to upload. Must include
           `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
           etc.).
-        - **partition_method** (`form`, optional): Partitioning strategy. One of:
-          `fast`, `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+        - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
 
         Args:
-          partition_method: Public-facing partition method names for API v2.
+          method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
 
@@ -528,7 +528,7 @@ class SourcesResource(SyncAPIResource):
         body = deepcopy_minimal(
             {
                 "file": file,
-                "partition_method": partition_method,
+                "method": method,
             }
         )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
@@ -595,7 +595,7 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
-        partition_method: Optional[Method] | Omit = omit,
+        method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -622,9 +622,9 @@ class SourcesResource(SyncAPIResource):
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
-        - **partition_method** (str, optional): The partitioning strategy to use. One
-          of: `fast`, `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system
-          default is applied.
+        - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system default is
+          applied.
 
         **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
         Poll the source status endpoint using the returned `file_id` to track
@@ -640,7 +640,7 @@ class SourcesResource(SyncAPIResource):
 
           crawl_urls: When true, also follows and ingests links found on the page
 
-          partition_method: Public-facing partition method names for API v2.
+          method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
 
@@ -664,7 +664,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
-                    "partition_method": partition_method,
+                    "method": method,
                 },
                 source_ingest_url_params.SourceIngestURLParams,
             ),
@@ -724,7 +724,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file_id: str,
-        partition_method: Method | Omit = omit,
+        method: Method | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -742,15 +742,15 @@ class SourcesResource(SyncAPIResource):
         **Parameters (JSON body):**
 
         - **file_id** (str, required): Unique identifier of the source to re-process.
-        - **partition_method** (str, default `"fast"`): Partitioning strategy. One of:
-          `fast`, `balanced`, `accurate`, `vlm`, `agentic`.
+        - **method** (str, default `"fast"`): Partitioning strategy. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`.
 
         **Returns** `AsyncIngestResponse` with `build_id`.
 
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          partition_method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
 
           extra_headers: Send extra headers
 
@@ -765,7 +765,7 @@ class SourcesResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "file_id": file_id,
-                    "partition_method": partition_method,
+                    "method": method,
                 },
                 source_reprocess_params.SourceReprocessParams,
             ),
@@ -1282,7 +1282,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file: FileTypes,
-        partition_method: Optional[Method] | Omit = omit,
+        method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1302,14 +1302,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **file** (`multipart/form-data`): The file to upload. Must include
           `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
           etc.).
-        - **partition_method** (`form`, optional): Partitioning strategy. One of:
-          `fast`, `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+        - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
 
         Args:
-          partition_method: Public-facing partition method names for API v2.
+          method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
 
@@ -1330,7 +1330,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         body = deepcopy_minimal(
             {
                 "file": file,
-                "partition_method": partition_method,
+                "method": method,
             }
         )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
@@ -1397,7 +1397,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
-        partition_method: Optional[Method] | Omit = omit,
+        method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1424,9 +1424,9 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
-        - **partition_method** (str, optional): The partitioning strategy to use. One
-          of: `fast`, `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system
-          default is applied.
+        - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system default is
+          applied.
 
         **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
         Poll the source status endpoint using the returned `file_id` to track
@@ -1442,7 +1442,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           crawl_urls: When true, also follows and ingests links found on the page
 
-          partition_method: Public-facing partition method names for API v2.
+          method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
 
@@ -1466,7 +1466,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
-                    "partition_method": partition_method,
+                    "method": method,
                 },
                 source_ingest_url_params.SourceIngestURLParams,
             ),
@@ -1526,7 +1526,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file_id: str,
-        partition_method: Method | Omit = omit,
+        method: Method | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1544,15 +1544,15 @@ class AsyncSourcesResource(AsyncAPIResource):
         **Parameters (JSON body):**
 
         - **file_id** (str, required): Unique identifier of the source to re-process.
-        - **partition_method** (str, default `"fast"`): Partitioning strategy. One of:
-          `fast`, `balanced`, `accurate`, `vlm`, `agentic`.
+        - **method** (str, default `"fast"`): Partitioning strategy. One of: `fast`,
+          `balanced`, `accurate`, `vlm`, `agentic`.
 
         **Returns** `AsyncIngestResponse` with `build_id`.
 
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          partition_method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
 
           extra_headers: Send extra headers
 
@@ -1567,7 +1567,7 @@ class AsyncSourcesResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "file_id": file_id,
-                    "partition_method": partition_method,
+                    "method": method,
                 },
                 source_reprocess_params.SourceReprocessParams,
             ),
