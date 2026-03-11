@@ -453,6 +453,8 @@ class SourcesResource(SyncAPIResource):
         - **method**, **total_partitions**, **total_pages**: Build metadata when history
           exists.
         - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
+        - **document_annotation**: Document-level summary/annotation from the build
+          history when available.
         - **message**: Human-readable message (e.g. when status is `not_found`).
         - **elements**: List of `{ page_content, metadata }` when
           `suppress_elements=false` and the build completed successfully.
@@ -1360,6 +1362,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **method**, **total_partitions**, **total_pages**: Build metadata when history
           exists.
         - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
+        - **document_annotation**: Document-level summary/annotation from the build
+          history when available.
         - **message**: Human-readable message (e.g. when status is `not_found`).
         - **elements**: List of `{ page_content, metadata }` when
           `suppress_elements=false` and the build completed successfully.
