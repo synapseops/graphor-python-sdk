@@ -36,6 +36,12 @@ class SourceGetBuildStatusResponse(BaseModel):
     Present when history exists.
     """
 
+    document_annotation: Optional[str] = None
+    """Document-level summary/annotation from the build history.
+
+    Present when history exists.
+    """
+
     elements: Optional[List[Element]] = None
     """Paginated list of parsed elements (chunks) for this build.
 
