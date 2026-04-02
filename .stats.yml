@@ -1,4 +1,4 @@
 configured_endpoints: 12
-openapi_spec_url: https://storage.googleapis.com/stainless-sdk-openapi-specs/graphor%2Fgraphor-prd-9ad1d50155626b7843cb2e40a6059598692eeb082bbd62646bb1f385809a2787.yml
-openapi_spec_hash: a89125c8f47c470408cc092b25451da8
+openapi_spec_url: https://storage.googleapis.com/stainless-sdk-openapi-specs/graphor%2Fgraphor-prd-45ceb2633628c3b736432aaeb07710e452242f957030dfcff9802e6d50ab5251.yml
+openapi_spec_hash: 9336eb8d5650079b0cbba6085e1448d2
 config_hash: 548ee465c941573885bbf2d269af6554
