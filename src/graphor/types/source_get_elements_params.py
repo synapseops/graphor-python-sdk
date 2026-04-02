@@ -15,6 +15,9 @@ class SourceGetElementsParams(TypedDict, total=False):
     file_id: Required[str]
     """Unique identifier of the source"""
 
+    element_ids: Optional[SequenceNotStr[str]]
+    """Restrict to specific element IDs (repeat param for multiple)"""
+
     elements_to_remove: Annotated[Optional[SequenceNotStr[str]], PropertyInfo(alias="elementsToRemove")]
     """Element types to exclude"""
 
