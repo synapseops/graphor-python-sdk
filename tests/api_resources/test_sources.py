@@ -267,6 +267,7 @@ class TestSources:
     def test_method_get_elements_with_all_params(self, client: Graphor) -> None:
         source = client.sources.get_elements(
             file_id="file_id",
+            element_ids=["string"],
             elements_to_remove=["string"],
             page=0,
             page_numbers=[0],
@@ -787,6 +788,7 @@ class TestAsyncSources:
     async def test_method_get_elements_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.get_elements(
             file_id="file_id",
+            element_ids=["string"],
             elements_to_remove=["string"],
             page=0,
             page_numbers=[0],

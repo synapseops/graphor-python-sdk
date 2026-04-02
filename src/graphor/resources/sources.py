@@ -23,7 +23,7 @@ from ..types import (
     source_get_build_status_params,
 )
 from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
-from .._utils import extract_files, maybe_transform, deepcopy_minimal, async_maybe_transform
+from .._utils import extract_files, path_template, maybe_transform, deepcopy_minimal, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
 from .._response import (
@@ -477,7 +477,7 @@ class SourcesResource(SyncAPIResource):
         if not build_id:
             raise ValueError(f"Expected a non-empty value for `build_id` but received {build_id!r}")
         return self._get(
-            f"/sources/builds/{build_id}",
+            path_template("/sources/builds/{build_id}", build_id=build_id),
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -500,6 +500,7 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file_id: str,
+        element_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         elements_to_remove: Optional[SequenceNotStr[str]] | Omit = omit,
         page: Optional[int] | Omit = omit,
         page_numbers: Optional[Iterable[int]] | Omit = omit,
@@ -533,6 +534,8 @@ class SourcesResource(SyncAPIResource):
           Table).
         - **page_numbers** (list, optional): Restrict to specific page numbers (repeat
           param for multiple).
+        - **element_ids** (list, optional): Restrict to specific partition element_ids
+          (repeat param for multiple).
         - **elementsToRemove** (list, optional): Element types to exclude (repeat param
           for multiple).
 
@@ -541,6 +544,8 @@ class SourcesResource(SyncAPIResource):
 
         Args:
           file_id: Unique identifier of the source
+
+          element_ids: Restrict to specific element IDs (repeat param for multiple)
 
           elements_to_remove: Element types to exclude
 
@@ -572,6 +577,7 @@ class SourcesResource(SyncAPIResource):
                 query=maybe_transform(
                     {
                         "file_id": file_id,
+                        "element_ids": element_ids,
                         "elements_to_remove": elements_to_remove,
                         "page": page,
                         "page_numbers": page_numbers,
@@ -1386,7 +1392,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         if not build_id:
             raise ValueError(f"Expected a non-empty value for `build_id` but received {build_id!r}")
         return await self._get(
-            f"/sources/builds/{build_id}",
+            path_template("/sources/builds/{build_id}", build_id=build_id),
             options=make_request_options(
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -1409,6 +1415,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file_id: str,
+        element_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         elements_to_remove: Optional[SequenceNotStr[str]] | Omit = omit,
         page: Optional[int] | Omit = omit,
         page_numbers: Optional[Iterable[int]] | Omit = omit,
@@ -1442,6 +1449,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           Table).
         - **page_numbers** (list, optional): Restrict to specific page numbers (repeat
           param for multiple).
+        - **element_ids** (list, optional): Restrict to specific partition element_ids
+          (repeat param for multiple).
         - **elementsToRemove** (list, optional): Element types to exclude (repeat param
           for multiple).
 
@@ -1450,6 +1459,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         Args:
           file_id: Unique identifier of the source
+
+          element_ids: Restrict to specific element IDs (repeat param for multiple)
 
           elements_to_remove: Element types to exclude
 
@@ -1481,6 +1492,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 query=await async_maybe_transform(
                     {
                         "file_id": file_id,
+                        "element_ids": element_ids,
                         "elements_to_remove": elements_to_remove,
                         "page": page,
                         "page_numbers": page_numbers,
