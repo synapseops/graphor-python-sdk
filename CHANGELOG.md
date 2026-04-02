@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.20.0 (2026-04-02)
+
+Full Changelog: [v0.19.0...v0.20.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.19.0...v0.20.0)
+
+### Features
+
+* **api:** api update ([40c6b90](https://github.com/synapseops/graphor-python-sdk/commit/40c6b90355933b2f6375ed3d5d6093ac533295e9))
+* **internal:** implement indices array format for query and form serialization ([82cfa12](https://github.com/synapseops/graphor-python-sdk/commit/82cfa1236a1d475cd14c9faf6c6bfe101266900c))
+
+
+### Bug Fixes
+
+* **deps:** bump minimum typing-extensions version ([6cbd959](https://github.com/synapseops/graphor-python-sdk/commit/6cbd9597b7262d47ebeb35e9bfb366c953ab6cba))
+* **pydantic:** do not pass `by_alias` unless set ([8efce77](https://github.com/synapseops/graphor-python-sdk/commit/8efce77a47722e8d82896845d6b7e9aa9f07b4bf))
+* sanitize endpoint path params ([1a0d2cb](https://github.com/synapseops/graphor-python-sdk/commit/1a0d2cb6f3da1189bee84e568d46a0b6d51f6e82))
+
+
+### Chores
+
+* **ci:** skip lint on metadata-only changes ([dd8dd4e](https://github.com/synapseops/graphor-python-sdk/commit/dd8dd4eaef59291ab82c08425cf4f9de1179f44b))
+* **internal:** tweak CI branches ([9a63ab5](https://github.com/synapseops/graphor-python-sdk/commit/9a63ab5af223f7eb289c7fc9193ccc7d84cd9186))
+* **internal:** update gitignore ([6bca9d8](https://github.com/synapseops/graphor-python-sdk/commit/6bca9d89cd27aa0955773cafd374427fb01a3b65))
+
 ## 0.19.0 (2026-03-11)
 
 Full Changelog: [v0.18.0...v0.19.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.18.0...v0.19.0)
