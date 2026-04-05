@@ -24,11 +24,12 @@ class SourceGetBuildStatusResponse(BaseModel):
     """Current build status.
 
     When a build history exists, this is a SourceNodeStatus value (e.g. Completed,
-    Processing, Processing failed). When no history exists yet: not_found.
+    Completed with errors, Processing, Processing failed). When no history exists
+    yet: not_found.
     """
 
     success: bool
-    """True if the build completed successfully (status is Completed)."""
+    """True if the build completed (status is Completed or Completed with errors)."""
 
     created_at: Optional[str] = None
     """ISO8601 timestamp when the build (history) was created.
@@ -46,11 +47,17 @@ class SourceGetBuildStatusResponse(BaseModel):
     """Paginated list of parsed elements (chunks) for this build.
 
     Only present when suppress_elements=false and the build has completed (status
-    Completed).
+    Completed or Completed with errors).
     """
 
     error: Optional[str] = None
     """Error message from the pipeline, if the build failed (e.g. processing_failed)."""
+
+    failed_batches_count: Optional[int] = None
+    """Number of failed batches when status is 'Completed with errors'.
+
+    Null otherwise.
+    """
 
     file_id: Optional[str] = None
     """Source file identifier.
@@ -60,6 +67,9 @@ class SourceGetBuildStatusResponse(BaseModel):
 
     file_name: Optional[str] = None
     """Display name of the source file. Present when the build has been persisted."""
+
+    has_failed_batches: Optional[bool] = None
+    """True when the build has failed batch details available for retry."""
 
     message: Optional[str] = None
     """Human-readable message (e.g. when status is not_found or processing)."""
