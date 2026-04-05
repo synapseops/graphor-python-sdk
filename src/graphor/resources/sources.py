@@ -445,8 +445,8 @@ class SourcesResource(SyncAPIResource):
         - **status**: SourceNodeStatus value when history exists (e.g. Processed,
           Processing, Processing failed). `not_found` when no history exists (build in
           progress or invalid id).
-        - **success**: `true` only when `status == "Completed"`
-          (SourceNodeStatus.COMPLETED).
+        - **success**: `true` when the build completed (status is "Completed" or
+          "Completed with errors").
         - **file_id**, **file_name**: Source identifiers; present when the build has
           been persisted (history exists).
         - **error**: Error message from the pipeline when the build failed.
@@ -1360,8 +1360,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **status**: SourceNodeStatus value when history exists (e.g. Processed,
           Processing, Processing failed). `not_found` when no history exists (build in
           progress or invalid id).
-        - **success**: `true` only when `status == "Completed"`
-          (SourceNodeStatus.COMPLETED).
+        - **success**: `true` when the build completed (status is "Completed" or
+          "Completed with errors").
         - **file_id**, **file_name**: Source identifiers; present when the build has
           been persisted (history exists).
         - **error**: Error message from the pipeline when the build failed.
