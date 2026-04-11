@@ -42,7 +42,7 @@ client = Graphor(
 )
 
 response = client.sources.ingest_url(
-    url="url",
+    url="https://example.com/blog/ai-trends-2025",
 )
 print(response.build_id)
 ```
@@ -68,7 +68,7 @@ client = AsyncGraphor(
 
 async def main() -> None:
     response = await client.sources.ingest_url(
-        url="url",
+        url="https://example.com/blog/ai-trends-2025",
     )
     print(response.build_id)
 
@@ -104,7 +104,7 @@ async def main() -> None:
         http_client=DefaultAioHttpClient(),
     ) as client:
         response = await client.sources.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         )
         print(response.build_id)
 
@@ -155,7 +155,7 @@ client = Graphor()
 
 try:
     client.sources.ingest_url(
-        url="url",
+        url="https://example.com/blog/ai-trends-2025",
     )
 except graphor.APIConnectionError as e:
     print("The server could not be reached")
@@ -200,7 +200,7 @@ client = Graphor(
 
 # Or, configure per-request:
 client.with_options(max_retries=5).sources.ingest_url(
-    url="url",
+    url="https://example.com/blog/ai-trends-2025",
 )
 ```
 
@@ -225,7 +225,7 @@ client = Graphor(
 
 # Override per-request:
 client.with_options(timeout=5.0).sources.ingest_url(
-    url="url",
+    url="https://example.com/blog/ai-trends-2025",
 )
 ```
 
@@ -268,7 +268,7 @@ from graphor import Graphor
 
 client = Graphor()
 response = client.sources.with_raw_response.ingest_url(
-    url="url",
+    url="https://example.com/blog/ai-trends-2025",
 )
 print(response.headers.get('X-My-Header'))
 
@@ -288,7 +288,7 @@ To stream the response body, use `.with_streaming_response` instead, which requi
 
 ```python
 with client.sources.with_streaming_response.ingest_url(
-    url="url",
+    url="https://example.com/blog/ai-trends-2025",
 ) as response:
     print(response.headers.get("X-My-Header"))
 
