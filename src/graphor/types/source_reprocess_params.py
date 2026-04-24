@@ -14,4 +14,4 @@ class SourceReprocessParams(TypedDict, total=False):
     """Unique identifier of the source to re-process."""
 
     method: Method
-    """Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic."""
+    """Partitioning strategy. One of: fast, balanced, accurate, agentic."""

@@ -42,5 +42,5 @@ class PublicSource(BaseModel):
     """Partitioning strategy used during ingestion.
 
     V1 API: basic, hi_res, hi_res_ft, mai, graphorlm. V2 API: fast, balanced,
-    accurate, vlm, agentic.
+    accurate, agentic.
     """
