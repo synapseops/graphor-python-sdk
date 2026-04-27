@@ -36,8 +36,8 @@ class SourceAskParams(TypedDict, total=False):
     reset: Optional[bool]
     """When true, starts a new conversation discarding any previous history"""
 
-    thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
+    thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]]
     """
-    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-    'accurate' (most thorough)
+    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+    'accurate', or 'max' (most thorough)
     """

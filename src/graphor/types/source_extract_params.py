@@ -26,8 +26,8 @@ class SourceExtractParams(TypedDict, total=False):
     file_names: Optional[SequenceNotStr[str]]
     """List of file names to extract from (deprecated, use file_ids)"""
 
-    thinking_level: Optional[Literal["fast", "balanced", "accurate"]]
+    thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]]
     """
-    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-    'accurate' (most thorough)
+    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+    'accurate', or 'max' (most thorough)
     """

@@ -205,7 +205,7 @@ class SourcesResource(SyncAPIResource):
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -272,8 +272,8 @@ class SourcesResource(SyncAPIResource):
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -310,7 +310,7 @@ class SourcesResource(SyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -361,8 +361,8 @@ class SourcesResource(SyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -1119,7 +1119,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1186,8 +1186,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -1224,7 +1224,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1275,8 +1275,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
