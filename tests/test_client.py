@@ -876,7 +876,7 @@ class TestGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            client.sources.with_streaming_response.ingest_url(url="url").__enter__()
+            client.sources.with_streaming_response.ingest_url(url="https://example.com/blog/ai-trends-2025").__enter__()
 
         assert _get_open_connections(client) == 0
 
@@ -886,7 +886,7 @@ class TestGraphor:
         respx_mock.post("/sources/ingest-url").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            client.sources.with_streaming_response.ingest_url(url="url").__enter__()
+            client.sources.with_streaming_response.ingest_url(url="https://example.com/blog/ai-trends-2025").__enter__()
         assert _get_open_connections(client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
@@ -915,7 +915,7 @@ class TestGraphor:
 
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
-        response = client.sources.with_raw_response.ingest_url(url="url")
+        response = client.sources.with_raw_response.ingest_url(url="https://example.com/blog/ai-trends-2025")
 
         assert response.retries_taken == failures_before_success
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
@@ -940,7 +940,7 @@ class TestGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
         response = client.sources.with_raw_response.ingest_url(
-            url="url", extra_headers={"x-stainless-retry-count": Omit()}
+            url="https://example.com/blog/ai-trends-2025", extra_headers={"x-stainless-retry-count": Omit()}
         )
 
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
@@ -965,7 +965,7 @@ class TestGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
         response = client.sources.with_raw_response.ingest_url(
-            url="url", extra_headers={"x-stainless-retry-count": "42"}
+            url="https://example.com/blog/ai-trends-2025", extra_headers={"x-stainless-retry-count": "42"}
         )
 
         assert response.http_request.headers.get("x-stainless-retry-count") == "42"
@@ -1812,7 +1812,9 @@ class TestAsyncGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            await async_client.sources.with_streaming_response.ingest_url(url="url").__aenter__()
+            await async_client.sources.with_streaming_response.ingest_url(
+                url="https://example.com/blog/ai-trends-2025"
+            ).__aenter__()
 
         assert _get_open_connections(async_client) == 0
 
@@ -1822,7 +1824,9 @@ class TestAsyncGraphor:
         respx_mock.post("/sources/ingest-url").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            await async_client.sources.with_streaming_response.ingest_url(url="url").__aenter__()
+            await async_client.sources.with_streaming_response.ingest_url(
+                url="https://example.com/blog/ai-trends-2025"
+            ).__aenter__()
         assert _get_open_connections(async_client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
@@ -1851,7 +1855,7 @@ class TestAsyncGraphor:
 
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
-        response = await client.sources.with_raw_response.ingest_url(url="url")
+        response = await client.sources.with_raw_response.ingest_url(url="https://example.com/blog/ai-trends-2025")
 
         assert response.retries_taken == failures_before_success
         assert int(response.http_request.headers.get("x-stainless-retry-count")) == failures_before_success
@@ -1876,7 +1880,7 @@ class TestAsyncGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
         response = await client.sources.with_raw_response.ingest_url(
-            url="url", extra_headers={"x-stainless-retry-count": Omit()}
+            url="https://example.com/blog/ai-trends-2025", extra_headers={"x-stainless-retry-count": Omit()}
         )
 
         assert len(response.http_request.headers.get_list("x-stainless-retry-count")) == 0
@@ -1901,7 +1905,7 @@ class TestAsyncGraphor:
         respx_mock.post("/sources/ingest-url").mock(side_effect=retry_handler)
 
         response = await client.sources.with_raw_response.ingest_url(
-            url="url", extra_headers={"x-stainless-retry-count": "42"}
+            url="https://example.com/blog/ai-trends-2025", extra_headers={"x-stainless-retry-count": "42"}
         )
 
         assert response.http_request.headers.get("x-stainless-retry-count") == "42"
