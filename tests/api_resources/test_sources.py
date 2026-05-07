@@ -22,6 +22,7 @@ from graphor.types import (
     SourceIngestYoutubeResponse,
     SourceGetBuildStatusResponse,
     SourceRetrieveChunksResponse,
+    SourceGetPageScreenshotResponse,
 )
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -319,6 +320,62 @@ class TestSources:
             assert_matches_type(SourceGetElementsResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_page_screenshot(self, client: Graphor) -> None:
+        source = client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_page_screenshot_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+            max_width=300,
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_get_page_screenshot(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_get_page_screenshot(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_path_params_get_page_screenshot(self, client: Graphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `file_id` but received ''"):
+            client.sources.with_raw_response.get_page_screenshot(
+                page_number=0,
+                file_id="",
+            )
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
@@ -857,6 +914,62 @@ class TestAsyncSources:
             assert_matches_type(SourceGetElementsResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_page_screenshot_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+            max_width=300,
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_path_params_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `file_id` but received ''"):
+            await async_client.sources.with_raw_response.get_page_screenshot(
+                page_number=0,
+                file_id="",
+            )
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
