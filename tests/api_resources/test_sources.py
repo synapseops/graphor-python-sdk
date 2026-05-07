@@ -22,6 +22,7 @@ from graphor.types import (
     SourceIngestYoutubeResponse,
     SourceGetBuildStatusResponse,
     SourceRetrieveChunksResponse,
+    SourceGetPageScreenshotResponse,
 )
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
@@ -76,8 +77,8 @@ class TestSources:
     @parametrize
     def test_method_delete_with_all_params(self, client: Graphor) -> None:
         source = client.sources.delete(
-            file_id="file_id",
-            file_name="file_name",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            file_name="annual-report-2025.pdf",
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
@@ -107,7 +108,7 @@ class TestSources:
     @parametrize
     def test_method_ask(self, client: Graphor) -> None:
         source = client.sources.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -115,13 +116,18 @@ class TestSources:
     @parametrize
     def test_method_ask_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ask(
-            question="question",
-            conversation_id="conversation_id",
-            file_ids=["string"],
+            question="What was the company's revenue in 2025?",
+            conversation_id="conv-9f8e7d6c-5b4a-3210-fedc-ba0987654321",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
             file_names=["string"],
-            output_schema={"foo": "bar"},
+            include_citation_images=True,
+            include_citation_markup=True,
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
             reset=True,
-            thinking_level="fast",
+            thinking_level="accurate",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -129,7 +135,7 @@ class TestSources:
     @parametrize
     def test_raw_response_ask(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         )
 
         assert response.is_closed is True
@@ -141,7 +147,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_ask(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -155,8 +161,11 @@ class TestSources:
     @parametrize
     def test_method_extract(self, client: Graphor) -> None:
         source = client.sources.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
@@ -164,11 +173,14 @@ class TestSources:
     @parametrize
     def test_method_extract_with_all_params(self, client: Graphor) -> None:
         source = client.sources.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
-            file_ids=["string"],
-            file_names=["string"],
-            thinking_level="fast",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            file_names=["contract-draft.docx"],
+            thinking_level="accurate",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
@@ -176,8 +188,11 @@ class TestSources:
     @parametrize
     def test_raw_response_extract(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         )
 
         assert response.is_closed is True
@@ -189,8 +204,11 @@ class TestSources:
     @parametrize
     def test_streaming_response_extract(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -305,6 +323,62 @@ class TestSources:
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
+    def test_method_get_page_screenshot(self, client: Graphor) -> None:
+        source = client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_get_page_screenshot_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+            max_width=300,
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_get_page_screenshot(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_get_page_screenshot(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_path_params_get_page_screenshot(self, client: Graphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `file_id` but received ''"):
+            client.sources.with_raw_response.get_page_screenshot(
+                page_number=0,
+                file_id="",
+            )
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
     def test_method_ingest_file(self, client: Graphor) -> None:
         source = client.sources.ingest_file(
             file=b"Example data",
@@ -350,7 +424,7 @@ class TestSources:
     @parametrize
     def test_method_ingest_github(self, client: Graphor) -> None:
         source = client.sources.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
 
@@ -358,7 +432,7 @@ class TestSources:
     @parametrize
     def test_raw_response_ingest_github(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         )
 
         assert response.is_closed is True
@@ -370,7 +444,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_ingest_github(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -384,7 +458,7 @@ class TestSources:
     @parametrize
     def test_method_ingest_url(self, client: Graphor) -> None:
         source = client.sources.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -392,9 +466,9 @@ class TestSources:
     @parametrize
     def test_method_ingest_url_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ingest_url(
-            url="url",
-            crawl_urls=True,
-            method="fast",
+            url="https://example.com/blog/ai-trends-2025",
+            crawl_urls=False,
+            method="balanced",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -402,7 +476,7 @@ class TestSources:
     @parametrize
     def test_raw_response_ingest_url(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         )
 
         assert response.is_closed is True
@@ -414,7 +488,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_ingest_url(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -428,7 +502,7 @@ class TestSources:
     @parametrize
     def test_method_ingest_youtube(self, client: Graphor) -> None:
         source = client.sources.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
 
@@ -436,7 +510,7 @@ class TestSources:
     @parametrize
     def test_raw_response_ingest_youtube(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         )
 
         assert response.is_closed is True
@@ -448,7 +522,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_ingest_youtube(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -462,7 +536,7 @@ class TestSources:
     @parametrize
     def test_method_reprocess(self, client: Graphor) -> None:
         source = client.sources.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
@@ -470,8 +544,8 @@ class TestSources:
     @parametrize
     def test_method_reprocess_with_all_params(self, client: Graphor) -> None:
         source = client.sources.reprocess(
-            file_id="file_id",
-            method="fast",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            method="balanced",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
@@ -479,7 +553,7 @@ class TestSources:
     @parametrize
     def test_raw_response_reprocess(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         )
 
         assert response.is_closed is True
@@ -491,7 +565,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_reprocess(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -505,7 +579,7 @@ class TestSources:
     @parametrize
     def test_method_retrieve_chunks(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
@@ -513,8 +587,8 @@ class TestSources:
     @parametrize
     def test_method_retrieve_chunks_with_all_params(self, client: Graphor) -> None:
         source = client.sources.retrieve_chunks(
-            query="query",
-            file_ids=["string"],
+            query="What was the company's net income in 2025?",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "b2c3d4e5-f6a7-8901-bcde-f12345678901"],
             file_names=["string"],
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
@@ -523,7 +597,7 @@ class TestSources:
     @parametrize
     def test_raw_response_retrieve_chunks(self, client: Graphor) -> None:
         response = client.sources.with_raw_response.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         )
 
         assert response.is_closed is True
@@ -535,7 +609,7 @@ class TestSources:
     @parametrize
     def test_streaming_response_retrieve_chunks(self, client: Graphor) -> None:
         with client.sources.with_streaming_response.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -597,8 +671,8 @@ class TestAsyncSources:
     @parametrize
     async def test_method_delete_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.delete(
-            file_id="file_id",
-            file_name="file_name",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            file_name="annual-report-2025.pdf",
         )
         assert_matches_type(SourceDeleteResponse, source, path=["response"])
 
@@ -628,7 +702,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ask(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -636,13 +710,18 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ask_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ask(
-            question="question",
-            conversation_id="conversation_id",
-            file_ids=["string"],
+            question="What was the company's revenue in 2025?",
+            conversation_id="conv-9f8e7d6c-5b4a-3210-fedc-ba0987654321",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
             file_names=["string"],
-            output_schema={"foo": "bar"},
+            include_citation_images=True,
+            include_citation_markup=True,
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
             reset=True,
-            thinking_level="fast",
+            thinking_level="accurate",
         )
         assert_matches_type(SourceAskResponse, source, path=["response"])
 
@@ -650,7 +729,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_ask(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         )
 
         assert response.is_closed is True
@@ -662,7 +741,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_ask(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ask(
-            question="question",
+            question="What was the company's revenue in 2025?",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -676,8 +755,11 @@ class TestAsyncSources:
     @parametrize
     async def test_method_extract(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
@@ -685,11 +767,14 @@ class TestAsyncSources:
     @parametrize
     async def test_method_extract_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
-            file_ids=["string"],
-            file_names=["string"],
-            thinking_level="fast",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            file_names=["contract-draft.docx"],
+            thinking_level="accurate",
         )
         assert_matches_type(SourceExtractResponse, source, path=["response"])
 
@@ -697,8 +782,11 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_extract(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         )
 
         assert response.is_closed is True
@@ -710,8 +798,11 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_extract(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.extract(
-            output_schema={"foo": "bar"},
-            user_instruction="user_instruction",
+            output_schema={
+                "properties": "bar",
+                "type": "bar",
+            },
+            user_instruction="Extract all invoice line items including product name, quantity, unit price, and total.",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -826,6 +917,62 @@ class TestAsyncSources:
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
+    async def test_method_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_get_page_screenshot_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+            max_width=300,
+        )
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.get_page_screenshot(
+            page_number=0,
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceGetPageScreenshotResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_path_params_get_page_screenshot(self, async_client: AsyncGraphor) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `file_id` but received ''"):
+            await async_client.sources.with_raw_response.get_page_screenshot(
+                page_number=0,
+                file_id="",
+            )
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
     async def test_method_ingest_file(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_file(
             file=b"Example data",
@@ -871,7 +1018,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ingest_github(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
 
@@ -879,7 +1026,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_ingest_github(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         )
 
         assert response.is_closed is True
@@ -891,7 +1038,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_ingest_github(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ingest_github(
-            url="url",
+            url="https://github.com/langchain-ai/langchain",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -905,7 +1052,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ingest_url(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -913,9 +1060,9 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ingest_url_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_url(
-            url="url",
-            crawl_urls=True,
-            method="fast",
+            url="https://example.com/blog/ai-trends-2025",
+            crawl_urls=False,
+            method="balanced",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
 
@@ -923,7 +1070,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_ingest_url(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         )
 
         assert response.is_closed is True
@@ -935,7 +1082,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_ingest_url(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ingest_url(
-            url="url",
+            url="https://example.com/blog/ai-trends-2025",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -949,7 +1096,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_ingest_youtube(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
 
@@ -957,7 +1104,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_ingest_youtube(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         )
 
         assert response.is_closed is True
@@ -969,7 +1116,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_ingest_youtube(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.ingest_youtube(
-            url="url",
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -983,7 +1130,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_reprocess(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
@@ -991,8 +1138,8 @@ class TestAsyncSources:
     @parametrize
     async def test_method_reprocess_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.reprocess(
-            file_id="file_id",
-            method="fast",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            method="balanced",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
 
@@ -1000,7 +1147,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_reprocess(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         )
 
         assert response.is_closed is True
@@ -1012,7 +1159,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_reprocess(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.reprocess(
-            file_id="file_id",
+            file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
@@ -1026,7 +1173,7 @@ class TestAsyncSources:
     @parametrize
     async def test_method_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
 
@@ -1034,8 +1181,8 @@ class TestAsyncSources:
     @parametrize
     async def test_method_retrieve_chunks_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.retrieve_chunks(
-            query="query",
-            file_ids=["string"],
+            query="What was the company's net income in 2025?",
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "b2c3d4e5-f6a7-8901-bcde-f12345678901"],
             file_names=["string"],
         )
         assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
@@ -1044,7 +1191,7 @@ class TestAsyncSources:
     @parametrize
     async def test_raw_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         response = await async_client.sources.with_raw_response.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         )
 
         assert response.is_closed is True
@@ -1056,7 +1203,7 @@ class TestAsyncSources:
     @parametrize
     async def test_streaming_response_retrieve_chunks(self, async_client: AsyncGraphor) -> None:
         async with async_client.sources.with_streaming_response.retrieve_chunks(
-            query="query",
+            query="What was the company's net income in 2025?",
         ) as response:
             assert not response.is_closed
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"

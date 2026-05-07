@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.23.0 (2026-05-07)
+
+Full Changelog: [v0.22.0...v0.23.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.22.0...v0.23.0)
+
+### Features
+
+* **api:** api update ([5e58944](https://github.com/synapseops/graphor-python-sdk/commit/5e58944a621a2483ccbb0cf02cc58755a152eb82))
+* **api:** api update ([11e54f0](https://github.com/synapseops/graphor-python-sdk/commit/11e54f07eb08312385303eb75c650c1b24dd08f7))
+* **api:** api update ([d962149](https://github.com/synapseops/graphor-python-sdk/commit/d962149111cdc397165adf0f34ce9925bf4469bb))
+* **api:** manual updates ([fe2a344](https://github.com/synapseops/graphor-python-sdk/commit/fe2a3447f657a37658f8a56d13e56bd84117085e))
+* support setting headers via env ([00ccd09](https://github.com/synapseops/graphor-python-sdk/commit/00ccd09e2e7865d6518e62b2e51ccc6d00620052))
+
+
+### Bug Fixes
+
+* **client:** preserve hardcoded query params when merging with user params ([f4c4aa7](https://github.com/synapseops/graphor-python-sdk/commit/f4c4aa7e8bfe8a3dc554eaaef8b9f85e0e06d66e))
+* ensure file data are only sent as 1 parameter ([9fa0745](https://github.com/synapseops/graphor-python-sdk/commit/9fa074548fd1666b2419b08058c768a49b0131ea))
+* use correct field name format for multipart file arrays ([510b41a](https://github.com/synapseops/graphor-python-sdk/commit/510b41a89a63b5651c002a9ba5300ec8b2d37e8b))
+
+
+### Performance Improvements
+
+* **client:** optimize file structure copying in multipart requests ([ba12b39](https://github.com/synapseops/graphor-python-sdk/commit/ba12b39c0bf8ec6b5e70c3b82f7d823a8b1a9ff2))
+
+
+### Chores
+
+* **internal:** more robust bootstrap script ([974844e](https://github.com/synapseops/graphor-python-sdk/commit/974844e972f8e72fab6b25091f4242f091663960))
+* **internal:** reformat pyproject.toml ([81ef437](https://github.com/synapseops/graphor-python-sdk/commit/81ef43770eaf9eb04f6839e92b81599fc3a80ef1))
+
+
+### Documentation
+
+* update examples ([9ba3652](https://github.com/synapseops/graphor-python-sdk/commit/9ba36520cf0b66a90ff4256e64b064cd6449ab95))
+
 ## 0.22.0 (2026-04-07)
 
 Full Changelog: [v0.21.0...v0.22.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.21.0...v0.22.0)

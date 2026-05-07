@@ -82,7 +82,6 @@ class SourceGetBuildStatusResponse(BaseModel):
     - fast → basic
     - balanced → hi_res
     - accurate → hi_res_ft
-    - vlm → mai
     - agentic → graphorlm
     """
 

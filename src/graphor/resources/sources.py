@@ -21,9 +21,11 @@ from ..types import (
     source_ingest_youtube_params,
     source_retrieve_chunks_params,
     source_get_build_status_params,
+    source_get_page_screenshot_params,
 )
+from .._files import deepcopy_with_paths
 from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
-from .._utils import extract_files, path_template, maybe_transform, deepcopy_minimal, async_maybe_transform
+from .._utils import extract_files, path_template, maybe_transform, async_maybe_transform
 from .._compat import cached_property
 from .._resource import SyncAPIResource, AsyncAPIResource
 from .._response import (
@@ -46,6 +48,7 @@ from ..types.source_ingest_github_response import SourceIngestGitHubResponse
 from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
 from ..types.source_get_build_status_response import SourceGetBuildStatusResponse
+from ..types.source_get_page_screenshot_response import SourceGetPageScreenshotResponse
 
 __all__ = ["SourcesResource", "AsyncSourcesResource"]
 
@@ -202,9 +205,11 @@ class SourcesResource(SyncAPIResource):
         conversation_id: Optional[str] | Omit = omit,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        include_citation_images: Optional[bool] | Omit = omit,
+        include_citation_markup: Optional[bool] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -265,14 +270,27 @@ class SourcesResource(SyncAPIResource):
           file_names: Optional list of file display names to restrict search scope (deprecated, use
               file_ids)
 
+          include_citation_images: When true, the response's `citations` entries are populated with a
+              base64-encoded PNG screenshot of each cited page in `image_base64`. Increases
+              payload size and latency — leave false (the default) when not needed and fetch
+              screenshots on demand via
+              `GET /sources/{file_id}/pages/{page_number}/screenshot`.
+
+          include_citation_markup: When true, the `answer` field keeps the structured citation markup
+              `[N](file_id|pX|sY|eZ|fNAME)` emitted by the agent. When false (default), the
+              markup is stripped to plain `[N]` markers and the structured data is exposed via
+              `citations` instead. Note: the markup format is an implementation detail and may
+              change in future versions — prefer the `citations` field for stable parsing. Has
+              no effect when `output_schema` is set.
+
           output_schema: Optional JSON Schema for requesting structured output. When provided, the answer
               field will contain a short status message and the structured data will be in
               structured_output.
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -290,6 +308,8 @@ class SourcesResource(SyncAPIResource):
                     "conversation_id": conversation_id,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "include_citation_images": include_citation_images,
+                    "include_citation_markup": include_citation_markup,
                     "output_schema": output_schema,
                     "reset": reset,
                     "thinking_level": thinking_level,
@@ -309,7 +329,7 @@ class SourcesResource(SyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -360,8 +380,8 @@ class SourcesResource(SyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -591,6 +611,78 @@ class SourcesResource(SyncAPIResource):
             cast_to=SourceGetElementsResponse,
         )
 
+    def get_page_screenshot(
+        self,
+        page_number: int,
+        *,
+        file_id: str,
+        max_width: int | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetPageScreenshotResponse:
+        """
+        Render a single page of a source file as a base64-encoded PNG screenshot.
+
+        Use this endpoint to lazily fetch the visual preview of a citation returned by
+        `/ask-sources` without paying the payload cost of inlining base64 in the answer.
+        Supports PDFs, image files (`page_number` must be 1), and Office documents
+        (doc/docx/ppt/pptx/odt — rendered from the converted PDF).
+
+        **Path parameters:**
+
+        - **file_id** (str): UUID of the source file.
+        - **page_number** (int): 1-based page number.
+
+        **Query parameters:**
+
+        - **max_width** (int, optional, default `900`): Pixel width cap. Clamped to the
+          300-1600 range.
+
+        **Returns** a `PublicPageScreenshotResponse` containing:
+
+        - `file_id`, `file_name`, `page_number` — identifying metadata.
+        - `mime_type` — always `"image/png"`.
+        - `width`, `height` — rendered image dimensions in pixels.
+        - `image_base64` — the base64-encoded PNG bytes.
+
+        **Error responses:**
+
+        - `404` — File not found, unsupported file type, or invalid page number.
+        - `500` — Unexpected internal error while rendering.
+
+        Args:
+          max_width: Pixel width cap for the rendered image (clamped to 300-1600).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not file_id:
+            raise ValueError(f"Expected a non-empty value for `file_id` but received {file_id!r}")
+        return self._get(
+            path_template(
+                "/sources/{file_id}/pages/{page_number}/screenshot", file_id=file_id, page_number=page_number
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=maybe_transform(
+                    {"max_width": max_width}, source_get_page_screenshot_params.SourceGetPageScreenshotParams
+                ),
+            ),
+            cast_to=SourceGetPageScreenshotResponse,
+        )
+
     def ingest_file(
         self,
         *,
@@ -629,7 +721,6 @@ class SourcesResource(SyncAPIResource):
               - fast → basic
               - balanced → hi_res
               - accurate → hi_res_ft
-              - vlm → mai
               - agentic → graphorlm
 
           extra_headers: Send extra headers
@@ -640,11 +731,12 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_minimal(
+        body = deepcopy_with_paths(
             {
                 "file": file,
                 "method": method,
-            }
+            },
+            [["file"]],
         )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
         # It should be noted that the actual Content-Type header that will be
@@ -762,7 +854,6 @@ class SourcesResource(SyncAPIResource):
               - fast → basic
               - balanced → hi_res
               - accurate → hi_res_ft
-              - vlm → mai
               - agentic → graphorlm
 
           extra_headers: Send extra headers
@@ -865,7 +956,7 @@ class SourcesResource(SyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, agentic.
 
           extra_headers: Send extra headers
 
@@ -1117,9 +1208,11 @@ class AsyncSourcesResource(AsyncAPIResource):
         conversation_id: Optional[str] | Omit = omit,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        include_citation_images: Optional[bool] | Omit = omit,
+        include_citation_markup: Optional[bool] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
         reset: Optional[bool] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1180,14 +1273,27 @@ class AsyncSourcesResource(AsyncAPIResource):
           file_names: Optional list of file display names to restrict search scope (deprecated, use
               file_ids)
 
+          include_citation_images: When true, the response's `citations` entries are populated with a
+              base64-encoded PNG screenshot of each cited page in `image_base64`. Increases
+              payload size and latency — leave false (the default) when not needed and fetch
+              screenshots on demand via
+              `GET /sources/{file_id}/pages/{page_number}/screenshot`.
+
+          include_citation_markup: When true, the `answer` field keeps the structured citation markup
+              `[N](file_id|pX|sY|eZ|fNAME)` emitted by the agent. When false (default), the
+              markup is stripped to plain `[N]` markers and the structured data is exposed via
+              `citations` instead. Note: the markup format is an implementation detail and may
+              change in future versions — prefer the `citations` field for stable parsing. Has
+              no effect when `output_schema` is set.
+
           output_schema: Optional JSON Schema for requesting structured output. When provided, the answer
               field will contain a short status message and the structured data will be in
               structured_output.
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -1205,6 +1311,8 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "conversation_id": conversation_id,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "include_citation_images": include_citation_images,
+                    "include_citation_markup": include_citation_markup,
                     "output_schema": output_schema,
                     "reset": reset,
                     "thinking_level": thinking_level,
@@ -1224,7 +1332,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
-        thinking_level: Optional[Literal["fast", "balanced", "accurate"]] | Omit = omit,
+        thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1275,8 +1383,8 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced', or
-              'accurate' (most thorough)
+          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+              'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
 
@@ -1506,6 +1614,78 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceGetElementsResponse,
         )
 
+    async def get_page_screenshot(
+        self,
+        page_number: int,
+        *,
+        file_id: str,
+        max_width: int | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetPageScreenshotResponse:
+        """
+        Render a single page of a source file as a base64-encoded PNG screenshot.
+
+        Use this endpoint to lazily fetch the visual preview of a citation returned by
+        `/ask-sources` without paying the payload cost of inlining base64 in the answer.
+        Supports PDFs, image files (`page_number` must be 1), and Office documents
+        (doc/docx/ppt/pptx/odt — rendered from the converted PDF).
+
+        **Path parameters:**
+
+        - **file_id** (str): UUID of the source file.
+        - **page_number** (int): 1-based page number.
+
+        **Query parameters:**
+
+        - **max_width** (int, optional, default `900`): Pixel width cap. Clamped to the
+          300-1600 range.
+
+        **Returns** a `PublicPageScreenshotResponse` containing:
+
+        - `file_id`, `file_name`, `page_number` — identifying metadata.
+        - `mime_type` — always `"image/png"`.
+        - `width`, `height` — rendered image dimensions in pixels.
+        - `image_base64` — the base64-encoded PNG bytes.
+
+        **Error responses:**
+
+        - `404` — File not found, unsupported file type, or invalid page number.
+        - `500` — Unexpected internal error while rendering.
+
+        Args:
+          max_width: Pixel width cap for the rendered image (clamped to 300-1600).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not file_id:
+            raise ValueError(f"Expected a non-empty value for `file_id` but received {file_id!r}")
+        return await self._get(
+            path_template(
+                "/sources/{file_id}/pages/{page_number}/screenshot", file_id=file_id, page_number=page_number
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=await async_maybe_transform(
+                    {"max_width": max_width}, source_get_page_screenshot_params.SourceGetPageScreenshotParams
+                ),
+            ),
+            cast_to=SourceGetPageScreenshotResponse,
+        )
+
     async def ingest_file(
         self,
         *,
@@ -1544,7 +1724,6 @@ class AsyncSourcesResource(AsyncAPIResource):
               - fast → basic
               - balanced → hi_res
               - accurate → hi_res_ft
-              - vlm → mai
               - agentic → graphorlm
 
           extra_headers: Send extra headers
@@ -1555,11 +1734,12 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_minimal(
+        body = deepcopy_with_paths(
             {
                 "file": file,
                 "method": method,
-            }
+            },
+            [["file"]],
         )
         files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
         # It should be noted that the actual Content-Type header that will be
@@ -1677,7 +1857,6 @@ class AsyncSourcesResource(AsyncAPIResource):
               - fast → basic
               - balanced → hi_res
               - accurate → hi_res_ft
-              - vlm → mai
               - agentic → graphorlm
 
           extra_headers: Send extra headers
@@ -1780,7 +1959,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          method: Partitioning strategy. One of: fast, balanced, accurate, vlm, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, agentic.
 
           extra_headers: Send extra headers
 
@@ -1902,6 +2081,9 @@ class SourcesResourceWithRawResponse:
         self.get_elements = to_raw_response_wrapper(
             sources.get_elements,
         )
+        self.get_page_screenshot = to_raw_response_wrapper(
+            sources.get_page_screenshot,
+        )
         self.ingest_file = to_raw_response_wrapper(
             sources.ingest_file,
         )
@@ -1943,6 +2125,9 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.get_elements = async_to_raw_response_wrapper(
             sources.get_elements,
+        )
+        self.get_page_screenshot = async_to_raw_response_wrapper(
+            sources.get_page_screenshot,
         )
         self.ingest_file = async_to_raw_response_wrapper(
             sources.ingest_file,
@@ -1986,6 +2171,9 @@ class SourcesResourceWithStreamingResponse:
         self.get_elements = to_streamed_response_wrapper(
             sources.get_elements,
         )
+        self.get_page_screenshot = to_streamed_response_wrapper(
+            sources.get_page_screenshot,
+        )
         self.ingest_file = to_streamed_response_wrapper(
             sources.ingest_file,
         )
@@ -2027,6 +2215,9 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.get_elements = async_to_streamed_response_wrapper(
             sources.get_elements,
+        )
+        self.get_page_screenshot = async_to_streamed_response_wrapper(
+            sources.get_page_screenshot,
         )
         self.ingest_file = async_to_streamed_response_wrapper(
             sources.ingest_file,

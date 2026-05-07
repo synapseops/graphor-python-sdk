@@ -13,6 +13,7 @@ from graphor.types import (
     SourceExtractResponse,
     SourceGetBuildStatusResponse,
     SourceGetElementsResponse,
+    SourceGetPageScreenshotResponse,
     SourceIngestFileResponse,
     SourceIngestGitHubResponse,
     SourceIngestURLResponse,
@@ -30,6 +31,7 @@ Methods:
 - <code title="post /sources/run-extraction">client.sources.<a href="./src/graphor/resources/sources.py">extract</a>(\*\*<a href="src/graphor/types/source_extract_params.py">params</a>) -> <a href="./src/graphor/types/source_extract_response.py">SourceExtractResponse</a></code>
 - <code title="get /sources/builds/{build_id}">client.sources.<a href="./src/graphor/resources/sources.py">get_build_status</a>(build_id, \*\*<a href="src/graphor/types/source_get_build_status_params.py">params</a>) -> <a href="./src/graphor/types/source_get_build_status_response.py">SourceGetBuildStatusResponse</a></code>
 - <code title="get /sources/get-elements">client.sources.<a href="./src/graphor/resources/sources.py">get_elements</a>(\*\*<a href="src/graphor/types/source_get_elements_params.py">params</a>) -> <a href="./src/graphor/types/source_get_elements_response.py">SourceGetElementsResponse</a></code>
+- <code title="get /sources/{file_id}/pages/{page_number}/screenshot">client.sources.<a href="./src/graphor/resources/sources.py">get_page_screenshot</a>(page_number, \*, file_id, \*\*<a href="src/graphor/types/source_get_page_screenshot_params.py">params</a>) -> <a href="./src/graphor/types/source_get_page_screenshot_response.py">SourceGetPageScreenshotResponse</a></code>
 - <code title="post /sources/ingest-file">client.sources.<a href="./src/graphor/resources/sources.py">ingest_file</a>(\*\*<a href="src/graphor/types/source_ingest_file_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_file_response.py">SourceIngestFileResponse</a></code>
 - <code title="post /sources/ingest-github">client.sources.<a href="./src/graphor/resources/sources.py">ingest_github</a>(\*\*<a href="src/graphor/types/source_ingest_github_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_github_response.py">SourceIngestGitHubResponse</a></code>
 - <code title="post /sources/ingest-url">client.sources.<a href="./src/graphor/resources/sources.py">ingest_url</a>(\*\*<a href="src/graphor/types/source_ingest_url_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_url_response.py">SourceIngestURLResponse</a></code>
