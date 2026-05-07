@@ -21,6 +21,7 @@ from ..types import (
     source_ingest_youtube_params,
     source_retrieve_chunks_params,
     source_get_build_status_params,
+    source_get_page_screenshot_params,
 )
 from .._files import deepcopy_with_paths
 from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
@@ -47,6 +48,7 @@ from ..types.source_ingest_github_response import SourceIngestGitHubResponse
 from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
 from ..types.source_get_build_status_response import SourceGetBuildStatusResponse
+from ..types.source_get_page_screenshot_response import SourceGetPageScreenshotResponse
 
 __all__ = ["SourcesResource", "AsyncSourcesResource"]
 
@@ -607,6 +609,78 @@ class SourcesResource(SyncAPIResource):
                 ),
             ),
             cast_to=SourceGetElementsResponse,
+        )
+
+    def get_page_screenshot(
+        self,
+        page_number: int,
+        *,
+        file_id: str,
+        max_width: int | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetPageScreenshotResponse:
+        """
+        Render a single page of a source file as a base64-encoded PNG screenshot.
+
+        Use this endpoint to lazily fetch the visual preview of a citation returned by
+        `/ask-sources` without paying the payload cost of inlining base64 in the answer.
+        Supports PDFs, image files (`page_number` must be 1), and Office documents
+        (doc/docx/ppt/pptx/odt — rendered from the converted PDF).
+
+        **Path parameters:**
+
+        - **file_id** (str): UUID of the source file.
+        - **page_number** (int): 1-based page number.
+
+        **Query parameters:**
+
+        - **max_width** (int, optional, default `900`): Pixel width cap. Clamped to the
+          300-1600 range.
+
+        **Returns** a `PublicPageScreenshotResponse` containing:
+
+        - `file_id`, `file_name`, `page_number` — identifying metadata.
+        - `mime_type` — always `"image/png"`.
+        - `width`, `height` — rendered image dimensions in pixels.
+        - `image_base64` — the base64-encoded PNG bytes.
+
+        **Error responses:**
+
+        - `404` — File not found, unsupported file type, or invalid page number.
+        - `500` — Unexpected internal error while rendering.
+
+        Args:
+          max_width: Pixel width cap for the rendered image (clamped to 300-1600).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not file_id:
+            raise ValueError(f"Expected a non-empty value for `file_id` but received {file_id!r}")
+        return self._get(
+            path_template(
+                "/sources/{file_id}/pages/{page_number}/screenshot", file_id=file_id, page_number=page_number
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=maybe_transform(
+                    {"max_width": max_width}, source_get_page_screenshot_params.SourceGetPageScreenshotParams
+                ),
+            ),
+            cast_to=SourceGetPageScreenshotResponse,
         )
 
     def ingest_file(
@@ -1540,6 +1614,78 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceGetElementsResponse,
         )
 
+    async def get_page_screenshot(
+        self,
+        page_number: int,
+        *,
+        file_id: str,
+        max_width: int | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceGetPageScreenshotResponse:
+        """
+        Render a single page of a source file as a base64-encoded PNG screenshot.
+
+        Use this endpoint to lazily fetch the visual preview of a citation returned by
+        `/ask-sources` without paying the payload cost of inlining base64 in the answer.
+        Supports PDFs, image files (`page_number` must be 1), and Office documents
+        (doc/docx/ppt/pptx/odt — rendered from the converted PDF).
+
+        **Path parameters:**
+
+        - **file_id** (str): UUID of the source file.
+        - **page_number** (int): 1-based page number.
+
+        **Query parameters:**
+
+        - **max_width** (int, optional, default `900`): Pixel width cap. Clamped to the
+          300-1600 range.
+
+        **Returns** a `PublicPageScreenshotResponse` containing:
+
+        - `file_id`, `file_name`, `page_number` — identifying metadata.
+        - `mime_type` — always `"image/png"`.
+        - `width`, `height` — rendered image dimensions in pixels.
+        - `image_base64` — the base64-encoded PNG bytes.
+
+        **Error responses:**
+
+        - `404` — File not found, unsupported file type, or invalid page number.
+        - `500` — Unexpected internal error while rendering.
+
+        Args:
+          max_width: Pixel width cap for the rendered image (clamped to 300-1600).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        if not file_id:
+            raise ValueError(f"Expected a non-empty value for `file_id` but received {file_id!r}")
+        return await self._get(
+            path_template(
+                "/sources/{file_id}/pages/{page_number}/screenshot", file_id=file_id, page_number=page_number
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                query=await async_maybe_transform(
+                    {"max_width": max_width}, source_get_page_screenshot_params.SourceGetPageScreenshotParams
+                ),
+            ),
+            cast_to=SourceGetPageScreenshotResponse,
+        )
+
     async def ingest_file(
         self,
         *,
@@ -1935,6 +2081,9 @@ class SourcesResourceWithRawResponse:
         self.get_elements = to_raw_response_wrapper(
             sources.get_elements,
         )
+        self.get_page_screenshot = to_raw_response_wrapper(
+            sources.get_page_screenshot,
+        )
         self.ingest_file = to_raw_response_wrapper(
             sources.ingest_file,
         )
@@ -1976,6 +2125,9 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.get_elements = async_to_raw_response_wrapper(
             sources.get_elements,
+        )
+        self.get_page_screenshot = async_to_raw_response_wrapper(
+            sources.get_page_screenshot,
         )
         self.ingest_file = async_to_raw_response_wrapper(
             sources.ingest_file,
@@ -2019,6 +2171,9 @@ class SourcesResourceWithStreamingResponse:
         self.get_elements = to_streamed_response_wrapper(
             sources.get_elements,
         )
+        self.get_page_screenshot = to_streamed_response_wrapper(
+            sources.get_page_screenshot,
+        )
         self.ingest_file = to_streamed_response_wrapper(
             sources.ingest_file,
         )
@@ -2060,6 +2215,9 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.get_elements = async_to_streamed_response_wrapper(
             sources.get_elements,
+        )
+        self.get_page_screenshot = async_to_streamed_response_wrapper(
+            sources.get_page_screenshot,
         )
         self.ingest_file = async_to_streamed_response_wrapper(
             sources.ingest_file,
