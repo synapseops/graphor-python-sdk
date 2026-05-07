@@ -119,6 +119,8 @@ class TestSources:
             conversation_id="conv-9f8e7d6c-5b4a-3210-fedc-ba0987654321",
             file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
             file_names=["string"],
+            include_citation_images=True,
+            include_citation_markup=True,
             output_schema={
                 "properties": "bar",
                 "type": "bar",
@@ -655,6 +657,8 @@ class TestAsyncSources:
             conversation_id="conv-9f8e7d6c-5b4a-3210-fedc-ba0987654321",
             file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
             file_names=["string"],
+            include_citation_images=True,
+            include_citation_markup=True,
             output_schema={
                 "properties": "bar",
                 "type": "bar",
