@@ -722,6 +722,7 @@ class SourcesResource(SyncAPIResource):
               - balanced → hi_res
               - accurate → hi_res_ft
               - agentic → graphorlm
+              - auto → auto
 
           extra_headers: Send extra headers
 
@@ -855,6 +856,7 @@ class SourcesResource(SyncAPIResource):
               - balanced → hi_res
               - accurate → hi_res_ft
               - agentic → graphorlm
+              - auto → auto
 
           extra_headers: Send extra headers
 
@@ -956,7 +958,7 @@ class SourcesResource(SyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          method: Partitioning strategy. One of: fast, balanced, accurate, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, agentic, auto.
 
           extra_headers: Send extra headers
 
@@ -1725,6 +1727,7 @@ class AsyncSourcesResource(AsyncAPIResource):
               - balanced → hi_res
               - accurate → hi_res_ft
               - agentic → graphorlm
+              - auto → auto
 
           extra_headers: Send extra headers
 
@@ -1858,6 +1861,7 @@ class AsyncSourcesResource(AsyncAPIResource):
               - balanced → hi_res
               - accurate → hi_res_ft
               - agentic → graphorlm
+              - auto → auto
 
           extra_headers: Send extra headers
 
@@ -1959,7 +1963,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
-          method: Partitioning strategy. One of: fast, balanced, accurate, agentic.
+          method: Partitioning strategy. One of: fast, balanced, accurate, agentic, auto.
 
           extra_headers: Send extra headers
 
