@@ -27,4 +27,5 @@ class SourceIngestURLParams(TypedDict, total=False):
     - balanced → hi_res
     - accurate → hi_res_ft
     - agentic → graphorlm
+    - auto → auto
     """

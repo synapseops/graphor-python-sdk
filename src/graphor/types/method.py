@@ -4,4 +4,4 @@ from typing_extensions import Literal, TypeAlias
 
 __all__ = ["Method"]
 
-Method: TypeAlias = Literal["fast", "balanced", "accurate", "agentic"]
+Method: TypeAlias = Literal["fast", "balanced", "accurate", "agentic", "auto"]
