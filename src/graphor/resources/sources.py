@@ -708,7 +708,7 @@ class SourcesResource(SyncAPIResource):
           `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
           etc.).
         - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`. Default when omitted.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
@@ -831,8 +831,8 @@ class SourcesResource(SyncAPIResource):
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
         - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system default is
-          applied.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`. When omitted the system
+          default is applied.
 
         **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
         Poll the source status endpoint using the returned `file_id` to track
@@ -951,7 +951,7 @@ class SourcesResource(SyncAPIResource):
 
         - **file_id** (str, required): Unique identifier of the source to re-process.
         - **method** (str, default `"fast"`): Partitioning strategy. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`.
 
         **Returns** `AsyncIngestResponse` with `build_id`.
 
@@ -1713,7 +1713,7 @@ class AsyncSourcesResource(AsyncAPIResource):
           `Content-Length` and have a supported extension (pdf, doc, docx, csv, txt, md,
           etc.).
         - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`. Default when omitted.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`. Default when omitted.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
@@ -1836,8 +1836,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
         - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`. When omitted the system default is
-          applied.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`. When omitted the system
+          default is applied.
 
         **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
         Poll the source status endpoint using the returned `file_id` to track
@@ -1956,7 +1956,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         - **file_id** (str, required): Unique identifier of the source to re-process.
         - **method** (str, default `"fast"`): Partitioning strategy. One of: `fast`,
-          `balanced`, `accurate`, `vlm`, `agentic`.
+          `balanced`, `accurate`, `vlm`, `agentic`, `auto`.
 
         **Returns** `AsyncIngestResponse` with `build_id`.
 
