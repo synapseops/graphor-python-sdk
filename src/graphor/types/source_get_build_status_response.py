@@ -83,6 +83,7 @@ class SourceGetBuildStatusResponse(BaseModel):
     - balanced → hi_res
     - accurate → hi_res_ft
     - agentic → graphorlm
+    - auto → auto
     """
 
     page: Optional[int] = None

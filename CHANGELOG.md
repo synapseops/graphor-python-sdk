@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.24.0 (2026-05-20)
+
+Full Changelog: [v0.23.0...v0.24.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.23.0...v0.24.0)
+
+### Features
+
+* **api:** api update ([0435e00](https://github.com/synapseops/graphor-python-sdk/commit/0435e00545744a397de4195df08a8fe793ec8936))
+* **api:** api update ([b2e991a](https://github.com/synapseops/graphor-python-sdk/commit/b2e991aa0079d778501872b9a7a73d99d63d48d2))
+* **internal/types:** support eagerly validating pydantic iterators ([c8463eb](https://github.com/synapseops/graphor-python-sdk/commit/c8463eb602ccab5117229300f34c2659e268c585))
+
+
+### Bug Fixes
+
+* **client:** add missing f-string prefix in file type error message ([4313b48](https://github.com/synapseops/graphor-python-sdk/commit/4313b48d25abe3a4c1408ed0ed1fa12db84d00ac))
+
+
+### Chores
+
+* update SDK settings ([97616c2](https://github.com/synapseops/graphor-python-sdk/commit/97616c2a4315d3173d763b863ab9fb8f5d1b8be4))
+* update SDK settings ([0aff531](https://github.com/synapseops/graphor-python-sdk/commit/0aff53150658fb2ee1be1e73bffc70d4b199ec32))
+* update SDK settings ([cbe7bbf](https://github.com/synapseops/graphor-python-sdk/commit/cbe7bbf7e05a3c2fae2fb31089649c08bd751108))
+* update SDK settings ([b3bf62e](https://github.com/synapseops/graphor-python-sdk/commit/b3bf62e4e9ac7edf1da70010690177610f9128c7))
+
 ## 0.23.0 (2026-05-07)
 
 Full Changelog: [v0.22.0...v0.23.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.22.0...v0.23.0)
