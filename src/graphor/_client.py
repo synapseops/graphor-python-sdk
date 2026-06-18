@@ -127,9 +127,11 @@ class Graphor(SyncAPIClient):
 
     @override
     def _auth_headers(self, security: SecurityOptions) -> dict[str, str]:
-        return {
-            **(self._http_bearer if security.get("http_bearer", False) else {}),
-        }
+        headers: dict[str, str] = {}
+        if security.get("http_bearer", False):
+            for key, value in self._http_bearer.items():
+                headers.setdefault(key, value)
+        return headers
 
     @property
     def _http_bearer(self) -> dict[str, str]:
@@ -315,9 +317,11 @@ class AsyncGraphor(AsyncAPIClient):
 
     @override
     def _auth_headers(self, security: SecurityOptions) -> dict[str, str]:
-        return {
-            **(self._http_bearer if security.get("http_bearer", False) else {}),
-        }
+        headers: dict[str, str] = {}
+        if security.get("http_bearer", False):
+            for key, value in self._http_bearer.items():
+                headers.setdefault(key, value)
+        return headers
 
     @property
     def _http_bearer(self) -> dict[str, str]:
