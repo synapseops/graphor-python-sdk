@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.25.0 (2026-08-03)
+
+Full Changelog: [v0.24.0...v0.25.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.24.0...v0.25.0)
+
+### Features
+
+* **api:** api update ([75c46a5](https://github.com/synapseops/graphor-python-sdk/commit/75c46a53690b7a448a306dfc9bfb8045f8b863a9))
+* **api:** api update ([4e3b354](https://github.com/synapseops/graphor-python-sdk/commit/4e3b3549a9af9e816299acf84462d9e99a275d42))
+* **stlc:** configurable CI runner and private-production-repo support in workflow templates ([1de4749](https://github.com/synapseops/graphor-python-sdk/commit/1de474908948128bde7feff0cd1248e0a8399a95))
+
+
+### Bug Fixes
+
+* **auth:** prioritize first auth header ([8d439bf](https://github.com/synapseops/graphor-python-sdk/commit/8d439bff7d44cdd2bfe0dadc7f4de55a74afbcdf))
+* **internal:** resolve build failures ([3dce74d](https://github.com/synapseops/graphor-python-sdk/commit/3dce74df018df62209d9f9a067bd9e229e153c46))
+
+
+### Chores
+
+* update SDK settings ([e4ade2e](https://github.com/synapseops/graphor-python-sdk/commit/e4ade2e0cad6537013057f18990eb45b0370bb03))
+* update SDK settings ([1a5dd27](https://github.com/synapseops/graphor-python-sdk/commit/1a5dd27324a348366ef3554b5689acfffb4a39e5))
+
 ## 0.24.0 (2026-05-20)
 
 Full Changelog: [v0.23.0...v0.24.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.23.0...v0.24.0)
