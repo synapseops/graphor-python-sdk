@@ -390,6 +390,8 @@ class TestSources:
     def test_method_ingest_file_with_all_params(self, client: Graphor) -> None:
         source = client.sources.ingest_file(
             file=b"Example data",
+            enrichment="enrichment",
+            indexing="indexing",
             method="fast",
         )
         assert_matches_type(SourceIngestFileResponse, source, path=["response"])
@@ -425,6 +427,16 @@ class TestSources:
     def test_method_ingest_github(self, client: Graphor) -> None:
         source = client.sources.ingest_github(
             url="https://github.com/langchain-ai/langchain",
+        )
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_github_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.ingest_github(
+            url="https://github.com/langchain-ai/langchain",
+            enrichment="enrichment",
+            indexing="indexing",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
 
@@ -468,6 +480,8 @@ class TestSources:
         source = client.sources.ingest_url(
             url="https://example.com/blog/ai-trends-2025",
             crawl_urls=False,
+            enrichment="enrichment",
+            indexing="indexing",
             method="balanced",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
@@ -503,6 +517,16 @@ class TestSources:
     def test_method_ingest_youtube(self, client: Graphor) -> None:
         source = client.sources.ingest_youtube(
             url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        )
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_ingest_youtube_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.ingest_youtube(
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            enrichment="enrichment",
+            indexing="indexing",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
 
@@ -545,6 +569,8 @@ class TestSources:
     def test_method_reprocess_with_all_params(self, client: Graphor) -> None:
         source = client.sources.reprocess(
             file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            enrichment="enrichment",
+            indexing="indexing",
             method="balanced",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
@@ -984,6 +1010,8 @@ class TestAsyncSources:
     async def test_method_ingest_file_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_file(
             file=b"Example data",
+            enrichment="enrichment",
+            indexing="indexing",
             method="fast",
         )
         assert_matches_type(SourceIngestFileResponse, source, path=["response"])
@@ -1019,6 +1047,16 @@ class TestAsyncSources:
     async def test_method_ingest_github(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_github(
             url="https://github.com/langchain-ai/langchain",
+        )
+        assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_github_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_github(
+            url="https://github.com/langchain-ai/langchain",
+            enrichment="enrichment",
+            indexing="indexing",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
 
@@ -1062,6 +1100,8 @@ class TestAsyncSources:
         source = await async_client.sources.ingest_url(
             url="https://example.com/blog/ai-trends-2025",
             crawl_urls=False,
+            enrichment="enrichment",
+            indexing="indexing",
             method="balanced",
         )
         assert_matches_type(SourceIngestURLResponse, source, path=["response"])
@@ -1097,6 +1137,16 @@ class TestAsyncSources:
     async def test_method_ingest_youtube(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.ingest_youtube(
             url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        )
+        assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_ingest_youtube_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.ingest_youtube(
+            url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            enrichment="enrichment",
+            indexing="indexing",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
 
@@ -1139,6 +1189,8 @@ class TestAsyncSources:
     async def test_method_reprocess_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.reprocess(
             file_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            enrichment="enrichment",
+            indexing="indexing",
             method="balanced",
         )
         assert_matches_type(SourceReprocessResponse, source, path=["response"])
