@@ -36,3 +36,10 @@ class SourceRetrieveChunksResponse(BaseModel):
 
     chunks: Optional[List[Chunk]] = None
     """List of retrieved chunks ordered by relevance"""
+
+    message: Optional[str] = None
+    """Present only when the result needs explaining — e.g.
+
+    every source in scope was ingested with indexing=none, so an empty chunk list
+    means 'nothing is indexed', not 'nothing matched'.
+    """
