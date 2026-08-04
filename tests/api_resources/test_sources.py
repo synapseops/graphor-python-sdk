@@ -16,6 +16,7 @@ from graphor.types import (
     SourceExtractResponse,
     SourceIngestURLResponse,
     SourceReprocessResponse,
+    SourceIndexBuildResponse,
     SourceIngestFileResponse,
     SourceGetElementsResponse,
     SourceIngestGitHubResponse,
@@ -376,6 +377,49 @@ class TestSources:
                 page_number=0,
                 file_id="",
             )
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_index_build(self, client: Graphor) -> None:
+        source = client.sources.index_build(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_index_build_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.index_build(
+            file_id="file_id",
+            build_id="build_id",
+        )
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_index_build(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.index_build(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_index_build(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.index_build(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize
@@ -996,6 +1040,49 @@ class TestAsyncSources:
                 page_number=0,
                 file_id="",
             )
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_index_build(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.index_build(
+            file_id="file_id",
+        )
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_index_build_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.index_build(
+            file_id="file_id",
+            build_id="build_id",
+        )
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_index_build(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.index_build(
+            file_id="file_id",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_index_build(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.index_build(
+            file_id="file_id",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceIndexBuildResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
 
     @pytest.mark.skip(reason="Mock server tests are disabled")
     @parametrize

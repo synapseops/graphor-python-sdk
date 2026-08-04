@@ -15,6 +15,7 @@ from ..types import (
     source_extract_params,
     source_reprocess_params,
     source_ingest_url_params,
+    source_index_build_params,
     source_ingest_file_params,
     source_get_elements_params,
     source_ingest_github_params,
@@ -42,6 +43,7 @@ from ..types.source_delete_response import SourceDeleteResponse
 from ..types.source_extract_response import SourceExtractResponse
 from ..types.source_reprocess_response import SourceReprocessResponse
 from ..types.source_ingest_url_response import SourceIngestURLResponse
+from ..types.source_index_build_response import SourceIndexBuildResponse
 from ..types.source_ingest_file_response import SourceIngestFileResponse
 from ..types.source_get_elements_response import SourceGetElementsResponse
 from ..types.source_ingest_github_response import SourceIngestGitHubResponse
@@ -681,6 +683,69 @@ class SourcesResource(SyncAPIResource):
                 ),
             ),
             cast_to=SourceGetPageScreenshotResponse,
+        )
+
+    def index_build(
+        self,
+        *,
+        file_id: str,
+        build_id: Optional[str] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIndexBuildResponse:
+        """
+        Build the retrieval index for an existing build from its already-parsed
+        partitions — the way out of `indexing=none` without paying for a re-parse.
+
+        Chunks, embeds and indexes the build's persisted partitions, makes it the file's
+        active build, and flips the persisted `indexing` level to `full`. After it
+        returns, `ask-sources`, `run-extraction` and `prebuilt-rag` see the source, and
+        build status reports `searchable: true`.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, required): Unique identifier of the source file.
+        - **build_id** (str, optional): Build to index. Omitted → the file's active
+          build. A non-active build becomes active (only the active build can serve
+          retrieval).
+
+        Synchronous: the response arrives when indexing finishes. For large documents
+        the connection is kept alive with whitespace heartbeats — JSON parsers ignore
+        them, no client change needed.
+
+        **Returns** `PublicIndexBuildResponse` with `chunks_indexed`.
+
+        Args:
+          file_id: Unique identifier of the source file.
+
+          build_id: Build to index. Omitted → the file's active build. When given, that build
+              becomes the active one (only the active build can serve retrieval).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return self._post(
+            "/sources/index",
+            body=maybe_transform(
+                {
+                    "file_id": file_id,
+                    "build_id": build_id,
+                },
+                source_index_build_params.SourceIndexBuildParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIndexBuildResponse,
         )
 
     def ingest_file(
@@ -1766,6 +1831,69 @@ class AsyncSourcesResource(AsyncAPIResource):
             cast_to=SourceGetPageScreenshotResponse,
         )
 
+    async def index_build(
+        self,
+        *,
+        file_id: str,
+        build_id: Optional[str] | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceIndexBuildResponse:
+        """
+        Build the retrieval index for an existing build from its already-parsed
+        partitions — the way out of `indexing=none` without paying for a re-parse.
+
+        Chunks, embeds and indexes the build's persisted partitions, makes it the file's
+        active build, and flips the persisted `indexing` level to `full`. After it
+        returns, `ask-sources`, `run-extraction` and `prebuilt-rag` see the source, and
+        build status reports `searchable: true`.
+
+        **Parameters (JSON body):**
+
+        - **file_id** (str, required): Unique identifier of the source file.
+        - **build_id** (str, optional): Build to index. Omitted → the file's active
+          build. A non-active build becomes active (only the active build can serve
+          retrieval).
+
+        Synchronous: the response arrives when indexing finishes. For large documents
+        the connection is kept alive with whitespace heartbeats — JSON parsers ignore
+        them, no client change needed.
+
+        **Returns** `PublicIndexBuildResponse` with `chunks_indexed`.
+
+        Args:
+          file_id: Unique identifier of the source file.
+
+          build_id: Build to index. Omitted → the file's active build. When given, that build
+              becomes the active one (only the active build can serve retrieval).
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        return await self._post(
+            "/sources/index",
+            body=await async_maybe_transform(
+                {
+                    "file_id": file_id,
+                    "build_id": build_id,
+                },
+                source_index_build_params.SourceIndexBuildParams,
+            ),
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            ),
+            cast_to=SourceIndexBuildResponse,
+        )
+
     async def ingest_file(
         self,
         *,
@@ -2244,6 +2372,9 @@ class SourcesResourceWithRawResponse:
         self.get_page_screenshot = to_raw_response_wrapper(
             sources.get_page_screenshot,
         )
+        self.index_build = to_raw_response_wrapper(
+            sources.index_build,
+        )
         self.ingest_file = to_raw_response_wrapper(
             sources.ingest_file,
         )
@@ -2288,6 +2419,9 @@ class AsyncSourcesResourceWithRawResponse:
         )
         self.get_page_screenshot = async_to_raw_response_wrapper(
             sources.get_page_screenshot,
+        )
+        self.index_build = async_to_raw_response_wrapper(
+            sources.index_build,
         )
         self.ingest_file = async_to_raw_response_wrapper(
             sources.ingest_file,
@@ -2334,6 +2468,9 @@ class SourcesResourceWithStreamingResponse:
         self.get_page_screenshot = to_streamed_response_wrapper(
             sources.get_page_screenshot,
         )
+        self.index_build = to_streamed_response_wrapper(
+            sources.index_build,
+        )
         self.ingest_file = to_streamed_response_wrapper(
             sources.ingest_file,
         )
@@ -2378,6 +2515,9 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.get_page_screenshot = async_to_streamed_response_wrapper(
             sources.get_page_screenshot,
+        )
+        self.index_build = async_to_streamed_response_wrapper(
+            sources.index_build,
         )
         self.ingest_file = async_to_streamed_response_wrapper(
             sources.ingest_file,
