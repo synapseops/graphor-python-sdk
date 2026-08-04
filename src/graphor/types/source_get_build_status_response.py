@@ -50,6 +50,9 @@ class SourceGetBuildStatusResponse(BaseModel):
     Completed or Completed with errors).
     """
 
+    enrichment: Optional[str] = None
+    """LLM enrichment level used for this build."""
+
     error: Optional[str] = None
     """Error message from the pipeline, if the build failed (e.g. processing_failed)."""
 
@@ -70,6 +73,9 @@ class SourceGetBuildStatusResponse(BaseModel):
 
     has_failed_batches: Optional[bool] = None
     """True when the build has failed batch details available for retry."""
+
+    indexing: Optional[str] = None
+    """Retrieval indexing level used for this build."""
 
     message: Optional[str] = None
     """Human-readable message (e.g. when status is not_found or processing)."""
@@ -94,6 +100,14 @@ class SourceGetBuildStatusResponse(BaseModel):
 
     page_size: Optional[int] = None
     """Number of elements per page. Null when no pagination was requested."""
+
+    searchable: Optional[bool] = None
+    """
+    Whether this build's retrieval index is currently serving queries: the build
+    completed, was indexed (indexing=full), and is still the source's active build.
+    False for unindexed, failed, in-progress, or superseded builds —
+    ask/extract/retrieve will return nothing for those.
+    """
 
     total_elements: Optional[int] = None
     """Total number of elements for this build. Present when suppress_elements=false."""

@@ -14,6 +14,19 @@ __all__ = ["SourceIngestFileParams"]
 class SourceIngestFileParams(TypedDict, total=False):
     file: Required[FileTypes]
 
+    enrichment: Optional[str]
+    """
+    LLM enrichment level: 'full' (default) or 'none' to skip page/section/document
+    annotation for faster parsing.
+    """
+
+    indexing: Optional[str]
+    """
+    Retrieval indexing level: 'full' (default) or 'none' to skip
+    chunking/embedding/indexing — the source is parsed but not searchable. Requires
+    Temporal ingestion.
+    """
+
     method: Optional[Method]
     """Public-facing partition method names for API v2.
 

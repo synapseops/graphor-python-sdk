@@ -44,3 +44,11 @@ class PublicSource(BaseModel):
     V1 API: basic, hi_res, hi_res_ft, mai, graphorlm, auto. V2 API: fast, balanced,
     accurate, agentic, auto.
     """
+
+    searchable: Optional[bool] = None
+    """Whether this source has a retrieval index.
+
+    False means it was ingested with indexing=none: `ask`, `extract` and `retrieve`
+    will return nothing for it, while reading its elements, `grep` and page reads
+    all still work. Null when unknown (pre-existing sources).
+    """

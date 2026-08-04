@@ -687,6 +687,8 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file: FileTypes,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -709,11 +711,23 @@ class SourcesResource(SyncAPIResource):
           etc.).
         - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
           `balanced`, `accurate`, `vlm`, `agentic`, `auto`. Default when omitted.
+        - **enrichment** (`form`, optional): `full` (default) or `none`. `none` skips
+          LLM page/section/document annotation for faster, cheaper parsing.
+        - **indexing** (`form`, optional): `full` (default) or `none`. `none` skips
+          chunking/embedding/indexing — the source is parsed but not searchable via
+          ask/extract/retrieve. Check `GET /v2/sources/config` for availability.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
 
         Args:
+          enrichment: LLM enrichment level: 'full' (default) or 'none' to skip page/section/document
+              annotation for faster parsing.
+
+          indexing: Retrieval indexing level: 'full' (default) or 'none' to skip
+              chunking/embedding/indexing — the source is parsed but not searchable. Requires
+              Temporal ingestion.
+
           method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
@@ -735,6 +749,8 @@ class SourcesResource(SyncAPIResource):
         body = deepcopy_with_paths(
             {
                 "file": file,
+                "enrichment": enrichment,
+                "indexing": indexing,
                 "method": method,
             },
             [["file"]],
@@ -758,6 +774,8 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         url: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -781,6 +799,15 @@ class SourcesResource(SyncAPIResource):
         Args:
           url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -791,7 +818,14 @@ class SourcesResource(SyncAPIResource):
         """
         return self._post(
             "/sources/ingest-github",
-            body=maybe_transform({"url": url}, source_ingest_github_params.SourceIngestGitHubParams),
+            body=maybe_transform(
+                {
+                    "url": url,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                },
+                source_ingest_github_params.SourceIngestGitHubParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -803,6 +837,8 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -848,6 +884,15 @@ class SourcesResource(SyncAPIResource):
 
           crawl_urls: When true, also follows and ingests links found on the page
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
@@ -872,6 +917,8 @@ class SourcesResource(SyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
                     "method": method,
                 },
                 source_ingest_url_params.SourceIngestURLParams,
@@ -886,6 +933,8 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         url: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -911,6 +960,15 @@ class SourcesResource(SyncAPIResource):
           url: The YouTube video URL to ingest (e.g.
               https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -921,7 +979,14 @@ class SourcesResource(SyncAPIResource):
         """
         return self._post(
             "/sources/ingest-youtube",
-            body=maybe_transform({"url": url}, source_ingest_youtube_params.SourceIngestYoutubeParams),
+            body=maybe_transform(
+                {
+                    "url": url,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                },
+                source_ingest_youtube_params.SourceIngestYoutubeParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -932,6 +997,8 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file_id: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Method | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -958,6 +1025,15 @@ class SourcesResource(SyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           method: Partitioning strategy. One of: fast, balanced, accurate, agentic, auto.
 
           extra_headers: Send extra headers
@@ -973,6 +1049,8 @@ class SourcesResource(SyncAPIResource):
             body=maybe_transform(
                 {
                     "file_id": file_id,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
                     "method": method,
                 },
                 source_reprocess_params.SourceReprocessParams,
@@ -1692,6 +1770,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file: FileTypes,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1714,11 +1794,23 @@ class AsyncSourcesResource(AsyncAPIResource):
           etc.).
         - **method** (`form`, optional): Partitioning strategy. One of: `fast`,
           `balanced`, `accurate`, `vlm`, `agentic`, `auto`. Default when omitted.
+        - **enrichment** (`form`, optional): `full` (default) or `none`. `none` skips
+          LLM page/section/document annotation for faster, cheaper parsing.
+        - **indexing** (`form`, optional): `full` (default) or `none`. `none` skips
+          chunking/embedding/indexing — the source is parsed but not searchable via
+          ask/extract/retrieve. Check `GET /v2/sources/config` for availability.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
 
         Args:
+          enrichment: LLM enrichment level: 'full' (default) or 'none' to skip page/section/document
+              annotation for faster parsing.
+
+          indexing: Retrieval indexing level: 'full' (default) or 'none' to skip
+              chunking/embedding/indexing — the source is parsed but not searchable. Requires
+              Temporal ingestion.
+
           method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
@@ -1740,6 +1832,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         body = deepcopy_with_paths(
             {
                 "file": file,
+                "enrichment": enrichment,
+                "indexing": indexing,
                 "method": method,
             },
             [["file"]],
@@ -1763,6 +1857,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         url: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1786,6 +1882,15 @@ class AsyncSourcesResource(AsyncAPIResource):
         Args:
           url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -1796,7 +1901,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         return await self._post(
             "/sources/ingest-github",
-            body=await async_maybe_transform({"url": url}, source_ingest_github_params.SourceIngestGitHubParams),
+            body=await async_maybe_transform(
+                {
+                    "url": url,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                },
+                source_ingest_github_params.SourceIngestGitHubParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -1808,6 +1920,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         crawl_urls: bool | Omit = omit,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1853,6 +1967,15 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           crawl_urls: When true, also follows and ingests links found on the page
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           method: Public-facing partition method names for API v2.
 
               Maps to internal PartitionMethod as:
@@ -1877,6 +2000,8 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "url": url,
                     "crawl_urls": crawl_urls,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
                     "method": method,
                 },
                 source_ingest_url_params.SourceIngestURLParams,
@@ -1891,6 +2016,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         url: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1916,6 +2043,15 @@ class AsyncSourcesResource(AsyncAPIResource):
           url: The YouTube video URL to ingest (e.g.
               https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -1926,7 +2062,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         return await self._post(
             "/sources/ingest-youtube",
-            body=await async_maybe_transform({"url": url}, source_ingest_youtube_params.SourceIngestYoutubeParams),
+            body=await async_maybe_transform(
+                {
+                    "url": url,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                },
+                source_ingest_youtube_params.SourceIngestYoutubeParams,
+            ),
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
@@ -1937,6 +2080,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file_id: str,
+        enrichment: Optional[str] | Omit = omit,
+        indexing: Optional[str] | Omit = omit,
         method: Method | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1963,6 +2108,15 @@ class AsyncSourcesResource(AsyncAPIResource):
         Args:
           file_id: Unique identifier of the source to re-process.
 
+          enrichment: LLM enrichment level. `full` (default) runs page/section and document
+              annotation; `none` returns parsing results only and is faster, at the cost of
+              weaker retrieval context.
+
+          indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
+              source; `none` skips it — the source will NOT be searchable via
+              ask/extract/retrieve, though its parsed elements remain readable. Reversible by
+              re-processing.
+
           method: Partitioning strategy. One of: fast, balanced, accurate, agentic, auto.
 
           extra_headers: Send extra headers
@@ -1978,6 +2132,8 @@ class AsyncSourcesResource(AsyncAPIResource):
             body=await async_maybe_transform(
                 {
                     "file_id": file_id,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
                     "method": method,
                 },
                 source_reprocess_params.SourceReprocessParams,
