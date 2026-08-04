@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.0 (2026-08-04)
+
+Full Changelog: [v0.25.0...v0.26.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.25.0...v0.26.0)
+
+### Features
+
+* **api:** index build endpoint ([5278bee](https://github.com/synapseops/graphor-python-sdk/commit/5278bee9d872ebad6f2eb126e698422a0440f44d))
+
 ## 0.25.0 (2026-08-03)
 
 Full Changelog: [v0.24.0...v0.25.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.24.0...v0.25.0)
