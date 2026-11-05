@@ -222,11 +222,11 @@ class SourcesResource(SyncAPIResource):
         """
         Ask a natural-language question grounded on the project's ingested sources.
 
-        This is the primary Q&A endpoint. It sends the question through the GenAI File
-        Search pipeline, which retrieves relevant chunks from the knowledge graph,
-        grounds the answer in the source documents, and returns a natural-language
-        response. Optionally, you can request a structured JSON output by supplying an
-        `output_schema`.
+        This is the primary Q&A endpoint. It sends the question through native RAG
+        retrieval (legacy builds indexed with Google File Search still use that engine),
+        which retrieves relevant chunks from the knowledge graph, grounds the answer in
+        the source documents, and returns a natural-language response. Optionally, you
+        can request a structured JSON output by supplying an `output_schema`.
 
         Conversation memory is supported: pass a `conversation_id` to continue an
         existing conversation, or set `reset` to `true` to start fresh.
@@ -291,7 +291,7 @@ class SourcesResource(SyncAPIResource):
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+          thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
@@ -342,11 +342,11 @@ class SourcesResource(SyncAPIResource):
         """
         Run a one-off structured data extraction against one or more sources.
 
-        This endpoint uses the GenAI File Search pipeline to read the specified sources,
-        apply the user-provided instruction, and return structured JSON output
-        conforming to the supplied `output_schema`. Internally it builds a grounded
-        prompt, queries the model, and validates/corrects the raw JSON against the
-        schema.
+        This endpoint uses native RAG retrieval (legacy builds indexed with Google File
+        Search still use that engine) to read the specified sources, apply the
+        user-provided instruction, and return structured JSON output conforming to the
+        supplied `output_schema`. Internally it builds a grounded prompt, queries the
+        model, and validates/corrects the raw JSON against the schema.
 
         **Parameters (JSON body):**
 
@@ -382,7 +382,7 @@ class SourcesResource(SyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+          thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
@@ -1368,11 +1368,11 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         Ask a natural-language question grounded on the project's ingested sources.
 
-        This is the primary Q&A endpoint. It sends the question through the GenAI File
-        Search pipeline, which retrieves relevant chunks from the knowledge graph,
-        grounds the answer in the source documents, and returns a natural-language
-        response. Optionally, you can request a structured JSON output by supplying an
-        `output_schema`.
+        This is the primary Q&A endpoint. It sends the question through native RAG
+        retrieval (legacy builds indexed with Google File Search still use that engine),
+        which retrieves relevant chunks from the knowledge graph, grounds the answer in
+        the source documents, and returns a natural-language response. Optionally, you
+        can request a structured JSON output by supplying an `output_schema`.
 
         Conversation memory is supported: pass a `conversation_id` to continue an
         existing conversation, or set `reset` to `true` to start fresh.
@@ -1437,7 +1437,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           reset: When true, starts a new conversation discarding any previous history
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+          thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers
@@ -1488,11 +1488,11 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         Run a one-off structured data extraction against one or more sources.
 
-        This endpoint uses the GenAI File Search pipeline to read the specified sources,
-        apply the user-provided instruction, and return structured JSON output
-        conforming to the supplied `output_schema`. Internally it builds a grounded
-        prompt, queries the model, and validates/corrects the raw JSON against the
-        schema.
+        This endpoint uses native RAG retrieval (legacy builds indexed with Google File
+        Search still use that engine) to read the specified sources, apply the
+        user-provided instruction, and return structured JSON output conforming to the
+        supplied `output_schema`. Internally it builds a grounded prompt, queries the
+        model, and validates/corrects the raw JSON against the schema.
 
         **Parameters (JSON body):**
 
@@ -1528,7 +1528,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
-          thinking_level: Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+          thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
           extra_headers: Send extra headers

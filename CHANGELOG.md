@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.26.1 (2026-11-05)
+
+Full Changelog: [v0.26.0...v0.26.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.26.0...v0.26.1)
+
+### Documentation
+
+* describe `thinking_level="fast"` correctly: it is no longer the cheapest level
+* describe the current retrieval in `ask` and `extract`
+
 ## 0.26.0 (2026-08-04)
 
 Full Changelog: [v0.25.0...v0.26.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.25.0...v0.26.0)
