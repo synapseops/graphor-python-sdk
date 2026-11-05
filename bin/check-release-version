@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Fails unless every place that holds the version says the given one.
+# Usage: bin/check-release-version X.Y.Z
+set -euo pipefail
+
+version="${1:?usage: bin/check-release-version X.Y.Z}"
+errors=0
+
+check() {
+  if ! grep -qE "$2" "$1"; then
+    echo "ERROR: $1 does not say $version"
+    errors=1
+  fi
+}
+
+check pyproject.toml "^version = \"$version\"\$"
+check src/graphor/_version.py "^__version__ = \"$version\""
+if ! grep -A1 '^name = "graphor"$' uv.lock | grep -qE "^version = \"$version\"\$"; then
+  echo "ERROR: uv.lock does not say $version (run uv lock)"
+  errors=1
+fi
+
+if [[ "$errors" -ne 0 ]]; then
+  exit 1
+fi
+echo "All version locations say $version"

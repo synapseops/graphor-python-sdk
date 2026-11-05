@@ -34,13 +34,11 @@ $ pip install -r requirements-dev.lock
 
 ## Modifying/Adding code
 
-Most of the SDK is generated code. Modifications to code will be persisted between generations, but may
-result in merge conflicts between manual patches and changes from the generator. The generator will never
-modify the contents of the `src/graphor/lib/` and `examples/` directories.
+The code is maintained by hand. The `File generated from our OpenAPI spec` header on many files is historical, so those files can be edited like any other. See [AGENTS.md](AGENTS.md).
 
 ## Adding and running examples
 
-All files in the `examples/` directory are not modified by the generator and can be freely edited or added to.
+All files in the `examples/` directory can be freely edited or added to.
 
 ```py
 # add an example to examples/<your-example>.py
@@ -108,14 +106,4 @@ $ ./scripts/format
 
 ## Publishing and releases
 
-Changes made to this repository via the automated release PR pipeline should publish to PyPI automatically. If
-the changes aren't made through the automated pipeline, you may want to make releases manually.
-
-### Publish with a GitHub workflow
-
-You can release to package managers by using [the `Publish PyPI` GitHub action](https://www.github.com/synapseops/graphor-python-sdk/actions/workflows/publish-pypi.yml). This requires a setup organization or repository secret to be set up.
-
-### Publish manually
-
-If you need to manually release a package, you can run the `bin/publish-pypi` script with a `PYPI_TOKEN` set on
-the environment.
+See [RELEASING.md](RELEASING.md).
