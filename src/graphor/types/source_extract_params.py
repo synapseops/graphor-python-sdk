@@ -28,6 +28,6 @@ class SourceExtractParams(TypedDict, total=False):
 
     thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]]
     """
-    Controls model and thinking budget: 'fast' (cheapest/fastest), 'balanced',
+    Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
     'accurate', or 'max' (most thorough)
     """
