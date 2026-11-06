@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import os
+import math
 import time
 import base64
 import random
@@ -94,6 +95,8 @@ class UploadSource:
 
 def _base_name(obj: object, default: str = "upload") -> str:
     name = getattr(obj, "name", None)
+    if isinstance(name, int) and not isinstance(name, bool):
+        return str(name)  # a file descriptor, as httpx names it
     if isinstance(name, (str, os.PathLike)):
         return pathlib.Path(os.fspath(name)).name or default
     return default
@@ -119,17 +122,31 @@ def _stream_source(stream: IO[bytes], name: str, size: int, close: Optional[Call
     return UploadSource(name=name, size=size, read_at=read_at, close=close)
 
 
-def _seekable_size(stream: IO[bytes]) -> Optional[int]:
-    try:
-        return os.fstat(stream.fileno()).st_size
-    except (OSError, AttributeError, io.UnsupportedOperation):
-        pass
+def _is_stream(obj: object) -> bool:
+    return isinstance(obj, io.IOBase) or callable(getattr(obj, "read", None))
+
+
+def _is_seekable(stream: Any) -> bool:
+    check = getattr(stream, "seekable", None)
+    if callable(check):
+        try:
+            return bool(check())
+        except (OSError, ValueError):
+            return False
+    return callable(getattr(stream, "seek", None)) and callable(getattr(stream, "tell", None))
+
+
+def _seekable_size(stream: Any) -> Optional[int]:
+    # Seeking to the end flushes pending writes and gives the size a reader
+    # sees; a file descriptor's size would miss buffered bytes, or be a
+    # compressed file's size.
     try:
         position = stream.tell()
-        size = stream.seek(0, os.SEEK_END)
+        stream.seek(0, os.SEEK_END)  # some streams return None here
+        size = stream.tell()
         stream.seek(position)
-        return size
-    except (OSError, io.UnsupportedOperation):
+        return int(size)
+    except (OSError, ValueError, TypeError, AttributeError, io.UnsupportedOperation):
         return None
 
 
@@ -151,17 +168,22 @@ def _content_source(content: object, name: Optional[str]) -> tuple[object, Optio
         opened = path.open("rb")
         return cast(object, content), _stream_source(opened, name or path.name, size, opened.close)
 
-    if isinstance(content, io.IOBase):
+    if _is_stream(content):
         stream = cast(IO[bytes], content)
         file_name = name or _base_name(stream)
-        if stream.seekable():
-            stream_size = _seekable_size(stream)
-            if stream_size is None or stream_size <= DIRECT_UPLOAD_MAX_BYTES:
+        stream_size = _seekable_size(stream) if _is_seekable(stream) else None
+        if stream_size is not None:
+            if stream_size <= DIRECT_UPLOAD_MAX_BYTES:
                 return content, None
             # Uploaded from the start, as the direct request does.
             return content, _stream_source(stream, file_name, stream_size, None)
 
-        # Not seekable: its size is only known by reading it, so it is spooled.
+        # Its size is only known by reading it, so it is spooled.
+        if _is_seekable(stream):
+            try:
+                stream.seek(0)
+            except (OSError, ValueError, io.UnsupportedOperation):
+                pass
         spool = tempfile.TemporaryFile()
         while True:
             block = stream.read(8 * _MIB)
@@ -171,8 +193,13 @@ def _content_source(content: object, name: Optional[str]) -> tuple[object, Optio
         size = spool.tell()
         spool.seek(0)
         if size <= DIRECT_UPLOAD_MAX_BYTES:
-            return (file_name, spool), None
-        return (file_name, spool), _stream_source(cast(IO[bytes], spool), file_name, size, spool.close)
+            # Small enough for memory, so the temporary file can close now.
+            data = spool.read()
+            spool.close()
+            return (data if name else (file_name, data)), None
+        # Inside a tuple the caller's name is kept; on its own it needs one.
+        direct = spool if name else (file_name, spool)
+        return direct, _stream_source(cast(IO[bytes], spool), file_name, size, spool.close)
 
     return content, None
 
@@ -193,8 +220,11 @@ def prepare_upload(file: FileTypes) -> tuple[FileTypes, Optional[UploadSource]]:
 def rewind(file: FileTypes) -> None:
     """Put a file object back at its start before the direct request."""
     content = file[1] if isinstance(file, tuple) and len(file) > 1 else file
-    if isinstance(content, io.IOBase) and content.seekable():
-        content.seek(0)
+    if _is_stream(content) and _is_seekable(content):
+        try:
+            cast(Any, content).seek(0)
+        except (OSError, ValueError, io.UnsupportedOperation):
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -288,11 +318,20 @@ def _backoff(attempt: int) -> float:
 
 
 def _retry_after(headers: Mapping[str, str]) -> Optional[float]:
-    value = headers.get("retry-after")
+    return _clamp_delay(headers.get("retry-after"))
+
+
+def _clamp_delay(value: object) -> Optional[float]:
+    """A server-given delay in seconds, if it is a sane one, capped at 60."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        return None
     try:
-        return float(value) if value is not None else None
+        seconds = float(value)
     except ValueError:
         return None
+    if not math.isfinite(seconds) or seconds < 0:
+        return None
+    return min(seconds, 60.0)
 
 
 class _ChunkState:
@@ -355,6 +394,15 @@ class _ChunkState:
 
     def give_up(self) -> bool:
         return self.attempts >= UPLOAD_MAX_ATTEMPTS
+
+    def check_end(self) -> None:
+        """The file must end where its size said: a longer file changed."""
+        if self.source.read(self.source.size, 1):
+            raise UploadError(
+                "The file changed while it was being uploaded.",
+                request=_scrubbed_request("PUT", ""),
+                offset=self.source.size,
+            )
 
     def digest(self) -> Optional[str]:
         if self.md5 is None or self.hashed_upto != self.source.size:
@@ -484,9 +532,17 @@ def _send_chunks(client: Any, session: _UploadSession, source: UploadSource, tim
             status = response.status_code
         except httpx.TransportError:
             response = None
+            status = None
 
         if response is not None and (status in (200, 201, 308)):
             state.advance(state.persisted(response), url)
+            if not state.done and state.attempts:
+                # A 308 that stored nothing new spends the budget too.
+                if state.give_up():
+                    raise UploadError(
+                        "The upload made no progress.", request=_scrubbed_request("PUT", url), offset=state.offset
+                    )
+                time.sleep(_backoff(state.attempts))
             continue
         if response is not None and status is not None and _session_lost(status):
             raise UploadError(
@@ -525,6 +581,7 @@ def _send_chunks(client: Any, session: _UploadSession, source: UploadSource, tim
                 offset=state.offset,
                 status_code=status,
             )
+    state.check_end()
     return state.digest()
 
 
@@ -561,18 +618,20 @@ def _complete(
         verdict = _Verdict.RETRY
         try:
             raw = resource._post(_COMPLETE_PATH, body=body, options=options, cast_to=_ingest_response_type())
-            data = cast(object, raw.json())
-            waited = 0.0
+            try:
+                data = cast(object, raw.json())
+            except ValueError as e:
+                data, last = None, e
             if isinstance(data, dict) and cast(Dict[str, Any], data).get("build_id"):
                 return raw if raw_mode else raw.parse()
             if isinstance(data, dict) and "status_code" in data:
                 envelope = cast(Dict[str, Any], data)
                 verdict = _envelope_verdict(envelope)
                 last = _envelope_error(client, envelope, raw.http_response)
-                delay = cast(Optional[float], envelope.get("retry_after"))
+                delay = _clamp_delay(envelope.get("retry_after"))
                 if verdict == _Verdict.FINAL:
                     raise last
-            else:
+            elif data is not None:
                 last = None
         except APIStatusError as e:
             if e is last:
@@ -585,6 +644,8 @@ def _complete(
         except (APIConnectionError, httpx.HTTPError) as e:
             last = e
 
+        if verdict != _Verdict.FREE:
+            waited = 0.0
         if verdict == _Verdict.FREE:
             delay = delay or 20.0
             waited += delay
@@ -593,8 +654,6 @@ def _complete(
         else:
             attempts += 1
             if attempts >= budget:
-                if isinstance(last, APIStatusError):
-                    raise last
                 raise _gave_up(session, last)
             delay = delay or _backoff(attempts)
         time.sleep(delay)
@@ -663,7 +722,7 @@ async def async_upload(
             resource, session, md5, extra_headers=extra_headers, extra_query=extra_query, timeout=timeout
         )
     finally:
-        await to_thread(source.close)
+        source.close()
 
 
 async def _async_put(
@@ -695,9 +754,16 @@ async def _async_send_chunks(client: Any, session: _UploadSession, source: Uploa
             status = response.status_code
         except httpx.TransportError:
             response = None
+            status = None
 
         if response is not None and status in (200, 201, 308):
             state.advance(state.persisted(response), url)
+            if not state.done and state.attempts:
+                if state.give_up():
+                    raise UploadError(
+                        "The upload made no progress.", request=_scrubbed_request("PUT", url), offset=state.offset
+                    )
+                await anyio.sleep(_backoff(state.attempts))
             continue
         if response is not None and status is not None and _session_lost(status):
             raise UploadError(
@@ -736,6 +802,7 @@ async def _async_send_chunks(client: Any, session: _UploadSession, source: Uploa
                 offset=state.offset,
                 status_code=status,
             )
+    await to_thread(state.check_end)
     return state.digest()
 
 
@@ -771,18 +838,20 @@ async def _async_complete(
         verdict = _Verdict.RETRY
         try:
             raw = await resource._post(_COMPLETE_PATH, body=body, options=options, cast_to=_ingest_response_type())
-            data = cast(object, await raw.json())
-            waited = 0.0
+            try:
+                data = cast(object, await raw.json())
+            except ValueError as e:
+                data, last = None, e
             if isinstance(data, dict) and cast(Dict[str, Any], data).get("build_id"):
                 return raw if raw_mode else await raw.parse()
             if isinstance(data, dict) and "status_code" in data:
                 envelope = cast(Dict[str, Any], data)
                 verdict = _envelope_verdict(envelope)
                 last = _envelope_error(client, envelope, raw.http_response)
-                delay = cast(Optional[float], envelope.get("retry_after"))
+                delay = _clamp_delay(envelope.get("retry_after"))
                 if verdict == _Verdict.FINAL:
                     raise last
-            else:
+            elif data is not None:
                 last = None
         except APIStatusError as e:
             if e is last:
@@ -795,6 +864,8 @@ async def _async_complete(
         except (APIConnectionError, httpx.HTTPError) as e:
             last = e
 
+        if verdict != _Verdict.FREE:
+            waited = 0.0
         if verdict == _Verdict.FREE:
             delay = delay or 20.0
             waited += delay
@@ -803,8 +874,6 @@ async def _async_complete(
         else:
             attempts += 1
             if attempts >= budget:
-                if isinstance(last, APIStatusError):
-                    raise last
                 raise _gave_up(session, last)
             delay = delay or _backoff(attempts)
         await anyio.sleep(delay)

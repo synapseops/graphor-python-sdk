@@ -440,3 +440,208 @@ async def test_async_upload_resumes(server: FakeServer) -> None:
 async def test_async_small_file_goes_directly(server: FakeServer) -> None:
     result = await _async_client(server).sources.ingest_file(file=("a.pdf", _data(10 * KIB)))
     assert result.build_id == "direct"
+
+
+# --- review fixes -------------------------------------------------------------
+
+
+def test_an_unflushed_temp_file_uploads_whole(server: FakeServer) -> None:
+    import tempfile
+
+    data = _data()
+    with tempfile.TemporaryFile() as tmp:
+        for i in range(0, len(data), 1000):
+            tmp.write(data[i : i + 1000])  # no flush, no seek
+        _client(server).sources.ingest_file(file=("a.pdf", tmp))
+    assert bytes(server.stored) == data
+
+
+def test_a_gzip_file_uploads_its_uncompressed_bytes(server: FakeServer, tmp_path: Path) -> None:
+    import gzip
+
+    data = _data()
+    path = tmp_path / "a.pdf.gz"
+    with gzip.open(path, "wb") as f:
+        f.write(data)
+    with gzip.open(path, "rb") as f:
+        _client(server).sources.ingest_file(file=("a.pdf", cast(Any, f)))
+    assert bytes(server.stored) == data
+
+
+def test_a_file_that_grows_during_the_upload_raises(server: FakeServer, tmp_path: Path) -> None:
+    path = tmp_path / "growing.pdf"
+    path.write_bytes(_data())
+
+    def grow(start: int, _end: int, _body: bytes) -> Optional[httpx.Response]:
+        if start == 0:
+            with path.open("ab") as f:
+                f.write(b"more")
+        return None
+
+    server.on_put = grow
+    with pytest.raises(UploadError) as exc:
+        _client(server).sources.ingest_file(file=path)
+    assert "changed" in str(exc.value)
+    assert server.complete_bodies == []
+
+
+def test_a_308_without_progress_spends_the_budget(server: FakeServer) -> None:
+    calls = {"n": 0}
+
+    def stuck(_start: int, _end: int, _body: bytes) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] > 50:  # a regression would loop forever; fail instead
+            raise AssertionError("no budget")
+        return httpx.Response(308)
+
+    server.on_put = stuck
+    with pytest.raises(UploadError):
+        _client(server).sources.ingest_file(file=("a.pdf", _data()))
+    sends = [r for r in _puts(server) if not r.headers["content-range"].startswith("bytes */")]
+    assert len(sends) == large.UPLOAD_MAX_ATTEMPTS
+
+
+@pytest.mark.parametrize("size", [50 * KIB, 600 * KIB])
+def test_a_tuple_with_a_non_seekable_stream(server: FakeServer, size: int) -> None:
+    data = _data(size)
+
+    class Pipe(io.RawIOBase):
+        def __init__(self) -> None:
+            self.inner = io.BytesIO(data)
+
+        @override
+        def readable(self) -> bool:
+            return True
+
+        @override
+        def seekable(self) -> bool:
+            return False
+
+        @override
+        def readinto(self, buffer: Any) -> int:
+            chunk = self.inner.read(len(buffer))
+            buffer[: len(chunk)] = chunk
+            return len(chunk)
+
+    result = _client(server).sources.ingest_file(file=("a.pdf", cast(Any, Pipe())))
+    assert result.build_id == ("direct" if size < 100 * KIB else "bid")
+    if size >= 100 * KIB:
+        assert bytes(server.stored) == data
+        # The direct fallback takes the same content: it was wrapped twice once.
+        server.create_status = 501
+        assert _client(server).sources.ingest_file(file=("a.pdf", cast(Any, Pipe()))).build_id == "direct"
+
+
+def test_a_file_object_that_is_not_iobase(server: FakeServer) -> None:
+    data = _data()
+
+    class Spooled:  # like SpooledTemporaryFile on Python 3.9 and 3.10
+        def __init__(self) -> None:
+            self.inner = io.BytesIO(data)
+
+        def read(self, size: int = -1) -> bytes:
+            return self.inner.read(size)
+
+        def seek(self, offset: int, whence: int = 0) -> int:
+            return self.inner.seek(offset, whence)
+
+        def tell(self) -> int:
+            return self.inner.tell()
+
+    assert _client(server).sources.ingest_file(file=("a.pdf", cast(Any, Spooled()))).build_id == "bid"
+    assert bytes(server.stored) == data
+
+
+def test_busy_envelopes_end_at_the_deadline_with_the_build(server: FakeServer) -> None:
+    busy = lambda: httpx.Response(  # noqa: E731
+        200,
+        content=json.dumps(
+            {"detail": "busy", "status_code": 503, "retryable": True, "retry_after": 60, "busy": True}
+        ).encode(),
+    )
+    server.complete_script = [busy] * 100
+    with pytest.raises(UploadError) as exc:
+        _client(server).sources.ingest_file(file=("a.pdf", _data()))
+    assert exc.value.build_id == "bid"
+    assert len(server.complete_bodies) == int(large.COMPLETE_DEADLINE_SECONDS // 60) + 1
+
+
+def test_running_out_of_attempts_keeps_the_build(server: FakeServer) -> None:
+    server.complete_script = [lambda: httpx.Response(503, json={"detail": "down"})] * 10
+    with pytest.raises(UploadError) as exc:
+        _client(server).sources.ingest_file(file=("a.pdf", _data()))
+    assert exc.value.build_id == "bid"
+    assert exc.value.__cause__ is not None
+
+
+def test_a_non_json_complete_body_is_retried(server: FakeServer) -> None:
+    server.complete_script = [lambda: httpx.Response(200, content=b"<html>proxy</html>")]
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data())).build_id == "bid"
+    assert len(server.complete_bodies) == 2
+
+
+@pytest.mark.parametrize("value", ["-5", "inf", "nan", "soon", "3600"])
+def test_a_bad_retry_after_is_clamped(server: FakeServer, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+    sleeps: List[float] = []
+    monkeypatch.setattr(large, "time", SimpleNamespace(sleep=sleeps.append))
+    server.complete_script = [lambda: httpx.Response(503, headers={"Retry-After": value}, json={"detail": "x"})]
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data())).build_id == "bid"
+    assert sleeps and all(0 <= s <= 60 for s in sleeps)
+
+
+@pytest.mark.parametrize("value", [-1, "20", 3600, None, True])
+def test_an_envelope_retry_after_is_clamped(server: FakeServer, monkeypatch: pytest.MonkeyPatch, value: object) -> None:
+    sleeps: List[float] = []
+    monkeypatch.setattr(large, "time", SimpleNamespace(sleep=sleeps.append))
+    server.complete_script = [
+        lambda: httpx.Response(
+            200,
+            content=json.dumps({"detail": "x", "status_code": 503, "retryable": True, "retry_after": value}).encode(),
+        )
+    ]
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data())).build_id == "bid"
+    assert sleeps and all(0 <= s <= 60 for s in sleeps)
+
+
+def test_a_stream_whose_seek_returns_none(server: FakeServer) -> None:
+    for size in (10 * KIB, 600 * KIB):
+        data = _data(size)
+
+        class Remote:  # like paramiko's SFTPFile
+            def __init__(self, content: bytes) -> None:
+                self.inner = io.BytesIO(content)
+
+            def read(self, n: int = -1) -> bytes:
+                return self.inner.read(n)
+
+            def seekable(self) -> bool:
+                return True
+
+            def seek(self, offset: int, whence: int = 0) -> None:
+                self.inner.seek(offset, whence)
+
+            def tell(self) -> int:
+                return self.inner.tell()
+
+        server.stored = bytearray()
+        server.finished = False
+        result = _client(server).sources.ingest_file(file=("a.pdf", cast(Any, Remote(data))))
+        assert result.build_id == ("direct" if size < 100 * KIB else "bid")
+
+
+async def test_async_308_without_progress_and_a_non_json_body(server: FakeServer) -> None:
+    calls = {"n": 0}
+
+    def stuck(_start: int, _end: int, _body: bytes) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] > 50:
+            raise AssertionError("no budget")
+        return httpx.Response(308)
+
+    server.on_put = stuck
+    with pytest.raises(UploadError):
+        await _async_client(server).sources.ingest_file(file=("a.pdf", _data()))
+
+    fresh = FakeServer()
+    fresh.complete_script = [lambda: httpx.Response(200, content=b"<html>proxy</html>")]
+    assert (await _async_client(fresh).sources.ingest_file(file=("a.pdf", _data()))).build_id == "bid"
