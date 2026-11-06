@@ -7,6 +7,7 @@ from typing_extensions import Literal
 import httpx
 
 __all__ = [
+    "UploadError",
     "BadRequestError",
     "AuthenticationError",
     "PermissionDeniedError",
@@ -69,6 +70,33 @@ class APIStatusError(APIError):
 class APIConnectionError(APIError):
     def __init__(self, *, message: str = "Connection error.", request: httpx.Request) -> None:
         super().__init__(message, request, body=None)
+
+
+class UploadError(APIError):
+    """Raised when the bytes of a large file could not be uploaded or completed.
+
+    `offset` is how many bytes the upload had stored when it stopped (`-1` when
+    the bytes were all sent and completing them failed). `build_id` is set when
+    the upload may still finish: check that build before uploading again.
+    """
+
+    offset: int
+    status_code: int | None
+    build_id: str | None
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        request: httpx.Request,
+        offset: int,
+        status_code: int | None = None,
+        build_id: str | None = None,
+    ) -> None:
+        super().__init__(message, request, body=None)
+        self.offset = offset
+        self.status_code = status_code
+        self.build_id = build_id
 
 
 class APITimeoutError(APIConnectionError):

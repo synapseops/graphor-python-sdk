@@ -12,6 +12,7 @@ from ._response import APIResponse as APIResponse, AsyncAPIResponse as AsyncAPIR
 from ._constants import DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES, DEFAULT_CONNECTION_LIMITS
 from ._exceptions import (
     APIError,
+    UploadError,
     GraphorError,
     ConflictError,
     NotFoundError,
@@ -43,6 +44,7 @@ __all__ = [
     "omit",
     "GraphorError",
     "APIError",
+    "UploadError",
     "APIStatusError",
     "APITimeoutError",
     "APIConnectionError",

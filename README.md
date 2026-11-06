@@ -32,19 +32,21 @@ pip install graphor[aiohttp]
 ## Quick Start
 
 ```python
+from pathlib import Path
+
 from graphor import Graphor
 
 client = Graphor()  # Uses GRAPHOR_API_KEY env var
 
-# Upload a document
-source = client.sources.upload(file=open("document.pdf", "rb"))
-print(f"Uploaded: {source.file_name}")
-
-# Process with advanced parsing
-client.sources.parse(
-    file_name=source.file_name, 
-    partition_method="graphorlm" # Options: basic (Fast), hi_res (Balanced), hi_res_ft (Accurate), mai (VLM), graphorlm (Agentic)
+# Upload a document; it is parsed in the background
+build = client.sources.ingest_file(
+    file=Path("document.pdf"),
+    method="agentic",  # Options: fast, balanced, accurate, agentic, auto
 )
+
+# Check the build
+status = client.sources.get_build_status(build.build_id)
+print(f"{status.file_name}: {status.status}")
 
 # Ask questions about your documents
 response = client.sources.ask(question="What are the main topics?")
@@ -84,34 +86,32 @@ from graphor import Graphor
 client = Graphor()
 
 # Upload a local file
-source = client.sources.upload(file=Path("report.pdf"))
+build = client.sources.ingest_file(file=Path("report.pdf"))
 
 # Upload from URL
-source = client.sources.upload_url(url="https://example.com/article")
+source = client.sources.ingest_url(url="https://example.com/article")
 
 # Upload from GitHub
-source = client.sources.upload_github(url="https://github.com/org/repo")
+source = client.sources.ingest_github(url="https://github.com/org/repo")
 
 # Upload from YouTube
-source = client.sources.upload_youtube(url="https://youtube.com/watch?v=...")
+source = client.sources.ingest_youtube(url="https://youtube.com/watch?v=...")
 ```
 
 **Supported formats:** PDF, DOCX, TXT, MD, HTML, CSV, XLSX, PNG, JPG, MP3, MP4, and more.
 
 📖 [Full upload documentation](https://docs.graphorlm.com/sdk/sources/upload)
 
-Certain errors are automatically retried 0 times by default, with a short exponential backoff.
-Connection errors (for example, due to a network connectivity problem), 408 Request Timeout, 409 Conflict,
-429 Rate Limit, and >=500 Internal errors are all retried by default.
+Large files work the same way: above 30 MiB, `ingest_file` sends the file in chunks that resume after a network error, then returns the same `build_id`. A large upload can take a while, and `timeout` applies to each request rather than to the whole upload.
 ### ⚙️ Process Documents
 
 Reprocess documents with different OCR/parsing methods:
 
 ```python
 # Reprocess with high-resolution parsing
-source = client.sources.parse(
-    file_name="document.pdf",
-    partition_method="hi_res"  # Options: basic, hi_res, hi_res_ft, mai, graphorlm
+source = client.sources.reprocess(
+    file_id="<file_id>",
+    method="balanced",  # Options: fast, balanced, accurate, agentic, auto
 )
 ```
 
@@ -233,7 +233,7 @@ async def main():
     client = AsyncGraphor()
     
     # All methods support await
-    source = await client.sources.upload(file=b"content")
+    build = await client.sources.ingest_file(file=("notes.txt", b"content"))
     response = await client.sources.ask(question="Summarize this document")
     
     print(response.answer)
@@ -270,6 +270,8 @@ client.sources.ingest_file(
 ```
 
 The async client uses the exact same interface. If you pass a [`PathLike`](https://docs.python.org/3/library/os.html#os.PathLike) instance, the file contents will be read asynchronously automatically.
+
+Files above 30 MiB are uploaded in chunks, so a path or an open file is never read into memory whole. If the upload cannot finish, `ingest_file` raises `graphor.UploadError`; when its `build_id` is set, the file was sent and its build may still complete, so check that build before uploading again.
 
 ## Error Handling
 
@@ -308,7 +310,7 @@ except graphor.APIStatusError as e:
 
 ### Retries
 
-Requests are automatically retried twice with exponential backoff:
+Requests are not retried by default (`max_retries=0`). With retries enabled, connection errors, 408, 409, 429 and 5xx responses are retried with a short exponential backoff. Large file uploads retry their own chunks regardless of this setting.
 
 ```python
 # Configure default retries
@@ -327,9 +329,9 @@ Default timeout is 60 seconds:
 client = Graphor(timeout=120.0)
 
 # Or per-request
-client.with_options(timeout=300.0).sources.parse(
-    file_name="large-document.pdf",
-    partition_method="graphorlm"
+client.with_options(timeout=300.0).sources.reprocess(
+    file_id="<file_id>",
+    method="agentic",
 )
 ```
 
@@ -341,16 +343,13 @@ from graphor import Graphor
 
 client = Graphor()
 
-# 1. Upload a document
-source = client.sources.upload(file=Path("contract.pdf"))
-print(f"✅ Uploaded: {source.file_name}")
+# 1. Upload a document, parsed in the background
+build = client.sources.ingest_file(file=Path("contract.pdf"), method="balanced")
 
-# 2. Process with advanced parsing
-processed = client.sources.parse(
-    file_name=source.file_name,
-    partition_method="hi_res"
-)
-print(f"✅ Processed: {processed.status}")
+# 2. Check the build
+status = client.sources.get_build_status(build.build_id)
+print(f"✅ {status.file_name}: {status.status}")
+source = status
 
 # 3. Ask questions
 response = client.sources.ask(
@@ -459,11 +458,11 @@ See the [MCP Server README](https://github.com/synapseops/graphor-mcp-server) fo
 
 | Method | Description | Docs |
 |--------|-------------|------|
-| `sources.upload()` | Upload a local file | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-a-file) |
-| `sources.upload_url()` | Upload from web URL | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-url) |
-| `sources.upload_github()` | Upload from GitHub | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-github) |
-| `sources.upload_youtube()` | Upload from YouTube | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-youtube) |
-| `sources.parse()` | Reprocess with different method | [📖](https://docs.graphorlm.com/sdk/sources/process) |
+| `sources.ingest_file()` | Upload a local file, of any size up to the limit | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-a-file) |
+| `sources.ingest_url()` | Upload from web URL | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-url) |
+| `sources.ingest_github()` | Upload from GitHub | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-github) |
+| `sources.ingest_youtube()` | Upload from YouTube | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-youtube) |
+| `sources.reprocess()` | Reprocess with different method | [📖](https://docs.graphorlm.com/sdk/sources/process) |
 | `sources.list()` | List all sources | [📖](https://docs.graphorlm.com/sdk/sources/list) |
 | `sources.delete()` | Delete a source | [📖](https://docs.graphorlm.com/sdk/sources/delete) |
 | `sources.load_elements()` | Get parsed elements | [📖](https://docs.graphorlm.com/sdk/sources/list-elements) |
