@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.27.0 (2026-11-06)
+
+Full Changelog: [v0.26.1...v0.27.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.26.1...v0.27.0)
+
+### Features
+
+* `sources.ingest_file` uploads files above 30 MiB: the file is sent in chunks that resume after a network error, checked with an MD5, and the call returns the same `build_id`. Files up to 30 MiB are sent as before, and the SDK falls back to the single request when the API does not offer upload sessions. Paths and open files are read a chunk at a time.
+* New `graphor.UploadError` when a large upload cannot finish; its `build_id` is set when the file was sent and the build may still complete.
+
+### Documentation
+
+* the README examples call methods that exist, and the retry section matches the default of no retries
+
 ## 0.26.1 (2026-11-05)
 
 Full Changelog: [v0.26.0...v0.26.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.26.0...v0.26.1)
