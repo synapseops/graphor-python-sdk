@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.27.1 (2026-11-06)
+
+Full Changelog: [v0.27.0...v0.27.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.27.0...v0.27.1)
+
+### Bug Fixes
+
+* large uploads: a file object with unflushed writes, or a `gzip`/`bz2`/`lzma` file, was uploaded cut short; its size is now measured by seeking to its end, and a file that grows during the upload raises `UploadError`
+* large uploads: a `308` answer that stores nothing new now counts against the retry budget instead of looping
+* a tuple holding a non-seekable stream works again; file objects that are not `io.IOBase` and streams whose `seek()` returns `None` are supported
+* completing a large upload: a busy server is waited on for at most 15 minutes, running out of attempts raises `UploadError` with `build_id`, a non-JSON body is retried, and server-given delays are clamped to 0-60 s
+
 ## 0.27.0 (2026-11-06)
 
 Full Changelog: [v0.26.1...v0.27.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.26.1...v0.27.0)
