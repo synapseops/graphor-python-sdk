@@ -37,6 +37,7 @@ from .._response import (
 )
 from .._base_client import make_request_options
 from ..types.method import Method
+from .._large_upload import rewind, upload, async_upload, prepare_upload, async_prepare_upload
 from ..types.source_ask_response import SourceAskResponse
 from ..types.source_list_response import SourceListResponse
 from ..types.source_delete_response import SourceDeleteResponse
@@ -765,9 +766,11 @@ class SourcesResource(SyncAPIResource):
         """
         Upload a local file and schedule ingestion in the background.
 
-        Accepts **`multipart/form-data`** with the file. Validates size (max 100 MB) and
-        extension, stores the file, then schedules the full data-ingestion pipeline in
-        the background. Returns immediately with a `build_id` to poll for status.
+        Validates the file's size and extension, stores it, then schedules the full
+        data-ingestion pipeline in the background. Returns with a `build_id` to poll
+        for status. Files above the direct upload limit (30 MiB) are sent in chunks
+        that resume after a network error, which can take a while for a large file;
+        `timeout` then applies to each request, not to the whole upload.
 
         **Parameters:**
 
@@ -811,28 +814,51 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_with_paths(
-            {
-                "file": file,
-                "enrichment": enrichment,
-                "indexing": indexing,
-                "method": method,
-            },
-            [["file"]],
-        )
-        files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
-        # It should be noted that the actual Content-Type header that will be
-        # sent to the server will contain a `boundary` parameter, e.g.
-        # multipart/form-data; boundary=---abc--
-        extra_headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
-        return self._post(
-            "/sources/ingest-file",
-            body=maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
-            files=files,
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        file, large = prepare_upload(file)
+
+        def direct() -> SourceIngestFileResponse:
+            rewind(file)
+            body = deepcopy_with_paths(
+                {
+                    "file": file,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                    "method": method,
+                },
+                [["file"]],
+            )
+            files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
+            # It should be noted that the actual Content-Type header that will be
+            # sent to the server will contain a `boundary` parameter, e.g.
+            # multipart/form-data; boundary=---abc--
+            headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
+            return self._post(
+                "/sources/ingest-file",
+                body=maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
+                files=files,
+                options=make_request_options(
+                    extra_headers=headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceIngestFileResponse,
+            )
+
+        if large is None:
+            return direct()
+        # Above the direct upload limit: an upload session (see `_large_upload`).
+        return cast(
+            SourceIngestFileResponse,
+            upload(
+                self,
+                large,
+                direct=direct,
+                method=method,
+                enrichment=enrichment,
+                indexing=indexing,
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
             ),
-            cast_to=SourceIngestFileResponse,
         )
 
     def ingest_github(
@@ -1911,9 +1937,11 @@ class AsyncSourcesResource(AsyncAPIResource):
         """
         Upload a local file and schedule ingestion in the background.
 
-        Accepts **`multipart/form-data`** with the file. Validates size (max 100 MB) and
-        extension, stores the file, then schedules the full data-ingestion pipeline in
-        the background. Returns immediately with a `build_id` to poll for status.
+        Validates the file's size and extension, stores it, then schedules the full
+        data-ingestion pipeline in the background. Returns with a `build_id` to poll
+        for status. Files above the direct upload limit (30 MiB) are sent in chunks
+        that resume after a network error, which can take a while for a large file;
+        `timeout` then applies to each request, not to the whole upload.
 
         **Parameters:**
 
@@ -1957,28 +1985,51 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
-        body = deepcopy_with_paths(
-            {
-                "file": file,
-                "enrichment": enrichment,
-                "indexing": indexing,
-                "method": method,
-            },
-            [["file"]],
-        )
-        files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
-        # It should be noted that the actual Content-Type header that will be
-        # sent to the server will contain a `boundary` parameter, e.g.
-        # multipart/form-data; boundary=---abc--
-        extra_headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
-        return await self._post(
-            "/sources/ingest-file",
-            body=await async_maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
-            files=files,
-            options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        file, large = await async_prepare_upload(file)
+
+        async def direct() -> SourceIngestFileResponse:
+            rewind(file)
+            body = deepcopy_with_paths(
+                {
+                    "file": file,
+                    "enrichment": enrichment,
+                    "indexing": indexing,
+                    "method": method,
+                },
+                [["file"]],
+            )
+            files = extract_files(cast(Mapping[str, object], body), paths=[["file"]])
+            # It should be noted that the actual Content-Type header that will be
+            # sent to the server will contain a `boundary` parameter, e.g.
+            # multipart/form-data; boundary=---abc--
+            headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
+            return await self._post(
+                "/sources/ingest-file",
+                body=await async_maybe_transform(body, source_ingest_file_params.SourceIngestFileParams),
+                files=files,
+                options=make_request_options(
+                    extra_headers=headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceIngestFileResponse,
+            )
+
+        if large is None:
+            return await direct()
+        # Above the direct upload limit: an upload session (see `_large_upload`).
+        return cast(
+            SourceIngestFileResponse,
+            await async_upload(
+                self,
+                large,
+                direct=direct,
+                method=method,
+                enrichment=enrichment,
+                indexing=indexing,
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
             ),
-            cast_to=SourceIngestFileResponse,
         )
 
     async def ingest_github(
