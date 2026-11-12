@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.28.0 (unreleased)
+## 0.28.0 (2026-11-12)
 
 Full Changelog: [v0.27.1...v0.28.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.27.1...v0.28.0)
 
