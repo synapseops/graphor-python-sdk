@@ -12,6 +12,7 @@ from tests.utils import assert_matches_type
 from graphor.types import (
     SourceAskResponse,
     SourceListResponse,
+    SourceMoveResponse,
     SourceDeleteResponse,
     SourceExtractResponse,
     SourceIngestURLResponse,
@@ -19,7 +20,12 @@ from graphor.types import (
     SourceIndexBuildResponse,
     SourceIngestFileResponse,
     SourceGetElementsResponse,
+    SourceListFoldersResponse,
+    SourceCreateFolderResponse,
+    SourceDeleteFolderResponse,
     SourceIngestGitHubResponse,
+    SourceRemoveFolderResponse,
+    SourceRenameFolderResponse,
     SourceIngestYoutubeResponse,
     SourceGetBuildStatusResponse,
     SourceRetrieveChunksResponse,
@@ -43,6 +49,8 @@ class TestSources:
     def test_method_list_with_all_params(self, client: Graphor) -> None:
         source = client.sources.list(
             file_ids=["string"],
+            folder="Contracts/2026",
+            recursive=True,
         )
         assert_matches_type(SourceListResponse, source, path=["response"])
 
@@ -435,6 +443,7 @@ class TestSources:
         source = client.sources.ingest_file(
             file=b"Example data",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
             method="fast",
         )
@@ -480,6 +489,7 @@ class TestSources:
         source = client.sources.ingest_github(
             url="https://github.com/langchain-ai/langchain",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
@@ -525,6 +535,7 @@ class TestSources:
             url="https://example.com/blog/ai-trends-2025",
             crawl_urls=False,
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
             method="balanced",
         )
@@ -570,6 +581,7 @@ class TestSources:
         source = client.sources.ingest_youtube(
             url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
@@ -689,6 +701,229 @@ class TestSources:
 
         assert cast(Any, response.is_closed) is True
 
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_list_folders(self, client: Graphor) -> None:
+        source = client.sources.list_folders()
+        assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_list_folders(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.list_folders()
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_list_folders(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.list_folders() as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_create_folder(self, client: Graphor) -> None:
+        source = client.sources.create_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_create_folder(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.create_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_create_folder(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.create_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_rename_folder(self, client: Graphor) -> None:
+        source = client.sources.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        )
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_rename_folder_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+            merge=True,
+        )
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_rename_folder(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_rename_folder(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_remove_folder(self, client: Graphor) -> None:
+        source = client.sources.remove_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_remove_folder_with_all_params(self, client: Graphor) -> None:
+        source = client.sources.remove_folder(
+            folder="Contracts/2026",
+            merge=True,
+        )
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_remove_folder(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.remove_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_remove_folder(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.remove_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_delete_folder(self, client: Graphor) -> None:
+        source = client.sources.delete_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_delete_folder(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.delete_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_delete_folder(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.delete_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_method_move(self, client: Graphor) -> None:
+        source = client.sources.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceMoveResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_raw_response_move(self, client: Graphor) -> None:
+        response = client.sources.with_raw_response.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = response.parse()
+        assert_matches_type(SourceMoveResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    def test_streaming_response_move(self, client: Graphor) -> None:
+        with client.sources.with_streaming_response.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = response.parse()
+            assert_matches_type(SourceMoveResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
 
 class TestAsyncSources:
     parametrize = pytest.mark.parametrize(
@@ -706,6 +941,8 @@ class TestAsyncSources:
     async def test_method_list_with_all_params(self, async_client: AsyncGraphor) -> None:
         source = await async_client.sources.list(
             file_ids=["string"],
+            folder="Contracts/2026",
+            recursive=True,
         )
         assert_matches_type(SourceListResponse, source, path=["response"])
 
@@ -1098,6 +1335,7 @@ class TestAsyncSources:
         source = await async_client.sources.ingest_file(
             file=b"Example data",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
             method="fast",
         )
@@ -1143,6 +1381,7 @@ class TestAsyncSources:
         source = await async_client.sources.ingest_github(
             url="https://github.com/langchain-ai/langchain",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
         )
         assert_matches_type(SourceIngestGitHubResponse, source, path=["response"])
@@ -1188,6 +1427,7 @@ class TestAsyncSources:
             url="https://example.com/blog/ai-trends-2025",
             crawl_urls=False,
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
             method="balanced",
         )
@@ -1233,6 +1473,7 @@ class TestAsyncSources:
         source = await async_client.sources.ingest_youtube(
             url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             enrichment="enrichment",
+            folder="Contracts/2026",
             indexing="indexing",
         )
         assert_matches_type(SourceIngestYoutubeResponse, source, path=["response"])
@@ -1349,5 +1590,228 @@ class TestAsyncSources:
 
             source = await response.parse()
             assert_matches_type(SourceRetrieveChunksResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_list_folders(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.list_folders()
+        assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_list_folders(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.list_folders()
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_list_folders(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.list_folders() as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceListFoldersResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_create_folder(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.create_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_create_folder(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.create_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_create_folder(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.create_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceCreateFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_rename_folder(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        )
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_rename_folder_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+            merge=True,
+        )
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_rename_folder(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_rename_folder(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.rename_folder(
+            folder="Contracts/2026",
+            new_folder="Archive/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceRenameFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_remove_folder(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.remove_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_remove_folder_with_all_params(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.remove_folder(
+            folder="Contracts/2026",
+            merge=True,
+        )
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_remove_folder(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.remove_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_remove_folder(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.remove_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceRemoveFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_delete_folder(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.delete_folder(
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_delete_folder(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.delete_folder(
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_delete_folder(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.delete_folder(
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceDeleteFolderResponse, source, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_method_move(self, async_client: AsyncGraphor) -> None:
+        source = await async_client.sources.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        )
+        assert_matches_type(SourceMoveResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_raw_response_move(self, async_client: AsyncGraphor) -> None:
+        response = await async_client.sources.with_raw_response.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        source = await response.parse()
+        assert_matches_type(SourceMoveResponse, source, path=["response"])
+
+    @pytest.mark.skip(reason="Mock server tests are disabled")
+    @parametrize
+    async def test_streaming_response_move(self, async_client: AsyncGraphor) -> None:
+        async with async_client.sources.with_streaming_response.move(
+            file_ids=["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+            folder="Contracts/2026",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            source = await response.parse()
+            assert_matches_type(SourceMoveResponse, source, path=["response"])
 
         assert cast(Any, response.is_closed) is True

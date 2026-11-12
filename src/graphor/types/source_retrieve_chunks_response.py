@@ -43,3 +43,9 @@ class SourceRetrieveChunksResponse(BaseModel):
     every source in scope was ingested with indexing=none, so an empty chunk list
     means 'nothing is indexed', not 'nothing matched'.
     """
+
+    folders: Optional[List[str]] = None
+    """The folders the scope was resolved from, normalized and de-duplicated.
+
+    Null when the request named no folder.
+    """

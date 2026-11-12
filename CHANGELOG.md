@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.28.0 (unreleased)
+
+Full Changelog: [v0.27.1...v0.28.0](https://github.com/synapseops/graphor-python-sdk/compare/v0.27.1...v0.28.0)
+
+### Features
+
+* folders: sources can be organized in folders, `/`-separated paths such as `Contracts/2026`, where `""` (or `/`) is the top level. Every source returned by `sources.list` carries its `folder`.
+* new methods `sources.list_folders`, `sources.create_folder`, `sources.rename_folder`, `sources.remove_folder`, `sources.delete_folder` and `sources.move`, sync and async, also on `.with_raw_response` and `.with_streaming_response`
+* `sources.list` takes `folder` and `recursive`; a top-level spelling (`""`, `/`) lists only the sources at the top level
+* `sources.ingest_file`, `ingest_url`, `ingest_github` and `ingest_youtube` take `folder`; for a link, an omitted `folder` keeps the folder of the source it replaces
+* `sources.ask`, `extract` and `retrieve_chunks` take `folders`, which scopes the call to every source at or below each folder; their answers carry the `folders` the scope was resolved from
+* new `graphor.FolderScopeNotAppliedError`: when a call sends a folder filter or scope and the API does not confirm it applied it, or does not offer a folder method, the SDK raises it instead of returning a result that may cover more sources than were asked for. A large upload with `folder` stops before sending any byte when the upload session does not confirm the folder, or when the API offers no upload sessions.
+* with `folders`, a failure that `ask` or `extract` stream after the answer started raises the error for its status (also with strict response validation); without `folders` nothing changes
+* a `folders` that is not a list (a string, for example) is refused before any request
+* `rename_folder`, `remove_folder` and `delete_folder` never retry on their own, whatever `max_retries` says: after a failure, list the folders before repeating one
+
 ## 0.27.1 (2026-11-06)
 
 Full Changelog: [v0.27.0...v0.27.1](https://github.com/synapseops/graphor-python-sdk/compare/v0.27.0...v0.27.1)

@@ -26,6 +26,7 @@ from ._exceptions import (
     PermissionDeniedError,
     UnprocessableEntityError,
     APIResponseValidationError,
+    FolderScopeNotAppliedError,
 )
 from ._base_client import DefaultHttpxClient, DefaultAioHttpClient, DefaultAsyncHttpxClient
 from ._utils._logs import setup_logging as _setup_logging
@@ -45,6 +46,7 @@ __all__ = [
     "GraphorError",
     "APIError",
     "UploadError",
+    "FolderScopeNotAppliedError",
     "APIStatusError",
     "APITimeoutError",
     "APIConnectionError",

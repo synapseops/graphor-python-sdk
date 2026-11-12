@@ -221,6 +221,43 @@ elements = client.sources.load_elements(
 result = client.sources.delete(file_name="document.pdf")
 ```
 
+### 📁 Organize Sources in Folders
+
+A folder is a `/`-separated path such as `Contracts/2026`; `""` (or `/`) is the top level. Every source carries its `folder`. Names stay unique across the project, whatever the folder.
+
+```python
+from pathlib import Path
+
+# Upload into a folder; a folder that does not exist is created
+build = client.sources.ingest_file(file=Path("lease.pdf"), folder="Contracts/2026")
+client.sources.ingest_url(url="https://example.com/terms", folder="Contracts")
+
+# List a folder and everything below it, only the folder itself, or the top level
+sources = client.sources.list(folder="Contracts")
+sources = client.sources.list(folder="Contracts", recursive=False)
+sources = client.sources.list(folder="/")
+
+# Ask, extract or retrieve within folders (every source at or below each one)
+response = client.sources.ask(question="When do the leases end?", folders=["Contracts"])
+
+# Manage folders
+client.sources.list_folders()  # every folder, sorted, with `truncated`
+client.sources.create_folder(folder="Contracts/2027")  # safe to repeat
+client.sources.move(file_ids=["<file_id>"], folder="Contracts/2027")  # "" moves to the top level
+client.sources.rename_folder(folder="Contracts/2027", new_folder="Archive/2027")
+
+# Each of these is a separate example
+client.sources.remove_folder(folder="Archive")  # its content moves to the folder above
+client.sources.create_folder(folder="Drafts")
+client.sources.delete_folder(folder="Drafts")  # only an empty folder
+```
+
+An empty `folders` list is no folder scope: the call covers what `file_ids` names, or the whole project. A folder that holds no source refuses the call with `400 chat.folder_scope_empty`.
+
+`rename_folder`, `remove_folder` and `delete_folder` are not safe to repeat blindly: after a `503`, a timeout or a lost answer the change may have been saved. They never retry on their own, whatever `max_retries` says; call `list_folders()` before repeating one by hand. Only a `404` whose `code` is `folder.not_found` may mean an earlier call worked.
+
+The API echoes every folder filter or scope it applies. When a call sends one and the answer does not echo it, the API did not apply it (it does not support folders), and the SDK raises `graphor.FolderScopeNotAppliedError` instead of returning a result that may cover more sources than were asked for. The same error is raised when the API does not offer a folder method. The check runs whenever the result is parsed, also through `.with_raw_response` and `.with_streaming_response`, but not on the raw bytes, nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A large upload with `folder` stops before sending any byte when the upload session does not confirm the folder, or when the API offers no upload sessions. With `folders`, a failure that `ask` or `extract` stream after the answer started raises the error for its status. A `folders` that is not a list is refused before any request.
+
 ## Async Usage
 
 Use `AsyncGraphor` for async/await support:
@@ -305,6 +342,7 @@ except graphor.APIStatusError as e:
 | 429 | `RateLimitError` |
 | ≥500 | `InternalServerError` |
 | N/A | `APIConnectionError` |
+| N/A | `FolderScopeNotAppliedError` (a folder parameter the API did not apply) |
 
 ## Configuration
 
@@ -466,6 +504,12 @@ See the [MCP Server README](https://github.com/synapseops/graphor-mcp-server) fo
 | `sources.list()` | List all sources | [📖](https://docs.graphorlm.com/sdk/sources/list) |
 | `sources.delete()` | Delete a source | [📖](https://docs.graphorlm.com/sdk/sources/delete) |
 | `sources.load_elements()` | Get parsed elements | [📖](https://docs.graphorlm.com/sdk/sources/list-elements) |
+| `sources.list_folders()` | List every folder | |
+| `sources.create_folder()` | Create a folder | |
+| `sources.rename_folder()` | Rename or move a folder | |
+| `sources.remove_folder()` | Remove a folder, keeping its content | |
+| `sources.delete_folder()` | Delete an empty folder | |
+| `sources.move()` | Move sources to a folder | |
 
 ### Chat & AI
 

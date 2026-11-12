@@ -16,3 +16,16 @@ class SourceListParams(TypedDict, total=False):
 
     Repeat the param for multiple IDs.
     """
+
+    folder: str
+    """Only the sources in this folder, a '/'-separated path, and (with `recursive`,
+    the default) in the folders below it.
+
+    An empty string or '/' lists only the sources at the top level.
+    """
+
+    recursive: bool
+    """With `folder`, include the folders below it (the default).
+
+    Without `folder`, `False` lists only the sources at the top level.
+    """

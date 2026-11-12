@@ -19,3 +19,9 @@ class SourceExtractResponse(BaseModel):
 
     structured_output: Optional[Dict[str, object]] = None
     """Structured output (object) matching the requested output_schema."""
+
+    folders: Optional[List[str]] = None
+    """The folders the scope was resolved from, normalized and de-duplicated.
+
+    Null when the request named no folder.
+    """

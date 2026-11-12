@@ -21,6 +21,13 @@ from graphor.types import (
     SourceIngestYoutubeResponse,
     SourceReprocessResponse,
     SourceRetrieveChunksResponse,
+    Folder,
+    SourceListFoldersResponse,
+    SourceCreateFolderResponse,
+    SourceRenameFolderResponse,
+    SourceRemoveFolderResponse,
+    SourceDeleteFolderResponse,
+    SourceMoveResponse,
 )
 ```
 
@@ -40,3 +47,9 @@ Methods:
 - <code title="post /sources/ingest-youtube">client.sources.<a href="./src/graphor/resources/sources.py">ingest_youtube</a>(\*\*<a href="src/graphor/types/source_ingest_youtube_params.py">params</a>) -> <a href="./src/graphor/types/source_ingest_youtube_response.py">SourceIngestYoutubeResponse</a></code>
 - <code title="post /sources/reprocess">client.sources.<a href="./src/graphor/resources/sources.py">reprocess</a>(\*\*<a href="src/graphor/types/source_reprocess_params.py">params</a>) -> <a href="./src/graphor/types/source_reprocess_response.py">SourceReprocessResponse</a></code>
 - <code title="post /sources/prebuilt-rag">client.sources.<a href="./src/graphor/resources/sources.py">retrieve_chunks</a>(\*\*<a href="src/graphor/types/source_retrieve_chunks_params.py">params</a>) -> <a href="./src/graphor/types/source_retrieve_chunks_response.py">SourceRetrieveChunksResponse</a></code>
+- <code title="get /sources/folders">client.sources.<a href="./src/graphor/resources/sources.py">list_folders</a>() -> <a href="./src/graphor/types/source_list_folders_response.py">SourceListFoldersResponse</a></code>
+- <code title="post /sources/create-folder">client.sources.<a href="./src/graphor/resources/sources.py">create_folder</a>(\*\*<a href="src/graphor/types/source_create_folder_params.py">params</a>) -> <a href="./src/graphor/types/source_create_folder_response.py">SourceCreateFolderResponse</a></code>
+- <code title="post /sources/rename-folder">client.sources.<a href="./src/graphor/resources/sources.py">rename_folder</a>(\*\*<a href="src/graphor/types/source_rename_folder_params.py">params</a>) -> <a href="./src/graphor/types/source_rename_folder_response.py">SourceRenameFolderResponse</a></code>
+- <code title="post /sources/remove-folder">client.sources.<a href="./src/graphor/resources/sources.py">remove_folder</a>(\*\*<a href="src/graphor/types/source_remove_folder_params.py">params</a>) -> <a href="./src/graphor/types/source_remove_folder_response.py">SourceRemoveFolderResponse</a></code>
+- <code title="post /sources/delete-folder">client.sources.<a href="./src/graphor/resources/sources.py">delete_folder</a>(\*\*<a href="src/graphor/types/source_delete_folder_params.py">params</a>) -> <a href="./src/graphor/types/source_delete_folder_response.py">SourceDeleteFolderResponse</a></code>
+- <code title="post /sources/move-sources">client.sources.<a href="./src/graphor/resources/sources.py">move</a>(\*\*<a href="src/graphor/types/source_move_params.py">params</a>) -> <a href="./src/graphor/types/source_move_response.py">SourceMoveResponse</a></code>
