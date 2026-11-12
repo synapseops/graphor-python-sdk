@@ -28,6 +28,7 @@ import httpx
 
 from ._types import Body, FileTypes, RequestOptions
 from ._models import BaseModel
+from ._folders import session_check, session_fallback_check
 from ._constants import RAW_RESPONSE_HEADER, OVERRIDE_CAST_TO_HEADER
 from ._exceptions import UploadError, APIStatusError, APIConnectionError
 from ._base_client import make_request_options
@@ -67,6 +68,7 @@ class _UploadSession(BaseModel):
     build_id: str
     upload_url: str
     chunk_size: int
+    folder: Optional[str] = None
 
 
 class UploadSource:
@@ -247,9 +249,11 @@ def _create_options(
     return make_request_options(extra_headers=headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout)
 
 
-def _create_body(source: UploadSource, method: object, enrichment: object, indexing: object) -> Dict[str, object]:
+def _create_body(
+    source: UploadSource, method: object, enrichment: object, indexing: object, folder: object = None
+) -> Dict[str, object]:
     body: Dict[str, object] = {"file_name": source.name, "file_size": source.size}
-    for key, value in (("method", method), ("enrichment", enrichment), ("indexing", indexing)):
+    for key, value in (("method", method), ("enrichment", enrichment), ("indexing", indexing), ("folder", folder)):
         if value is not None and not _is_omitted(value):
             body[key] = value
     return body
@@ -474,6 +478,7 @@ def upload(
     method: object,
     enrichment: object,
     indexing: object,
+    folder: object = None,
     extra_headers: Optional[Mapping[str, Any]],
     extra_query: Optional[Mapping[str, object]],
     extra_body: Optional[Body],
@@ -484,15 +489,18 @@ def upload(
         try:
             session = resource._post(
                 _CREATE_PATH,
-                body=_create_body(source, method, enrichment, indexing),
+                body=_create_body(source, method, enrichment, indexing, folder),
                 options=_create_options(extra_headers, extra_query, extra_body, timeout),
                 cast_to=_UploadSession,
             )
         except (APIStatusError, APIConnectionError) as e:
+            session_fallback_check(folder, e)
             if falls_back(e, source.size):
                 return direct()
             raise
         _check_session(session)
+        # After the fallback: a session that would drop the folder never gets the file.
+        session_check(folder, session.folder)
         try:
             md5 = _send_chunks(client, session, source, timeout)
         except UploadError:
@@ -693,6 +701,7 @@ async def async_upload(
     method: object,
     enrichment: object,
     indexing: object,
+    folder: object = None,
     extra_headers: Optional[Mapping[str, Any]],
     extra_query: Optional[Mapping[str, object]],
     extra_body: Optional[Body],
@@ -703,15 +712,18 @@ async def async_upload(
         try:
             session = await resource._post(
                 _CREATE_PATH,
-                body=_create_body(source, method, enrichment, indexing),
+                body=_create_body(source, method, enrichment, indexing, folder),
                 options=_create_options(extra_headers, extra_query, extra_body, timeout),
                 cast_to=_UploadSession,
             )
         except (APIStatusError, APIConnectionError) as e:
+            session_fallback_check(folder, e)
             if falls_back(e, source.size):
                 return await direct()
             raise
         _check_session(session)
+        # After the fallback: a session that would drop the folder never gets the file.
+        session_check(folder, session.folder)
         try:
             md5 = await _async_send_chunks(client, session, source, timeout)
         except UploadError:

@@ -8,6 +8,7 @@ import httpx
 
 __all__ = [
     "UploadError",
+    "FolderScopeNotAppliedError",
     "BadRequestError",
     "AuthenticationError",
     "PermissionDeniedError",
@@ -97,6 +98,34 @@ class UploadError(APIError):
         self.offset = offset
         self.status_code = status_code
         self.build_id = build_id
+
+
+class FolderScopeNotAppliedError(GraphorError):
+    """Raised when the API did not apply a folder parameter, so the SDK refused the result.
+
+    The API says which folder filter or scope it applied: `folder` on every
+    listed source, `folders` on `ask`, `extract` and `retrieve_chunks`, and
+    `folder` on an upload session. When a call sent one of these and the answer
+    does not carry it, the API ignored it (it does not support folders), and the
+    result could cover more than was asked for, so it is not returned. The same
+    error is raised when the API does not offer a folder route.
+
+    `parameter` names what was not applied (`folder`, `recursive` or `folders`),
+    or the route the API does not offer (for example `POST /sources/rename-folder`).
+    `conversation_id` is set for `ask`: the API already answered and recorded that
+    turn in the conversation, so repeat the question with `reset=True` or in a new
+    conversation. This error is never retried.
+    """
+
+    message: str
+    parameter: str
+    conversation_id: str | None
+
+    def __init__(self, message: str, *, parameter: str, conversation_id: str | None = None) -> None:
+        super().__init__(message)
+        self.message = message
+        self.parameter = parameter
+        self.conversation_id = conversation_id
 
 
 class APITimeoutError(APIConnectionError):

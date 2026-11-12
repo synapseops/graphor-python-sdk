@@ -38,6 +38,12 @@ class PublicSource(BaseModel):
     file_id: Optional[str] = None
     """Unique identifier for the source"""
 
+    folder: Optional[str] = None
+    """The folder the source is in, as a '/'-separated path; `""` is the top level.
+
+    The API always sends it; `None` means the API does not support folders.
+    """
+
     method: Optional[str] = None
     """Partitioning strategy used during ingestion.
 

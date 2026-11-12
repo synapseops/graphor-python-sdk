@@ -11,6 +11,7 @@ from ..types import (
     Method,
     source_ask_params,
     source_list_params,
+    source_move_params,
     source_delete_params,
     source_extract_params,
     source_reprocess_params,
@@ -18,7 +19,11 @@ from ..types import (
     source_index_build_params,
     source_ingest_file_params,
     source_get_elements_params,
+    source_create_folder_params,
+    source_delete_folder_params,
     source_ingest_github_params,
+    source_remove_folder_params,
+    source_rename_folder_params,
     source_ingest_youtube_params,
     source_retrieve_chunks_params,
     source_get_build_status_params,
@@ -28,6 +33,16 @@ from .._files import deepcopy_with_paths
 from .._types import Body, Omit, Query, Headers, NotGiven, FileTypes, SequenceNotStr, omit, not_given
 from .._utils import extract_files, path_template, maybe_transform, async_maybe_transform
 from .._compat import cached_property
+from .._folders import (
+    list_check,
+    list_query,
+    scope_check,
+    scoped_cast_to,
+    check_folders_arg,
+    list_sends_folder,
+    scope_sends_folders,
+    raise_if_route_not_offered,
+)
 from .._resource import SyncAPIResource, AsyncAPIResource
 from .._response import (
     to_raw_response_wrapper,
@@ -35,11 +50,13 @@ from .._response import (
     async_to_raw_response_wrapper,
     async_to_streamed_response_wrapper,
 )
+from .._exceptions import NotFoundError
 from .._base_client import make_request_options
 from ..types.method import Method
 from .._large_upload import rewind, upload, async_upload, prepare_upload, async_prepare_upload
 from ..types.source_ask_response import SourceAskResponse
 from ..types.source_list_response import SourceListResponse
+from ..types.source_move_response import SourceMoveResponse
 from ..types.source_delete_response import SourceDeleteResponse
 from ..types.source_extract_response import SourceExtractResponse
 from ..types.source_reprocess_response import SourceReprocessResponse
@@ -47,7 +64,12 @@ from ..types.source_ingest_url_response import SourceIngestURLResponse
 from ..types.source_index_build_response import SourceIndexBuildResponse
 from ..types.source_ingest_file_response import SourceIngestFileResponse
 from ..types.source_get_elements_response import SourceGetElementsResponse
+from ..types.source_list_folders_response import SourceListFoldersResponse
+from ..types.source_create_folder_response import SourceCreateFolderResponse
+from ..types.source_delete_folder_response import SourceDeleteFolderResponse
 from ..types.source_ingest_github_response import SourceIngestGitHubResponse
+from ..types.source_remove_folder_response import SourceRemoveFolderResponse
+from ..types.source_rename_folder_response import SourceRenameFolderResponse
 from ..types.source_ingest_youtube_response import SourceIngestYoutubeResponse
 from ..types.source_retrieve_chunks_response import SourceRetrieveChunksResponse
 from ..types.source_get_build_status_response import SourceGetBuildStatusResponse
@@ -80,6 +102,8 @@ class SourcesResource(SyncAPIResource):
         self,
         *,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
+        folder: str | Omit = omit,
+        recursive: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -100,6 +124,14 @@ class SourcesResource(SyncAPIResource):
         - **file_ids** (list, optional): If provided, only sources whose file_id is in
           this list are returned. Repeat the param for multiple IDs (e.g.
           ?file_ids=id1&file_ids=id2).
+        - **folder** (str, optional): Only the sources in this folder and, with
+          `recursive=True` (the default), below it. An empty string or `/` lists only
+          the top level.
+        - **recursive** (bool, optional, default `True`): With `folder`, whether the
+          folders below it are included. Without `folder`, `False` lists only the top
+          level.
+
+        Every source carries `folder`, its folder's path (`""` at the top level).
 
         **Status messages returned per source:**
 
@@ -111,11 +143,27 @@ class SourcesResource(SyncAPIResource):
 
         **Error responses:**
 
+        - `422` — Invalid folder.
         - `500` — Unexpected internal error while retrieving sources.
 
         Args:
           file_ids: Optional list of file_id to filter by (only these sources are returned). Repeat
               the param for multiple IDs.
+
+          folder: Only the sources in this folder, a '/'-separated path, and (with
+              `recursive`, the default) in the folders below it. An empty string or '/' (any
+              value made only of spaces and slashes) lists only the top level; it is sent as
+              `recursive=false`. An invalid path answers 422.
+
+          recursive: With `folder`, include the folders below it (default `True`). Without
+              `folder`, `False` lists only the sources at the top level.
+
+              When `folder` or `recursive` is given, every returned source must carry
+              `folder`; if one does not, the API did not apply the filter and
+              `FolderScopeNotAppliedError` is raised instead of returning the list. The
+              check runs when the result is parsed, also through `.with_raw_response` and
+              `.with_streaming_response` (`.parse()`), but not on the raw bytes, nor on a
+              `.parse(to=...)` into `httpx.Response`, `str` or `bytes`.
 
           extra_headers: Send extra headers
 
@@ -132,7 +180,8 @@ class SourcesResource(SyncAPIResource):
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=maybe_transform({"file_ids": file_ids}, source_list_params.SourceListParams),
+                query=maybe_transform(list_query(file_ids, folder, recursive), source_list_params.SourceListParams),
+                post_parser=list_check(folder) if list_sends_folder(folder, recursive) else not_given,
             ),
             cast_to=SourceListResponse,
         )
@@ -208,6 +257,7 @@ class SourcesResource(SyncAPIResource):
         conversation_id: Optional[str] | Omit = omit,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         include_citation_images: Optional[bool] | Omit = omit,
         include_citation_markup: Optional[bool] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
@@ -243,6 +293,8 @@ class SourcesResource(SyncAPIResource):
           specific source file IDs.
         - **file_names** (list[str], optional — deprecated): Restrict the search scope
           to specific source file names. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Restrict the scope to every source at or
+          below each folder, together with `file_ids`. An empty list is no folder scope.
         - **output_schema** (dict, optional): A JSON Schema for requesting structured
           output. When provided, the response includes a `structured_output` field
           validated against this schema and the `raw_json` produced by the model.
@@ -272,6 +324,19 @@ class SourcesResource(SyncAPIResource):
 
           file_names: Optional list of file display names to restrict search scope (deprecated, use
               file_ids)
+
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
 
           include_citation_images: When true, the response's `citations` entries are populated with a
               base64-encoded PNG screenshot of each cited page in `image_base64`. Increases
@@ -303,6 +368,7 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return self._post(
             "/sources/ask-sources",
             body=maybe_transform(
@@ -311,6 +377,7 @@ class SourcesResource(SyncAPIResource):
                     "conversation_id": conversation_id,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                     "include_citation_images": include_citation_images,
                     "include_citation_markup": include_citation_markup,
                     "output_schema": output_schema,
@@ -320,9 +387,17 @@ class SourcesResource(SyncAPIResource):
                 source_ask_params.SourceAskParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/ask-sources")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
-            cast_to=SourceAskResponse,
+            cast_to=scoped_cast_to(self._client, SourceAskResponse)
+            if scope_sends_folders(folders)
+            else SourceAskResponse,
         )
 
     def extract(
@@ -332,6 +407,7 @@ class SourcesResource(SyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -354,8 +430,10 @@ class SourcesResource(SyncAPIResource):
         - **file_ids** (list[str], optional — preferred): List of source file IDs to
           extract from.
         - **file_names** (list[str], optional — deprecated): List of source file names
-          to extract from. Use `file_ids` when possible. At least one of the two lists
-          must be provided and non-empty.
+          to extract from. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Folders to extract from: every source at
+          or below each folder, together with `file_ids`. At least one of `file_ids`,
+          `file_names` or `folders` must be provided and non-empty.
         - **user_instruction** (str, required): A natural-language instruction that
           guides what information to extract from the documents.
         - **output_schema** (dict, required): A JSON Schema object describing the
@@ -383,6 +461,19 @@ class SourcesResource(SyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
+
           thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
@@ -394,6 +485,7 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return self._post(
             "/sources/run-extraction",
             body=maybe_transform(
@@ -402,14 +494,23 @@ class SourcesResource(SyncAPIResource):
                     "user_instruction": user_instruction,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                     "thinking_level": thinking_level,
                 },
                 source_extract_params.SourceExtractParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/run-extraction")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
-            cast_to=SourceExtractResponse,
+            cast_to=scoped_cast_to(self._client, SourceExtractResponse)
+            if scope_sends_folders(folders)
+            else SourceExtractResponse,
         )
 
     def get_build_status(
@@ -754,6 +855,7 @@ class SourcesResource(SyncAPIResource):
         *,
         file: FileTypes,
         enrichment: Optional[str] | Omit = omit,
+        folder: str | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -784,6 +886,8 @@ class SourcesResource(SyncAPIResource):
         - **indexing** (`form`, optional): `full` (default) or `none`. `none` skips
           chunking/embedding/indexing — the source is parsed but not searchable via
           ask/extract/retrieve. Check `GET /v2/sources/config` for availability.
+        - **folder** (`form`, optional): The folder to store the source in; empty, `/`
+          or omitted is the top level.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
@@ -791,6 +895,14 @@ class SourcesResource(SyncAPIResource):
         Args:
           enrichment: LLM enrichment level: 'full' (default) or 'none' to skip page/section/document
               annotation for faster parsing.
+
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); empty, '/' or omitted is the top level. A folder that does
+              not exist is created. An invalid path answers 400. For a file sent through an
+              upload session the folder is fixed when the session starts, and the upload
+              stops with `FolderScopeNotAppliedError`, before any byte is sent, if the API
+              does not confirm it, or if the API offers no upload sessions (then it does not
+              support folders either).
 
           indexing: Retrieval indexing level: 'full' (default) or 'none' to skip
               chunking/embedding/indexing — the source is parsed but not searchable. Requires
@@ -822,6 +934,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "file": file,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                     "method": method,
                 },
@@ -854,6 +967,7 @@ class SourcesResource(SyncAPIResource):
                 method=method,
                 enrichment=enrichment,
                 indexing=indexing,
+                folder=folder,
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
@@ -866,6 +980,7 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -894,6 +1009,11 @@ class SourcesResource(SyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -913,6 +1033,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "url": url,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                 },
                 source_ingest_github_params.SourceIngestGitHubParams,
@@ -929,6 +1050,7 @@ class SourcesResource(SyncAPIResource):
         url: str,
         crawl_urls: bool | Omit = omit,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -979,6 +1101,11 @@ class SourcesResource(SyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -1009,6 +1136,7 @@ class SourcesResource(SyncAPIResource):
                     "url": url,
                     "crawl_urls": crawl_urls,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                     "method": method,
                 },
@@ -1025,6 +1153,7 @@ class SourcesResource(SyncAPIResource):
         *,
         url: str,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1055,6 +1184,11 @@ class SourcesResource(SyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -1074,6 +1208,7 @@ class SourcesResource(SyncAPIResource):
                 {
                     "url": url,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                 },
                 source_ingest_youtube_params.SourceIngestYoutubeParams,
@@ -1158,6 +1293,7 @@ class SourcesResource(SyncAPIResource):
         query: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1182,6 +1318,8 @@ class SourcesResource(SyncAPIResource):
           source file IDs.
         - **file_names** (list[str], optional — deprecated): Restrict retrieval to
           specific source file names. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Restrict the scope to every source at or
+          below each folder, together with `file_ids`. An empty list is no folder scope.
 
         **Returns** a `PublicRetrieveResponse` containing:
 
@@ -1202,6 +1340,19 @@ class SourcesResource(SyncAPIResource):
           file_names: Optional list of file names to restrict retrieval scope (deprecated, use
               file_ids)
 
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -1210,6 +1361,7 @@ class SourcesResource(SyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return self._post(
             "/sources/prebuilt-rag",
             body=maybe_transform(
@@ -1217,14 +1369,379 @@ class SourcesResource(SyncAPIResource):
                     "query": query,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                 },
                 source_retrieve_chunks_params.SourceRetrieveChunksParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/prebuilt-rag")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
             cast_to=SourceRetrieveChunksResponse,
         )
+
+    def list_folders(
+        self,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceListFoldersResponse:
+        """
+        List every folder of the project, sorted, each with the folders above it.
+
+        Lists folders created empty, folders that hold sources and folders uploads
+        are on their way to. At most 10,000 folders are returned, in sort order;
+        `truncated` is true when the project has more.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return self._get(
+                "/sources/folders",
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceListFoldersResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "GET /sources/folders")
+            raise
+
+    def create_folder(
+        self,
+        *,
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceCreateFolderResponse:
+        """
+        Create a folder that stays listed while it is empty, with the folders above it.
+
+        Safe to repeat: `created` is false when the folder existed. An upload or a
+        move into a folder that does not exist creates it, so this is needed only for
+        an empty folder.
+
+        **Error responses:**
+
+        - `409` — `folder.too_many`: the project holds the most folders it can.
+        - `422` — Invalid path, or the top level.
+        - `503` — The folder could not be saved; retry.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder's path, '/'-separated (for example `Contracts/2026`). Not the
+              top level.
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return self._post(
+                "/sources/create-folder",
+                body=maybe_transform({"folder": folder}, source_create_folder_params.SourceCreateFolderParams),
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceCreateFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/create-folder")
+            raise
+
+    def rename_folder(
+        self,
+        *,
+        folder: str,
+        new_folder: str,
+        merge: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceRenameFolderResponse:
+        """
+        Rename a folder, or move it under another folder, with everything in it.
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `400` — `folder.into_itself` (a folder into its own subfolder) or
+          `folder.path_too_long` (a moved path breaks the path rules).
+        - `404` — `folder.not_found`.
+        - `409` — `folder.exists`: `new_folder` exists and `merge` is not set.
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to rename
+
+          new_folder: Its new path; it may sit under another folder
+
+          merge: Merge into `new_folder` when it already exists, instead of answering 409
+              `folder.exists`
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return self._post(
+                "/sources/rename-folder",
+                body=maybe_transform(
+                    {
+                        "folder": folder,
+                        "new_folder": new_folder,
+                        "merge": merge,
+                    },
+                    source_rename_folder_params.SourceRenameFolderParams,
+                ),
+                options=options,
+                cast_to=SourceRenameFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/rename-folder")
+            raise
+
+    def remove_folder(
+        self,
+        *,
+        folder: str,
+        merge: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceRemoveFolderResponse:
+        """
+        Remove a folder and move its sources and subfolders into the folder above it
+        (the top level for a top-level folder).
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `404` — `folder.not_found`.
+        - `409` — `folder.exists`: a subfolder has the name of a folder above and
+          `merge` is not set.
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to remove
+
+          merge: Merge a subfolder into a folder of the same name above it, instead of
+              answering 409 `folder.exists`
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return self._post(
+                "/sources/remove-folder",
+                body=maybe_transform(
+                    {
+                        "folder": folder,
+                        "merge": merge,
+                    },
+                    source_remove_folder_params.SourceRemoveFolderParams,
+                ),
+                options=options,
+                cast_to=SourceRemoveFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/remove-folder")
+            raise
+
+    def delete_folder(
+        self,
+        *,
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceDeleteFolderResponse:
+        """
+        Delete an empty folder and the empty folders below it.
+
+        Its sources must be moved (`move`) or deleted first.
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `404` — `folder.not_found`.
+        - `409` — `folder.not_empty` (it holds a source) or `folder.uploads_pending`
+          (uploads into it are not stored yet).
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to delete
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return self._post(
+                "/sources/delete-folder",
+                body=maybe_transform({"folder": folder}, source_delete_folder_params.SourceDeleteFolderParams),
+                options=options,
+                cast_to=SourceDeleteFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/delete-folder")
+            raise
+
+    def move(
+        self,
+        *,
+        file_ids: SequenceNotStr[str],
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceMoveResponse:
+        """
+        Move up to 1,000 sources to a folder.
+
+        `""` or `/` is the top level. A folder that does not exist is created. Ids
+        that match no source of the project come back in `not_found`. Safe to
+        repeat.
+
+        **Error responses:**
+
+        - `409` — `folder.too_many`: the project holds the most folders it can.
+        - `422` — Invalid path, or no ids or more than 1,000.
+        - `503` — The sources could not be moved; retry.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          file_ids: The sources to move (1 to 1,000)
+
+          folder: The target folder, '/'-separated; an empty string or '/' is the top level
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return self._post(
+                "/sources/move-sources",
+                body=maybe_transform(
+                    {
+                        "file_ids": file_ids,
+                        "folder": folder,
+                    },
+                    source_move_params.SourceMoveParams,
+                ),
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceMoveResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/move-sources")
+            raise
 
 
 class AsyncSourcesResource(AsyncAPIResource):
@@ -1251,6 +1768,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         self,
         *,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
+        folder: str | Omit = omit,
+        recursive: bool | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -1271,6 +1790,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **file_ids** (list, optional): If provided, only sources whose file_id is in
           this list are returned. Repeat the param for multiple IDs (e.g.
           ?file_ids=id1&file_ids=id2).
+        - **folder** (str, optional): Only the sources in this folder and, with
+          `recursive=True` (the default), below it. An empty string or `/` lists only
+          the top level.
+        - **recursive** (bool, optional, default `True`): With `folder`, whether the
+          folders below it are included. Without `folder`, `False` lists only the top
+          level.
+
+        Every source carries `folder`, its folder's path (`""` at the top level).
 
         **Status messages returned per source:**
 
@@ -1282,11 +1809,27 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         **Error responses:**
 
+        - `422` — Invalid folder.
         - `500` — Unexpected internal error while retrieving sources.
 
         Args:
           file_ids: Optional list of file_id to filter by (only these sources are returned). Repeat
               the param for multiple IDs.
+
+          folder: Only the sources in this folder, a '/'-separated path, and (with
+              `recursive`, the default) in the folders below it. An empty string or '/' (any
+              value made only of spaces and slashes) lists only the top level; it is sent as
+              `recursive=false`. An invalid path answers 422.
+
+          recursive: With `folder`, include the folders below it (default `True`). Without
+              `folder`, `False` lists only the sources at the top level.
+
+              When `folder` or `recursive` is given, every returned source must carry
+              `folder`; if one does not, the API did not apply the filter and
+              `FolderScopeNotAppliedError` is raised instead of returning the list. The
+              check runs when the result is parsed, also through `.with_raw_response` and
+              `.with_streaming_response` (`.parse()`), but not on the raw bytes, nor on a
+              `.parse(to=...)` into `httpx.Response`, `str` or `bytes`.
 
           extra_headers: Send extra headers
 
@@ -1303,7 +1846,10 @@ class AsyncSourcesResource(AsyncAPIResource):
                 extra_query=extra_query,
                 extra_body=extra_body,
                 timeout=timeout,
-                query=await async_maybe_transform({"file_ids": file_ids}, source_list_params.SourceListParams),
+                query=await async_maybe_transform(
+                    list_query(file_ids, folder, recursive), source_list_params.SourceListParams
+                ),
+                post_parser=list_check(folder) if list_sends_folder(folder, recursive) else not_given,
             ),
             cast_to=SourceListResponse,
         )
@@ -1379,6 +1925,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         conversation_id: Optional[str] | Omit = omit,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         include_citation_images: Optional[bool] | Omit = omit,
         include_citation_markup: Optional[bool] | Omit = omit,
         output_schema: Optional[Dict[str, object]] | Omit = omit,
@@ -1414,6 +1961,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           specific source file IDs.
         - **file_names** (list[str], optional — deprecated): Restrict the search scope
           to specific source file names. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Restrict the scope to every source at or
+          below each folder, together with `file_ids`. An empty list is no folder scope.
         - **output_schema** (dict, optional): A JSON Schema for requesting structured
           output. When provided, the response includes a `structured_output` field
           validated against this schema and the `raw_json` produced by the model.
@@ -1443,6 +1992,19 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: Optional list of file display names to restrict search scope (deprecated, use
               file_ids)
+
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
 
           include_citation_images: When true, the response's `citations` entries are populated with a
               base64-encoded PNG screenshot of each cited page in `image_base64`. Increases
@@ -1474,6 +2036,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return await self._post(
             "/sources/ask-sources",
             body=await async_maybe_transform(
@@ -1482,6 +2045,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "conversation_id": conversation_id,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                     "include_citation_images": include_citation_images,
                     "include_citation_markup": include_citation_markup,
                     "output_schema": output_schema,
@@ -1491,9 +2055,17 @@ class AsyncSourcesResource(AsyncAPIResource):
                 source_ask_params.SourceAskParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/ask-sources")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
-            cast_to=SourceAskResponse,
+            cast_to=scoped_cast_to(self._client, SourceAskResponse)
+            if scope_sends_folders(folders)
+            else SourceAskResponse,
         )
 
     async def extract(
@@ -1503,6 +2075,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         user_instruction: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         thinking_level: Optional[Literal["fast", "balanced", "accurate", "max"]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -1525,8 +2098,10 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **file_ids** (list[str], optional — preferred): List of source file IDs to
           extract from.
         - **file_names** (list[str], optional — deprecated): List of source file names
-          to extract from. Use `file_ids` when possible. At least one of the two lists
-          must be provided and non-empty.
+          to extract from. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Folders to extract from: every source at
+          or below each folder, together with `file_ids`. At least one of `file_ids`,
+          `file_names` or `folders` must be provided and non-empty.
         - **user_instruction** (str, required): A natural-language instruction that
           guides what information to extract from the documents.
         - **output_schema** (dict, required): A JSON Schema object describing the
@@ -1554,6 +2129,19 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           file_names: List of file names to extract from (deprecated, use file_ids)
 
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
+
           thinking_level: Controls model and thinking budget: 'fast' (premium output speed), 'balanced',
               'accurate', or 'max' (most thorough)
 
@@ -1565,6 +2153,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return await self._post(
             "/sources/run-extraction",
             body=await async_maybe_transform(
@@ -1573,14 +2162,23 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "user_instruction": user_instruction,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                     "thinking_level": thinking_level,
                 },
                 source_extract_params.SourceExtractParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/run-extraction")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
-            cast_to=SourceExtractResponse,
+            cast_to=scoped_cast_to(self._client, SourceExtractResponse)
+            if scope_sends_folders(folders)
+            else SourceExtractResponse,
         )
 
     async def get_build_status(
@@ -1925,6 +2523,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         file: FileTypes,
         enrichment: Optional[str] | Omit = omit,
+        folder: str | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -1955,6 +2554,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **indexing** (`form`, optional): `full` (default) or `none`. `none` skips
           chunking/embedding/indexing — the source is parsed but not searchable via
           ask/extract/retrieve. Check `GET /v2/sources/config` for availability.
+        - **folder** (`form`, optional): The folder to store the source in; empty, `/`
+          or omitted is the top level.
 
         **Returns** `AsyncIngestResponse` with `build_id`. Use it to check processing
         status.
@@ -1962,6 +2563,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         Args:
           enrichment: LLM enrichment level: 'full' (default) or 'none' to skip page/section/document
               annotation for faster parsing.
+
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); empty, '/' or omitted is the top level. A folder that does
+              not exist is created. An invalid path answers 400. For a file sent through an
+              upload session the folder is fixed when the session starts, and the upload
+              stops with `FolderScopeNotAppliedError`, before any byte is sent, if the API
+              does not confirm it, or if the API offers no upload sessions (then it does not
+              support folders either).
 
           indexing: Retrieval indexing level: 'full' (default) or 'none' to skip
               chunking/embedding/indexing — the source is parsed but not searchable. Requires
@@ -1993,6 +2602,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "file": file,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                     "method": method,
                 },
@@ -2025,6 +2635,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 method=method,
                 enrichment=enrichment,
                 indexing=indexing,
+                folder=folder,
                 extra_headers=extra_headers,
                 extra_query=extra_query,
                 extra_body=extra_body,
@@ -2037,6 +2648,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -2065,6 +2677,11 @@ class AsyncSourcesResource(AsyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -2084,6 +2701,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "url": url,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                 },
                 source_ingest_github_params.SourceIngestGitHubParams,
@@ -2100,6 +2718,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         url: str,
         crawl_urls: bool | Omit = omit,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         method: Optional[Method] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
@@ -2150,6 +2769,11 @@ class AsyncSourcesResource(AsyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -2180,6 +2804,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "url": url,
                     "crawl_urls": crawl_urls,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                     "method": method,
                 },
@@ -2196,6 +2821,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         *,
         url: str,
         enrichment: Optional[str] | Omit = omit,
+        folder: Optional[str] | Omit = omit,
         indexing: Optional[str] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
@@ -2226,6 +2852,11 @@ class AsyncSourcesResource(AsyncAPIResource):
               annotation; `none` returns parsing results only and is faster, at the cost of
               weaker retrieval context.
 
+          folder: Folder to store the source in, as a '/'-separated path (e.g.
+              `Contracts/2026`); an empty string or '/' is the top level. A folder that does
+              not exist is created. When omitted, a new source goes to the top level and a
+              source that replaces one of the same name keeps that source's folder.
+
           indexing: Retrieval indexing level. `full` (default) chunks, embeds and indexes the
               source; `none` skips it — the source will NOT be searchable via
               ask/extract/retrieve, though its parsed elements remain readable. Reversible by
@@ -2245,6 +2876,7 @@ class AsyncSourcesResource(AsyncAPIResource):
                 {
                     "url": url,
                     "enrichment": enrichment,
+                    "folder": folder,
                     "indexing": indexing,
                 },
                 source_ingest_youtube_params.SourceIngestYoutubeParams,
@@ -2329,6 +2961,7 @@ class AsyncSourcesResource(AsyncAPIResource):
         query: str,
         file_ids: Optional[SequenceNotStr[str]] | Omit = omit,
         file_names: Optional[SequenceNotStr[str]] | Omit = omit,
+        folders: Optional[SequenceNotStr[str]] | Omit = omit,
         # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
         # The extra values given here take precedence over values defined on the client or passed to this method.
         extra_headers: Headers | None = None,
@@ -2353,6 +2986,8 @@ class AsyncSourcesResource(AsyncAPIResource):
           source file IDs.
         - **file_names** (list[str], optional — deprecated): Restrict retrieval to
           specific source file names. Use `file_ids` when possible.
+        - **folders** (list[str], optional): Restrict the scope to every source at or
+          below each folder, together with `file_ids`. An empty list is no folder scope.
 
         **Returns** a `PublicRetrieveResponse` containing:
 
@@ -2373,6 +3008,19 @@ class AsyncSourcesResource(AsyncAPIResource):
           file_names: Optional list of file names to restrict retrieval scope (deprecated, use
               file_ids)
 
+          folders: Folders to restrict the scope to (at most 1,000): every source at or below
+              each folder, read when the request arrives, together with any `file_ids`. An
+              empty list is no folder scope. A folder that holds no source answers 400
+              `chat.folder_scope_empty`; the top level, an invalid path, or `folders` with
+              `file_names` answers 422. When `folders` is not empty and the answer does not
+              echo it, the API did not apply it and `FolderScopeNotAppliedError` is raised
+              instead of returning the result; a failure streamed after the answer started
+              raises the error for its status. Both checks run when the result is parsed,
+              also through `.with_raw_response` and `.with_streaming_response` (`.parse()`),
+              but not on the raw bytes (`.http_response`, `.read()`, `.text()`, `.json()`)
+              nor on a `.parse(to=...)` into `httpx.Response`, `str` or `bytes`. A `folders`
+              that is not a list (a string, for example) is refused before any request.
+
           extra_headers: Send extra headers
 
           extra_query: Add additional query parameters to the request
@@ -2381,6 +3029,7 @@ class AsyncSourcesResource(AsyncAPIResource):
 
           timeout: Override the client-level default timeout for this request, in seconds
         """
+        check_folders_arg(folders)
         return await self._post(
             "/sources/prebuilt-rag",
             body=await async_maybe_transform(
@@ -2388,14 +3037,383 @@ class AsyncSourcesResource(AsyncAPIResource):
                     "query": query,
                     "file_ids": file_ids,
                     "file_names": file_names,
+                    "folders": folders,
                 },
                 source_retrieve_chunks_params.SourceRetrieveChunksParams,
             ),
             options=make_request_options(
-                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                extra_headers=extra_headers,
+                extra_query=extra_query,
+                extra_body=extra_body,
+                timeout=timeout,
+                post_parser=scope_check(self._client, "POST", "/sources/prebuilt-rag")
+                if scope_sends_folders(folders)
+                else not_given,
             ),
             cast_to=SourceRetrieveChunksResponse,
         )
+
+    async def list_folders(
+        self,
+        *,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceListFoldersResponse:
+        """
+        List every folder of the project, sorted, each with the folders above it.
+
+        Lists folders created empty, folders that hold sources and folders uploads
+        are on their way to. At most 10,000 folders are returned, in sort order;
+        `truncated` is true when the project has more.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return await self._get(
+                "/sources/folders",
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceListFoldersResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "GET /sources/folders")
+            raise
+
+    async def create_folder(
+        self,
+        *,
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceCreateFolderResponse:
+        """
+        Create a folder that stays listed while it is empty, with the folders above it.
+
+        Safe to repeat: `created` is false when the folder existed. An upload or a
+        move into a folder that does not exist creates it, so this is needed only for
+        an empty folder.
+
+        **Error responses:**
+
+        - `409` — `folder.too_many`: the project holds the most folders it can.
+        - `422` — Invalid path, or the top level.
+        - `503` — The folder could not be saved; retry.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder's path, '/'-separated (for example `Contracts/2026`). Not the
+              top level.
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return await self._post(
+                "/sources/create-folder",
+                body=await async_maybe_transform(
+                    {"folder": folder}, source_create_folder_params.SourceCreateFolderParams
+                ),
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceCreateFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/create-folder")
+            raise
+
+    async def rename_folder(
+        self,
+        *,
+        folder: str,
+        new_folder: str,
+        merge: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceRenameFolderResponse:
+        """
+        Rename a folder, or move it under another folder, with everything in it.
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `400` — `folder.into_itself` (a folder into its own subfolder) or
+          `folder.path_too_long` (a moved path breaks the path rules).
+        - `404` — `folder.not_found`.
+        - `409` — `folder.exists`: `new_folder` exists and `merge` is not set.
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to rename
+
+          new_folder: Its new path; it may sit under another folder
+
+          merge: Merge into `new_folder` when it already exists, instead of answering 409
+              `folder.exists`
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return await self._post(
+                "/sources/rename-folder",
+                body=await async_maybe_transform(
+                    {
+                        "folder": folder,
+                        "new_folder": new_folder,
+                        "merge": merge,
+                    },
+                    source_rename_folder_params.SourceRenameFolderParams,
+                ),
+                options=options,
+                cast_to=SourceRenameFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/rename-folder")
+            raise
+
+    async def remove_folder(
+        self,
+        *,
+        folder: str,
+        merge: bool | Omit = omit,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceRemoveFolderResponse:
+        """
+        Remove a folder and move its sources and subfolders into the folder above it
+        (the top level for a top-level folder).
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `404` — `folder.not_found`.
+        - `409` — `folder.exists`: a subfolder has the name of a folder above and
+          `merge` is not set.
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to remove
+
+          merge: Merge a subfolder into a folder of the same name above it, instead of
+              answering 409 `folder.exists`
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return await self._post(
+                "/sources/remove-folder",
+                body=await async_maybe_transform(
+                    {
+                        "folder": folder,
+                        "merge": merge,
+                    },
+                    source_remove_folder_params.SourceRemoveFolderParams,
+                ),
+                options=options,
+                cast_to=SourceRemoveFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/remove-folder")
+            raise
+
+    async def delete_folder(
+        self,
+        *,
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceDeleteFolderResponse:
+        """
+        Delete an empty folder and the empty folders below it.
+
+        Its sources must be moved (`move`) or deleted first.
+
+        **Not safe to repeat blindly.** After a 503, a timeout or a lost answer the
+        change may have been saved, and a repeat can answer 404 `folder.not_found`
+        although the first call worked. So this method never retries on its own,
+        whatever `max_retries` says on the client or in `with_options`: call
+        `list_folders()` and repeat by hand only if the change is not there. Only a
+        404 whose `code` is `folder.not_found` may mean an earlier call worked.
+
+        **Error responses:**
+
+        - `404` — `folder.not_found`.
+        - `409` — `folder.not_empty` (it holds a source) or `folder.uploads_pending`
+          (uploads into it are not stored yet).
+        - `422` — Invalid path, or the top level.
+        - `503` — The change may or may not have been saved; list the folders before
+          repeating.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          folder: The folder to delete
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        options = make_request_options(
+            extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+        )
+        options["max_retries"] = 0  # never repeated on its own: see above
+        try:
+            return await self._post(
+                "/sources/delete-folder",
+                body=await async_maybe_transform(
+                    {"folder": folder}, source_delete_folder_params.SourceDeleteFolderParams
+                ),
+                options=options,
+                cast_to=SourceDeleteFolderResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/delete-folder")
+            raise
+
+    async def move(
+        self,
+        *,
+        file_ids: SequenceNotStr[str],
+        folder: str,
+        # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
+        # The extra values given here take precedence over values defined on the client or passed to this method.
+        extra_headers: Headers | None = None,
+        extra_query: Query | None = None,
+        extra_body: Body | None = None,
+        timeout: float | httpx.Timeout | None | NotGiven = not_given,
+    ) -> SourceMoveResponse:
+        """
+        Move up to 1,000 sources to a folder.
+
+        `""` or `/` is the top level. A folder that does not exist is created. Ids
+        that match no source of the project come back in `not_found`. Safe to
+        repeat.
+
+        **Error responses:**
+
+        - `409` — `folder.too_many`: the project holds the most folders it can.
+        - `422` — Invalid path, or no ids or more than 1,000.
+        - `503` — The sources could not be moved; retry.
+
+        A 404 without an error `code` means the API does not offer this route; it
+        raises `FolderScopeNotAppliedError`.
+
+        Args:
+          file_ids: The sources to move (1 to 1,000)
+
+          folder: The target folder, '/'-separated; an empty string or '/' is the top level
+
+          extra_headers: Send extra headers
+
+          extra_query: Add additional query parameters to the request
+
+          extra_body: Add additional JSON properties to the request
+
+          timeout: Override the client-level default timeout for this request, in seconds
+        """
+        try:
+            return await self._post(
+                "/sources/move-sources",
+                body=await async_maybe_transform(
+                    {
+                        "file_ids": file_ids,
+                        "folder": folder,
+                    },
+                    source_move_params.SourceMoveParams,
+                ),
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+                ),
+                cast_to=SourceMoveResponse,
+            )
+        except NotFoundError as e:
+            raise_if_route_not_offered(e, "POST /sources/move-sources")
+            raise
 
 
 class SourcesResourceWithRawResponse:
@@ -2443,6 +3461,24 @@ class SourcesResourceWithRawResponse:
         )
         self.retrieve_chunks = to_raw_response_wrapper(
             sources.retrieve_chunks,
+        )
+        self.list_folders = to_raw_response_wrapper(
+            sources.list_folders,
+        )
+        self.create_folder = to_raw_response_wrapper(
+            sources.create_folder,
+        )
+        self.rename_folder = to_raw_response_wrapper(
+            sources.rename_folder,
+        )
+        self.remove_folder = to_raw_response_wrapper(
+            sources.remove_folder,
+        )
+        self.delete_folder = to_raw_response_wrapper(
+            sources.delete_folder,
+        )
+        self.move = to_raw_response_wrapper(
+            sources.move,
         )
 
 
@@ -2492,6 +3528,24 @@ class AsyncSourcesResourceWithRawResponse:
         self.retrieve_chunks = async_to_raw_response_wrapper(
             sources.retrieve_chunks,
         )
+        self.list_folders = async_to_raw_response_wrapper(
+            sources.list_folders,
+        )
+        self.create_folder = async_to_raw_response_wrapper(
+            sources.create_folder,
+        )
+        self.rename_folder = async_to_raw_response_wrapper(
+            sources.rename_folder,
+        )
+        self.remove_folder = async_to_raw_response_wrapper(
+            sources.remove_folder,
+        )
+        self.delete_folder = async_to_raw_response_wrapper(
+            sources.delete_folder,
+        )
+        self.move = async_to_raw_response_wrapper(
+            sources.move,
+        )
 
 
 class SourcesResourceWithStreamingResponse:
@@ -2540,6 +3594,24 @@ class SourcesResourceWithStreamingResponse:
         self.retrieve_chunks = to_streamed_response_wrapper(
             sources.retrieve_chunks,
         )
+        self.list_folders = to_streamed_response_wrapper(
+            sources.list_folders,
+        )
+        self.create_folder = to_streamed_response_wrapper(
+            sources.create_folder,
+        )
+        self.rename_folder = to_streamed_response_wrapper(
+            sources.rename_folder,
+        )
+        self.remove_folder = to_streamed_response_wrapper(
+            sources.remove_folder,
+        )
+        self.delete_folder = to_streamed_response_wrapper(
+            sources.delete_folder,
+        )
+        self.move = to_streamed_response_wrapper(
+            sources.move,
+        )
 
 
 class AsyncSourcesResourceWithStreamingResponse:
@@ -2587,4 +3659,22 @@ class AsyncSourcesResourceWithStreamingResponse:
         )
         self.retrieve_chunks = async_to_streamed_response_wrapper(
             sources.retrieve_chunks,
+        )
+        self.list_folders = async_to_streamed_response_wrapper(
+            sources.list_folders,
+        )
+        self.create_folder = async_to_streamed_response_wrapper(
+            sources.create_folder,
+        )
+        self.rename_folder = async_to_streamed_response_wrapper(
+            sources.rename_folder,
+        )
+        self.remove_folder = async_to_streamed_response_wrapper(
+            sources.remove_folder,
+        )
+        self.delete_folder = async_to_streamed_response_wrapper(
+            sources.delete_folder,
+        )
+        self.move = async_to_streamed_response_wrapper(
+            sources.move,
         )

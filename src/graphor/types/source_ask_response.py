@@ -99,3 +99,9 @@ class SourceAskResponse(BaseModel):
 
     usage: Optional[Usage] = None
     """Token usage breakdown for this request."""
+
+    folders: Optional[List[str]] = None
+    """The folders the scope was resolved from, normalized and de-duplicated.
+
+    Null when the request named no folder.
+    """

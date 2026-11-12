@@ -14,6 +14,13 @@ __all__ = ["SourceIngestFileParams"]
 class SourceIngestFileParams(TypedDict, total=False):
     file: Required[FileTypes]
 
+    folder: str
+    """Folder to store the source in, as a '/'-separated path (e.g. `Contracts/2026`).
+
+    An empty string, '/' or omitted is the top level. A folder that does not exist
+    is created.
+    """
+
     enrichment: Optional[str]
     """
     LLM enrichment level: 'full' (default) or 'none' to skip page/section/document

@@ -17,7 +17,14 @@ import httpx
 import pytest
 
 import graphor._large_upload as large
-from graphor import Graphor, UploadError, AsyncGraphor, NotFoundError, UnprocessableEntityError
+from graphor import (
+    Graphor,
+    UploadError,
+    AsyncGraphor,
+    NotFoundError,
+    UnprocessableEntityError,
+    FolderScopeNotAppliedError,
+)
 
 KIB = 1024
 CHUNK = 256 * KIB
@@ -31,6 +38,7 @@ class FakeServer:
     def __init__(self) -> None:
         self.create_status = 201
         self.create_body: Any = None
+        self.session_extra: Dict[str, Any] = {}
         self.chunk_size = CHUNK
         self.upload_url = UPLOAD_URL
         self.stored = bytearray()
@@ -63,6 +71,7 @@ class FakeServer:
                     "upload_url": self.upload_url,
                     "chunk_size": self.chunk_size,
                     "expires_at": "2030-01-01T00:00:00Z",
+                    **self.session_extra,
                 },
             )
         if request.url.path.endswith("/upload-sessions/complete"):
@@ -645,3 +654,76 @@ async def test_async_308_without_progress_and_a_non_json_body(server: FakeServer
     fresh = FakeServer()
     fresh.complete_script = [lambda: httpx.Response(200, content=b"<html>proxy</html>")]
     assert (await _async_client(fresh).sources.ingest_file(file=("a.pdf", _data()))).build_id == "bid"
+
+
+# --- folders ------------------------------------------------------------------
+
+
+def test_the_session_carries_the_folder(server: FakeServer) -> None:
+    server.session_extra = {"folder": "Contracts/2026"}
+    result = _client(server).sources.ingest_file(file=("a.pdf", _data()), folder=" Contracts/2026/ ")
+    assert result.build_id == "bid"
+    assert server.create_calls[0]["folder"] == " Contracts/2026/ "
+
+
+def test_no_folder_is_not_sent_nor_checked(server: FakeServer) -> None:
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data())).build_id == "bid"
+    assert "folder" not in server.create_calls[0]
+
+
+@pytest.mark.parametrize("size", [600 * KIB, 150 * KIB])
+def test_a_session_without_the_folder_echo_sends_nothing(server: FakeServer, size: int) -> None:
+    # 150 KiB is between the direct limit and the fallback limit: no fallback either.
+    with pytest.raises(FolderScopeNotAppliedError) as info:
+        _client(server).sources.ingest_file(file=("a.pdf", _data(size)), folder="Contracts")
+    assert info.value.parameter == "folder"
+    assert _puts(server) == [] and server.direct_calls == 0 and server.complete_bodies == []
+
+
+@pytest.mark.parametrize("echo", [None, 0])
+def test_a_session_echo_that_is_not_a_string_is_refused(server: FakeServer, echo: object) -> None:
+    server.session_extra = {"folder": echo}
+    with pytest.raises(FolderScopeNotAppliedError):
+        _client(server).sources.ingest_file(file=("a.pdf", _data()), folder="Contracts")
+    assert _puts(server) == []
+
+
+@pytest.mark.parametrize("folder", ["/", " ", ""])
+def test_the_top_level_echo_is_an_empty_string(server: FakeServer, folder: str) -> None:
+    server.session_extra = {"folder": ""}
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data()), folder=folder).build_id == "bid"
+    assert server.create_calls[0]["folder"] == folder
+
+
+def test_the_direct_fallback_carries_the_folder(server: FakeServer) -> None:
+    server.create_status, server.create_body = 501, {"detail": "Upload sessions are not available"}
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data()), folder="Contracts").build_id == "direct"
+    direct = [r for r in server.requests if r.url.path.endswith("/sources/ingest-file")][0]
+    assert b'name="folder"\r\n\r\nContracts\r\n' in direct.content
+
+
+async def test_async_session_without_the_folder_echo_sends_nothing(server: FakeServer) -> None:
+    with pytest.raises(FolderScopeNotAppliedError):
+        await _async_client(server).sources.ingest_file(file=("a.pdf", _data(150 * KIB)), folder="Contracts")
+    assert _puts(server) == [] and server.direct_calls == 0
+    server.session_extra = {"folder": "Contracts"}
+    result = await _async_client(server).sources.ingest_file(file=("a.pdf", _data()), folder="Contracts")
+    assert result.build_id == "bid"
+
+
+@pytest.mark.parametrize("size", [600 * KIB, 150 * KIB])
+def test_a_server_without_sessions_does_not_get_a_folder_upload(server: FakeServer, size: int) -> None:
+    # The framework's own 404: the API has no upload sessions, so no folders either.
+    server.create_status, server.create_body = 404, {"detail": "Not Found"}
+    with pytest.raises(FolderScopeNotAppliedError):
+        _client(server).sources.ingest_file(file=("a.pdf", _data(size)), folder="Contracts")
+    assert server.direct_calls == 0 and _puts(server) == []
+    # Without a folder it still falls back, as before.
+    assert _client(server).sources.ingest_file(file=("a.pdf", _data(size))).build_id == "direct"
+
+
+async def test_async_server_without_sessions_does_not_get_a_folder_upload(server: FakeServer) -> None:
+    server.create_status, server.create_body = 404, {"detail": "Not Found"}
+    with pytest.raises(FolderScopeNotAppliedError):
+        await _async_client(server).sources.ingest_file(file=("a.pdf", _data()), folder="Contracts")
+    assert server.direct_calls == 0

@@ -44,3 +44,12 @@ class SourceIngestURLParams(TypedDict, total=False):
     - agentic → graphorlm
     - auto → auto
     """
+
+    folder: Optional[str]
+    """Folder to store the source in, as a '/'-separated path (e.g. `Contracts/2026`).
+
+    An empty string or '/' is the top level. A folder that does not exist is
+    created. When omitted (or `None`), a new source goes to the top level and a
+    source that replaces an existing one of the same name keeps that source's
+    folder.
+    """

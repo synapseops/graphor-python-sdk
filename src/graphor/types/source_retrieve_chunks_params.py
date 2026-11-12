@@ -22,3 +22,13 @@ class SourceRetrieveChunksParams(TypedDict, total=False):
     Optional list of file names to restrict retrieval scope (deprecated, use
     file_ids)
     """
+
+    folders: Optional[SequenceNotStr[str]]
+    """
+    Folders to restrict the scope to (at most 1,000): every source at or below each
+    folder, read when the request arrives, together with any `file_ids`. A folder is
+    a '/'-separated path. An empty list is no folder scope. A folder that holds no
+    source refuses the request (400 `chat.folder_scope_empty`); the top level, an
+    invalid path, or `folders` together with `file_names` answers 422
+    `request.invalid`.
+    """
