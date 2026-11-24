@@ -111,8 +111,9 @@ class SourceGetBuildStatusResponse(BaseModel):
     """
     Whether this build's retrieval index is currently serving queries: the build
     completed, was indexed (indexing=full), and is still the source's active build.
-    False for unindexed, failed, in-progress, or superseded builds —
-    ask/extract/retrieve will return nothing for those.
+    False for unindexed, failed, in-progress, or superseded builds: ask, extract and
+    retrieve do not use them (for a superseded build they use the source's newer
+    active build).
     """
 
     total_elements: Optional[int] = None
