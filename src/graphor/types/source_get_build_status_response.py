@@ -56,6 +56,14 @@ class SourceGetBuildStatusResponse(BaseModel):
     error: Optional[str] = None
     """Error message from the pipeline, if the build failed (e.g. processing_failed)."""
 
+    error_code: Optional[str] = None
+    """A machine-readable code for the failure, when there is one.
+
+    For example `ingestion.invalid_link`, `ingestion.provider_unavailable` or
+    `ingestion.method_unavailable`. Match on it rather than on the text of `error`;
+    see the error codes in the API docs.
+    """
+
     failed_batches_count: Optional[int] = None
     """Number of failed batches when status is 'Completed with errors'.
 
