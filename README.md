@@ -210,9 +210,9 @@ sources = client.sources.list()
 for source in sources:
     print(f"{source.file_name}: {source.status}")
 
-# Get document elements
-elements = client.sources.load_elements(
-    file_name="document.pdf",
+# Get document elements (the file_id comes from list() or get_build_status())
+elements = client.sources.get_elements(
+    file_id="your-file-id",
     page=1,
     page_size=50
 )
@@ -496,14 +496,14 @@ See the [MCP Server README](https://github.com/synapseops/graphor-mcp-server) fo
 
 | Method | Description | Docs |
 |--------|-------------|------|
-| `sources.ingest_file()` | Upload a local file, of any size up to the limit | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-a-file) |
-| `sources.ingest_url()` | Upload from web URL | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-url) |
-| `sources.ingest_github()` | Upload from GitHub | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-github) |
-| `sources.ingest_youtube()` | Upload from YouTube | [📖](https://docs.graphorlm.com/sdk/sources/upload#upload-from-youtube) |
+| `sources.ingest_file()` | Upload a local file, of any size up to the limit | [📖](https://docs.graphorlm.com/sdk/sources/upload#ingest-file) |
+| `sources.ingest_url()` | Upload from web URL | [📖](https://docs.graphorlm.com/sdk/sources/upload#ingest-url) |
+| `sources.ingest_github()` | Upload from GitHub | [📖](https://docs.graphorlm.com/sdk/sources/upload#ingest-github) |
+| `sources.ingest_youtube()` | Upload from YouTube | [📖](https://docs.graphorlm.com/sdk/sources/upload#ingest-youtube) |
 | `sources.reprocess()` | Reprocess with different method | [📖](https://docs.graphorlm.com/sdk/sources/process) |
 | `sources.list()` | List all sources | [📖](https://docs.graphorlm.com/sdk/sources/list) |
 | `sources.delete()` | Delete a source | [📖](https://docs.graphorlm.com/sdk/sources/delete) |
-| `sources.load_elements()` | Get parsed elements | [📖](https://docs.graphorlm.com/sdk/sources/list-elements) |
+| `sources.get_elements()` | Get parsed elements | [📖](https://docs.graphorlm.com/sdk/sources/list-elements) |
 | `sources.list_folders()` | List every folder | |
 | `sources.create_folder()` | Create a folder | |
 | `sources.rename_folder()` | Rename or move a folder | |

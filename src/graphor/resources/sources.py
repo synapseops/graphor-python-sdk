@@ -532,14 +532,14 @@ class SourcesResource(SyncAPIResource):
         Return the status and optional parsed elements for an async build identified by
         `build_id`.
 
-        Use this endpoint to poll the result of an async ingestion or re-process
-        request. The `build_id` is returned in the response of:
+        Use this method to poll the result of an async ingestion or re-process
+        request. The `build_id` is returned by:
 
-        - `POST /v2/sources/upload` (async file upload)
-        - `POST /v2/sources/upload-url-source` (async URL ingestion)
-        - `POST /v2/sources/upload-github-source` (async GitHub ingestion)
-        - `POST /v2/sources/upload-youtube-source` (async YouTube ingestion)
-        - `POST /v2/sources/process` (async re-process)
+        - `ingest_file` (file upload, including large files)
+        - `ingest_url` (URL ingestion)
+        - `ingest_github` (GitHub ingestion)
+        - `ingest_youtube` (YouTube ingestion)
+        - `reprocess` (re-process)
 
         **Path parameter:**
 
@@ -551,9 +551,8 @@ class SourcesResource(SyncAPIResource):
         - **suppress_elements** (bool, default `false`): When `true`, elements are
           omitted from the response. When `false` (default), the response includes the
           parsed elements (chunks/partitions) for the build if it completed
-          successfully. Same structure as `POST /sources/elements` (each element has
-          `page_content` and `metadata`). If `page` and `page_size` are not passed, all
-          elements are returned.
+          successfully, with the same fields as `get_elements`. If `page` and
+          `page_size` are not passed, all elements are returned.
         - **suppress_img_base64** (bool, default `false`): When `true`, `img_base64` is
           omitted from each element (useful to reduce payload size when images are not
           needed).
@@ -566,28 +565,42 @@ class SourcesResource(SyncAPIResource):
         **Response fields:**
 
         - **build_id**: The requested build identifier.
-        - **status**: SourceNodeStatus value when history exists (e.g. Processed,
-          Processing, Processing failed). `not_found` when no history exists (build in
-          progress or invalid id).
+        - **status**: The build's status when it has been recorded (e.g. Completed,
+          Completed with errors, Processing, Processing failed). `not_found` until the
+          build is recorded (build just scheduled, or invalid id).
         - **success**: `true` when the build completed (status is "Completed" or
           "Completed with errors").
         - **file_id**, **file_name**: Source identifiers; present when the build has
           been persisted (history exists).
-        - **error**: Error message from the pipeline when the build failed. A URL,
-          GitHub or YouTube build whose link can't be fetched fails with the message
-          "This link can't be fetched. Check that it is a full, public web address,
-          then delete the source and add it again."; re-processing fails the same
-          way, so delete the source and ingest it again with a full, public link.
+        - **error**: Error message when the build failed.
+        - **error_code**: A machine-readable code for the failure, when there is one.
+          Match on it rather than on the text of `error`.
         - **method**, **total_partitions**, **total_pages**: Build metadata when history
           exists.
         - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
         - **document_annotation**: Document-level summary/annotation from the build
           history when available.
         - **message**: Human-readable message (e.g. when status is `not_found`).
-        - **elements**: List of `{ page_content, metadata }` when
-          `suppress_elements=false` and the build completed successfully.
+        - **elements**: The parsed elements when `suppress_elements=false` and the
+          build completed successfully.
         - **total_elements**, **page**, **page_size**, **total_pages_elements**:
           Pagination metadata for `elements` when `suppress_elements=false`.
+
+        A URL, GitHub or YouTube build can fail while its link is processed, with
+        `status` `Processing failed` and one of these `error_code` values:
+
+        - `ingestion.invalid_link` — The link can't be fetched; `error` reads "This
+          link can't be fetched. Check that it is a full, public web address, then
+          delete the source and add it again." Re-processing fails the same way, so
+          delete the source and ingest it again with a full, public link.
+        - `ingestion.provider_unavailable` — The page could not be fetched in time,
+          for example when many web pages are added at once. Re-process the source in
+          a few minutes.
+        - `ingestion.method_unavailable` — The selected partition method can't read
+          this source. Re-process it with another method.
+
+        See the error codes in the API docs:
+        https://docs.graphorlm.com/api-reference/sources/upload#get-build-status
 
         **Error responses:**
 
@@ -1003,8 +1016,10 @@ class SourcesResource(SyncAPIResource):
 
         - **url** (str, required): The GitHub repository URL to ingest (e.g.
           `https://github.com/owner/repo`).
+        - **folder** (str, optional): The folder to store the source in, as for
+          `ingest_url`.
 
-        **Returns** `AsyncIngestResponse` with `build_id`.
+        **Returns** a response with `build_id`; poll `get_build_status` with it.
 
         The URL is an `http://` or `https://` URL whose host is exactly one of
         `github.com`, `gist.github.com`, `gitlab.com`, `bitbucket.org`, `gitea.com` or
@@ -1014,12 +1029,15 @@ class SourcesResource(SyncAPIResource):
 
         **Error responses:**
 
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
+        - `422` `request.invalid` — The URL is not a repository link on a supported
+          git host, or the folder is not valid. Nothing is stored; correct it before
+          sending again.
+        - `503` `service.unavailable` — The folder could not be recorded and nothing
+          started; safe to retry.
         - `500` — Unexpected internal error during GitHub source processing.
 
-        A link that can't be fetched while it is processed fails the build; its
-        `error` reads "This link can't be fetched. ..." (see `get_build_status`).
+        A link that can't be fetched while it is processed fails the build with
+        `error_code` `ingestion.invalid_link` (see `get_build_status`).
 
         Args:
           url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
@@ -1083,28 +1101,36 @@ class SourcesResource(SyncAPIResource):
         Ingest a web page (or a set of crawled pages) as a source into the project's
         knowledge graph.
 
-        Unlike the synchronous version, this endpoint schedules the ingestion in the
-        background and returns immediately with a `processing` status. The source will
-        be fully available once background processing completes.
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. The source is fully available once background processing
+        completes.
 
         If the URL points directly to a downloadable file (detected via URL path
         extension or HTTP Content-Type), the file is first downloaded and uploaded to
         storage synchronously, then the partition/embedding pipeline runs in the
         background.
 
+        Web pages processed with the `fast` method share a rate-limited fetch
+        capacity: when many are added at once, a page waits for capacity (up to 30
+        minutes) before its build fails with `error_code`
+        `ingestion.provider_unavailable`; re-process it later.
+
         **Parameters (JSON body):**
 
         - **url** (str, required): The web page URL to ingest.
-        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+        - **crawl_urls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
         - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
           `balanced`, `accurate`, `vlm`, `agentic`, `auto`. When omitted the system
           default is applied.
+        - **folder** (str, optional): The folder to store the source in; `""` is the
+          top level. When omitted, a new source goes to the top level and a source
+          that replaces one of the same name keeps that source's folder.
 
-        **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
-        Poll the source status endpoint using the returned `file_id` to track
-        completion.
+        **Returns** a response with `build_id`. Poll `get_build_status` with it until
+        `success` is `true` or `status` is a failed status (e.g. `Processing
+        failed`); `status` is `not_found` until the build is recorded.
 
         The URL must be an absolute `http://` or `https://` URL with a host, without
         a user name or password, and without spaces, backslashes or control
@@ -1122,12 +1148,16 @@ class SourcesResource(SyncAPIResource):
           and use `ingest_file`.
         - `413` `ingestion.file_too_large` — The file at the link is larger than 50 MB.
           Not retried: use `ingest_file`.
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
-        - `503` `service.unavailable` — The link could not be checked right now, or too
-          many link downloads are running. Nothing is stored; safe to retry after
-          `Retry-After` (30 seconds).
+        - `422` `request.invalid` — The URL is not a full `http` or `https` web
+          address (with a host and no user name or password), or the folder is not
+          valid. Nothing is stored; correct it before sending again.
+        - `503` `service.unavailable` — The link could not be checked right now, too
+          many link downloads are running, or the folder could not be recorded.
+          Nothing is stored; safe to retry after `Retry-After`.
         - `500` — Unexpected internal error during URL processing.
+
+        A link that can't be fetched while it is processed fails the build with
+        `error_code` `ingestion.invalid_link` (see `get_build_status`).
 
         Args:
           url: The web page URL to ingest
@@ -1210,8 +1240,10 @@ class SourcesResource(SyncAPIResource):
 
         - **url** (str, required): The YouTube video URL to ingest (e.g.
           `https://www.youtube.com/watch?v=...`).
+        - **folder** (str, optional): The folder to store the source in, as for
+          `ingest_url`.
 
-        **Returns** `AsyncIngestResponse` with `build_id`.
+        **Returns** a response with `build_id`; poll `get_build_status` with it.
 
         The URL is a link to one video on `youtube.com`, `www.youtube.com`,
         `m.youtube.com`, `music.youtube.com`, `youtu.be`, `youtube-nocookie.com` or
@@ -1223,8 +1255,11 @@ class SourcesResource(SyncAPIResource):
 
         **Error responses:**
 
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
+        - `422` `request.invalid` — The URL is not a YouTube video link (a YouTube
+          or youtu.be address with an 11-character video id), or the folder is not
+          valid. Nothing is stored; correct it before sending again.
+        - `503` `service.unavailable` — The folder could not be recorded and nothing
+          started; safe to retry.
         - `500` — Unexpected internal error during YouTube source processing.
 
         A link that can't be fetched while it is processed fails the build; its
@@ -2254,14 +2289,14 @@ class AsyncSourcesResource(AsyncAPIResource):
         Return the status and optional parsed elements for an async build identified by
         `build_id`.
 
-        Use this endpoint to poll the result of an async ingestion or re-process
-        request. The `build_id` is returned in the response of:
+        Use this method to poll the result of an async ingestion or re-process
+        request. The `build_id` is returned by:
 
-        - `POST /v2/sources/upload` (async file upload)
-        - `POST /v2/sources/upload-url-source` (async URL ingestion)
-        - `POST /v2/sources/upload-github-source` (async GitHub ingestion)
-        - `POST /v2/sources/upload-youtube-source` (async YouTube ingestion)
-        - `POST /v2/sources/process` (async re-process)
+        - `ingest_file` (file upload, including large files)
+        - `ingest_url` (URL ingestion)
+        - `ingest_github` (GitHub ingestion)
+        - `ingest_youtube` (YouTube ingestion)
+        - `reprocess` (re-process)
 
         **Path parameter:**
 
@@ -2273,9 +2308,8 @@ class AsyncSourcesResource(AsyncAPIResource):
         - **suppress_elements** (bool, default `false`): When `true`, elements are
           omitted from the response. When `false` (default), the response includes the
           parsed elements (chunks/partitions) for the build if it completed
-          successfully. Same structure as `POST /sources/elements` (each element has
-          `page_content` and `metadata`). If `page` and `page_size` are not passed, all
-          elements are returned.
+          successfully, with the same fields as `get_elements`. If `page` and
+          `page_size` are not passed, all elements are returned.
         - **suppress_img_base64** (bool, default `false`): When `true`, `img_base64` is
           omitted from each element (useful to reduce payload size when images are not
           needed).
@@ -2288,28 +2322,42 @@ class AsyncSourcesResource(AsyncAPIResource):
         **Response fields:**
 
         - **build_id**: The requested build identifier.
-        - **status**: SourceNodeStatus value when history exists (e.g. Processed,
-          Processing, Processing failed). `not_found` when no history exists (build in
-          progress or invalid id).
+        - **status**: The build's status when it has been recorded (e.g. Completed,
+          Completed with errors, Processing, Processing failed). `not_found` until the
+          build is recorded (build just scheduled, or invalid id).
         - **success**: `true` when the build completed (status is "Completed" or
           "Completed with errors").
         - **file_id**, **file_name**: Source identifiers; present when the build has
           been persisted (history exists).
-        - **error**: Error message from the pipeline when the build failed. A URL,
-          GitHub or YouTube build whose link can't be fetched fails with the message
-          "This link can't be fetched. Check that it is a full, public web address,
-          then delete the source and add it again."; re-processing fails the same
-          way, so delete the source and ingest it again with a full, public link.
+        - **error**: Error message when the build failed.
+        - **error_code**: A machine-readable code for the failure, when there is one.
+          Match on it rather than on the text of `error`.
         - **method**, **total_partitions**, **total_pages**: Build metadata when history
           exists.
         - **created_at**, **updated_at**: ISO8601 timestamps when history exists.
         - **document_annotation**: Document-level summary/annotation from the build
           history when available.
         - **message**: Human-readable message (e.g. when status is `not_found`).
-        - **elements**: List of `{ page_content, metadata }` when
-          `suppress_elements=false` and the build completed successfully.
+        - **elements**: The parsed elements when `suppress_elements=false` and the
+          build completed successfully.
         - **total_elements**, **page**, **page_size**, **total_pages_elements**:
           Pagination metadata for `elements` when `suppress_elements=false`.
+
+        A URL, GitHub or YouTube build can fail while its link is processed, with
+        `status` `Processing failed` and one of these `error_code` values:
+
+        - `ingestion.invalid_link` — The link can't be fetched; `error` reads "This
+          link can't be fetched. Check that it is a full, public web address, then
+          delete the source and add it again." Re-processing fails the same way, so
+          delete the source and ingest it again with a full, public link.
+        - `ingestion.provider_unavailable` — The page could not be fetched in time,
+          for example when many web pages are added at once. Re-process the source in
+          a few minutes.
+        - `ingestion.method_unavailable` — The selected partition method can't read
+          this source. Re-process it with another method.
+
+        See the error codes in the API docs:
+        https://docs.graphorlm.com/api-reference/sources/upload#get-build-status
 
         **Error responses:**
 
@@ -2725,8 +2773,10 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         - **url** (str, required): The GitHub repository URL to ingest (e.g.
           `https://github.com/owner/repo`).
+        - **folder** (str, optional): The folder to store the source in, as for
+          `ingest_url`.
 
-        **Returns** `AsyncIngestResponse` with `build_id`.
+        **Returns** a response with `build_id`; poll `get_build_status` with it.
 
         The URL is an `http://` or `https://` URL whose host is exactly one of
         `github.com`, `gist.github.com`, `gitlab.com`, `bitbucket.org`, `gitea.com` or
@@ -2736,12 +2786,15 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         **Error responses:**
 
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
+        - `422` `request.invalid` — The URL is not a repository link on a supported
+          git host, or the folder is not valid. Nothing is stored; correct it before
+          sending again.
+        - `503` `service.unavailable` — The folder could not be recorded and nothing
+          started; safe to retry.
         - `500` — Unexpected internal error during GitHub source processing.
 
-        A link that can't be fetched while it is processed fails the build; its
-        `error` reads "This link can't be fetched. ..." (see `get_build_status`).
+        A link that can't be fetched while it is processed fails the build with
+        `error_code` `ingestion.invalid_link` (see `get_build_status`).
 
         Args:
           url: The GitHub repository URL to ingest (e.g. https://github.com/owner/repo)
@@ -2805,28 +2858,36 @@ class AsyncSourcesResource(AsyncAPIResource):
         Ingest a web page (or a set of crawled pages) as a source into the project's
         knowledge graph.
 
-        Unlike the synchronous version, this endpoint schedules the ingestion in the
-        background and returns immediately with a `processing` status. The source will
-        be fully available once background processing completes.
+        Schedules the ingestion in the background and returns immediately with a
+        `build_id`. The source is fully available once background processing
+        completes.
 
         If the URL points directly to a downloadable file (detected via URL path
         extension or HTTP Content-Type), the file is first downloaded and uploaded to
         storage synchronously, then the partition/embedding pipeline runs in the
         background.
 
+        Web pages processed with the `fast` method share a rate-limited fetch
+        capacity: when many are added at once, a page waits for capacity (up to 30
+        minutes) before its build fails with `error_code`
+        `ingestion.provider_unavailable`; re-process it later.
+
         **Parameters (JSON body):**
 
         - **url** (str, required): The web page URL to ingest.
-        - **crawlUrls** (bool, optional, default `false`): When `true`, the system will
+        - **crawl_urls** (bool, optional, default `false`): When `true`, the system will
           also follow and ingest links found on the page. Ignored when the URL resolves
           to a file.
         - **method** (str, optional): The partitioning strategy to use. One of: `fast`,
           `balanced`, `accurate`, `vlm`, `agentic`, `auto`. When omitted the system
           default is applied.
+        - **folder** (str, optional): The folder to store the source in; `""` is the
+          top level. When omitted, a new source goes to the top level and a source
+          that replaces one of the same name keeps that source's folder.
 
-        **Returns** a `PublicSourceResponse` with `status: "processing"` immediately.
-        Poll the source status endpoint using the returned `file_id` to track
-        completion.
+        **Returns** a response with `build_id`. Poll `get_build_status` with it until
+        `success` is `true` or `status` is a failed status (e.g. `Processing
+        failed`); `status` is `not_found` until the build is recorded.
 
         The URL must be an absolute `http://` or `https://` URL with a host, without
         a user name or password, and without spaces, backslashes or control
@@ -2844,12 +2905,16 @@ class AsyncSourcesResource(AsyncAPIResource):
           and use `ingest_file`.
         - `413` `ingestion.file_too_large` — The file at the link is larger than 50 MB.
           Not retried: use `ingest_file`.
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
-        - `503` `service.unavailable` — The link could not be checked right now, or too
-          many link downloads are running. Nothing is stored; safe to retry after
-          `Retry-After` (30 seconds).
+        - `422` `request.invalid` — The URL is not a full `http` or `https` web
+          address (with a host and no user name or password), or the folder is not
+          valid. Nothing is stored; correct it before sending again.
+        - `503` `service.unavailable` — The link could not be checked right now, too
+          many link downloads are running, or the folder could not be recorded.
+          Nothing is stored; safe to retry after `Retry-After`.
         - `500` — Unexpected internal error during URL processing.
+
+        A link that can't be fetched while it is processed fails the build with
+        `error_code` `ingestion.invalid_link` (see `get_build_status`).
 
         Args:
           url: The web page URL to ingest
@@ -2932,8 +2997,10 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         - **url** (str, required): The YouTube video URL to ingest (e.g.
           `https://www.youtube.com/watch?v=...`).
+        - **folder** (str, optional): The folder to store the source in, as for
+          `ingest_url`.
 
-        **Returns** `AsyncIngestResponse` with `build_id`.
+        **Returns** a response with `build_id`; poll `get_build_status` with it.
 
         The URL is a link to one video on `youtube.com`, `www.youtube.com`,
         `m.youtube.com`, `music.youtube.com`, `youtu.be`, `youtube-nocookie.com` or
@@ -2945,8 +3012,11 @@ class AsyncSourcesResource(AsyncAPIResource):
 
         **Error responses:**
 
-        - `422` `request.invalid` — The URL (or the folder) is not valid. Nothing is
-          stored; correct it before sending again.
+        - `422` `request.invalid` — The URL is not a YouTube video link (a YouTube
+          or youtu.be address with an 11-character video id), or the folder is not
+          valid. Nothing is stored; correct it before sending again.
+        - `503` `service.unavailable` — The folder could not be recorded and nothing
+          started; safe to retry.
         - `500` — Unexpected internal error during YouTube source processing.
 
         A link that can't be fetched while it is processed fails the build; its
