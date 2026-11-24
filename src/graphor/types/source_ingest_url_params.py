@@ -47,7 +47,8 @@ class SourceIngestURLParams(TypedDict, total=False):
     """Folder to store the source in, as a '/'-separated path (e.g. `Contracts/2026`).
 
     An empty string or '/' is the top level. A folder that does not exist is
-    created. When omitted (or `None`), a new source goes to the top level and a
-    source that replaces an existing one of the same name keeps that source's
-    folder.
+    created. When omitted (or `None`), a new source goes to the top level. Sending
+    a web page, GitHub or YouTube link that is already a source refreshes that
+    source; it keeps its id and its folder unless `folder` is given. A link to a
+    file replaces the source and gets a new id.
     """
